@@ -18,7 +18,7 @@ export function parse(src: string): Node[] {
 
 // Cuts comment ranges found via the AST, so comments inside code blocks survive.
 export function clean(src: string): string {
-  let out = src.replace(/^﻿/, '').replace(/\r\n?/g, '\n')
+  let out = src.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
   const cuts: [number, number][] = []
   const walk = (ns: Node[]) => {
     for (const n of ns) {

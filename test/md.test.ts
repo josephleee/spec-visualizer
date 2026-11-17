@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { clean, parse, slice, splitAt, takeLabels, checkItems } from '../server/md.ts'
 
 test('clean removes comments, BOM and CRLF but keeps comments in code', () => {
-  const src = '﻿# T\r\n<!-- note -->\r\ntext <!-- x --> more\r\n```\n<!-- keep -->\n```\n'
+  const src = '\uFEFF# T\r\n<!-- note -->\r\ntext <!-- x --> more\r\n```\n<!-- keep -->\n```\n'
   const out = clean(src)
   expect(out).not.toContain('note')
   expect(out).not.toContain('<!-- x -->')
@@ -35,4 +35,10 @@ test('checkItems counts with or without an ID, uppercase X, and nested items', (
   expect(items[0]).toEqual({ id: 'T001', done: true, parallel: false, story: null, text: 'Create structure' })
   expect(items[1]).toMatchObject({ id: 'T012', done: false, parallel: true, story: 'US1', text: 'Create model' })
   expect(items[2]).toMatchObject({ id: null, done: true })
+})
+
+test('takeLabels reads line-start labels inside one paragraph', () => {
+  const src = '**A**: x\n**B**: y\n'
+  const { fields } = takeLabels(src, parse(src))
+  expect(fields).toEqual([{ label: 'A', value: 'x' }, { label: 'B', value: 'y' }])
 })
