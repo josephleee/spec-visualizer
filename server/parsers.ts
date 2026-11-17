@@ -1,6 +1,6 @@
 import { checkItems, parse, slice, splitAt, takeLabels } from './md.ts'
 import type { Node, Sec } from './md.ts'
-import type { Block, Scenario } from './types.ts'
+import type { Block, Field, Scenario } from './types.ts'
 
 export function rawBlock(src: string, sec: Sec): Block {
   return { kind: 'raw', heading: sec.heading, depth: sec.depth, markdown: slice(src, sec.nodes) }
@@ -75,7 +75,6 @@ export function parseSpec(src: string): Block[] {
   return blocks
 }
 
-const isCheckList = (n: Node) => n.type === 'list' && n.children.some((i) => i.checked != null)
 const at = (n: Node) => n.position!.start.offset!
 
 function parseChecks(src: string): Block[] {
@@ -84,10 +83,28 @@ function parseChecks(src: string): Block[] {
     if (sec.heading === null) continue
     const items = checkItems(sec.nodes)
     if (!items.length) { blocks.push(rawBlock(src, sec)); continue }
-    const heads = sec.nodes.filter((n) => n.type === 'heading')
-    const { fields, rest } = takeLabels(src, sec.nodes.filter((n) => n.type !== 'heading' && !isCheckList(n)))
-    const left = [...rest, ...heads].sort((a, b) => at(a) - at(b)).map((n) => slice(src, [n]))
-    blocks.push({ kind: 'phase', title: sec.heading, fields, items, rest: left.join('\n\n') })
+    // A heading ends the current label's value, so labels are read per segment.
+    const left: { pos: number; text: string }[] = []
+    const fields: Field[] = []
+    let seg: Node[] = []
+    const flush = () => {
+      const t = takeLabels(src, seg)
+      fields.push(...t.fields)
+      for (const n of t.rest) left.push({ pos: at(n), text: slice(src, [n]) })
+      seg = []
+    }
+    for (const n of sec.nodes) {
+      if (n.type === 'heading') { flush(); left.push({ pos: at(n), text: slice(src, [n]) }) }
+      else if (n.type === 'list' && n.children.some((i) => i.checked != null)) {
+        // Checkbox items go to `items`; plain items of a mixed list stay visible in `rest`.
+        n.children.forEach((i, k) => {
+          if (i.checked == null) left.push({ pos: at(i), text: (n.ordered ? `${(n.start ?? 1) + k}. ` : '- ') + slice(src, [i]) })
+        })
+      } else seg.push(n)
+    }
+    flush()
+    left.sort((x, y) => x.pos - y.pos)
+    blocks.push({ kind: 'phase', title: sec.heading, fields, items, rest: left.map((l) => l.text).filter(Boolean).join('\n\n') })
   }
   return blocks
 }

@@ -116,3 +116,16 @@ test('phase: plain lists stay in content, checkbox lists do not leak into fields
   expect(p.fields).toEqual([{ label: 'Goal', value: 'g\n\n- plain note' }])
   expect(p.items).toHaveLength(1)
 })
+
+test('phase: plain items of a mixed list go to rest', () => {
+  const [p] = parseTasks('## P\n\n- [x] T001 a\n- plain note\n- [ ] T002 b\n') as any[]
+  expect(p.items).toHaveLength(2)
+  expect(p.rest).toContain('- plain note')
+})
+
+test('phase: a heading ends the label value', () => {
+  const [p] = parseTasks('## Phase 2: X\n\n**Goal**: Deliver\n\n### Tests\n\nWrite these first.\n\n- [ ] T001 a\n\n**Checkpoint**: ok\n') as any[]
+  expect(p.fields).toEqual([{ label: 'Goal', value: 'Deliver' }, { label: 'Checkpoint', value: 'ok' }])
+  expect(p.rest).toContain('### Tests')
+  expect(p.rest).toContain('Write these first.')
+})
