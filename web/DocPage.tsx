@@ -31,8 +31,8 @@ function Stories({ b }: { b: B<'stories'> }) {
       {items.map((s, i) => (
         <article key={i} className="card story">
           <h3>{s.priority && <span className="badge">{s.priority}</span>} {s.title}</h3>
-          {s.why && <div><strong>Why this priority:</strong> <Markdown inline>{s.why}</Markdown></div>}
-          {s.test && <div><strong>Independent Test:</strong> <Markdown inline>{s.test}</Markdown></div>}
+          {s.why && <div><strong>Why this priority</strong> <Markdown inline>{s.why}</Markdown></div>}
+          {s.test && <div><strong>Independent Test</strong> <Markdown inline>{s.test}</Markdown></div>}
           {s.scenarios.map((sc, j) => (
             <dl key={j} className="scenario">
               <dt>Given</dt><dd><Markdown inline>{sc.given}</Markdown></dd>
@@ -54,7 +54,7 @@ function IdList({ b }: { b: B<'idList'> }) {
       <ul className="idlist">
         {b.items.map((it, i) => (
           <li key={i} className={clarify(it.text) ? 'clarify' : undefined}>
-            <code>{it.id}</code> <Markdown inline>{it.text}</Markdown>
+            <code className="id">{it.id}</code> <Markdown inline>{it.text}</Markdown>
           </li>
         ))}
       </ul>
@@ -67,14 +67,14 @@ function Phase({ b, story, onStory }: { b: B<'phase'>; story: string | null; onS
   const { t } = useLang()
   const items: CheckItem[] = story ? b.items.filter(i => i.story === story) : b.items
   return (
-    <section>
+    <section className="phase">
       <h2>{b.title}</h2>
       <Bar done={b.items.filter(i => i.done).length} total={b.items.length} />
       <Fields items={b.fields} />
       <ul className="items">
         {items.map((it, i) => (
           <li key={i} className={it.done ? 'done' : undefined}>
-            <span aria-hidden>{it.done ? '☑' : '☐'}</span><span className="sr-only">{t(it.done ? 'itemDone' : 'itemOpen')}</span> {it.id && <code>{it.id}</code>}{' '}
+            <span className="check" aria-hidden /><span className="sr-only">{t(it.done ? 'itemDone' : 'itemOpen')}</span> {it.id && <code className="id">{it.id}</code>}{' '}
             <Markdown inline>{it.text}</Markdown>
             {it.parallel && <span className="badge"> [P]</span>}
             {it.story && <button type="button" className="badge" onClick={() => onStory(it.story!)}>{it.story}</button>}
@@ -137,7 +137,7 @@ function Body({ doc }: { doc: ParsedDoc }) {
   if (story && !stories.includes(story)) setStory(null) // a refetch removed the selected story
   return (
     <>
-      {doc.ref.kind === 'tasks' && <p><strong>{t('tasks')}</strong> <Bar done={all.filter(i => i.done).length} total={all.length} /></p>}
+      {doc.ref.kind === 'tasks' && <p className="summary"><strong>{t('tasks')}</strong> <Bar done={all.filter(i => i.done).length} total={all.length} /></p>}
       {stories.length > 0 && (
         <div className="filter" role="group" aria-label={t('storyFilter')}>
           <button type="button" aria-pressed={story === null} onClick={() => setStory(null)}>{t('all')}</button>
@@ -184,19 +184,18 @@ export function DocPage({ path, project, version, onSeen }: {
 
   const ref = [project.constitution, ...project.features.flatMap(f => f.docs)].find(d => d?.path === path)
   const feature = project.features.find(f => f.docs.some(d => d.path === path))
-  const home = <p><a href="#/">{t('home')}</a></p>
+  const home = <a href="#/">{t('home')}</a>
 
-  if (ref?.error) return <section>{home}<h1>{path}</h1><p role="alert">{t('readError')}: {ref.error}</p></section>
-  if (mine?.failed && !doc) return <section>{home}<h1>{path}</h1><p role="alert">{t('readError')}</p></section>
-  if (doc === null) return <section>{home}<p role="alert">{t('docGone')}</p></section>
-  if (!doc) return <section>{home}<p>{t('loading')}</p></section>
+  if (ref?.error) return <section className="state"><p className="crumb">{home}</p><h1>{path}</h1><p role="alert">{t('readError')}: {ref.error}</p></section>
+  if (mine?.failed && !doc) return <section className="state"><p className="crumb">{home}</p><h1>{path}</h1><p role="alert">{t('readError')}</p></section>
+  if (doc === null) return <section className="state"><p className="crumb">{home}</p><p role="alert">{t('docGone')}</p></section>
+  if (!doc) return <section className="state"><p className="crumb">{home}</p><p>{t('loading')}</p></section>
   return (
-    <article>
-      {home}
+    <article className={`doc kind-${doc.ref.kind}`}>
+      <p className="crumb">{home}<span>{feature?.id ?? t('constitution')}</span>{feature && <span>{doc.ref.kind}</span>}</p>
       {mine?.failed && <p role="status" className="notice">{t('refreshError')}</p>}
-      <p className="crumb">{feature?.id ?? t('constitution')} · {doc.ref.kind}</p>
       <h1>{doc.title ?? path}</h1>
-      <Fields items={doc.meta} />
+      <div className="meta"><Fields items={doc.meta} /></div>
       <Body key={path} doc={doc} />
     </article>
   )

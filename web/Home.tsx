@@ -20,7 +20,7 @@ function Stages({ stage }: { stage: Stage }) {
         const text = state === 'done' ? t('stageDone') : state === 'current' ? t('stageCurrent') : t('stageTodo')
         return (
           <li key={s.id} className={`stage ${state}`} aria-current={state === 'current' ? 'step' : undefined}>
-            <span aria-hidden>{state === 'done' ? '✓' : state === 'current' ? '●' : '○'}</span> {s.name}
+            {state === 'done' && <span aria-hidden>✓</span>} {s.name}
             <span className="sr-only"> ({text})</span>
           </li>
         )
@@ -34,7 +34,7 @@ function Chip({ doc, seen }: { doc: DocRef; seen: Seen }) {
   const mark = markOf(doc, seen)
   return (
     <a className={doc.error ? 'chip error' : 'chip'} href={href(doc)} title={doc.error ?? doc.path}>
-      {doc.error && '⚠ '}{doc.kind === 'other' ? label(doc) : doc.kind}
+      {doc.error && '⚠\uFE0E '}{doc.kind === 'other' ? label(doc) : doc.kind}
       {mark && <span className={`mark ${mark}`}> {t(mark)}</span>}
     </a>
   )
@@ -56,7 +56,7 @@ function FeatureCard({ f, current, seen }: { f: Feature; current: boolean; seen:
           <progress max={f.tasks.total} value={f.tasks.done} aria-label={t('progress')} /> {f.tasks.done}/{f.tasks.total}
         </p>
       )}
-      <p>{t('openQuestions')}: {f.openQuestions}</p>
+      <p className={f.openQuestions > 0 ? 'questions open' : 'questions'}>{t('openQuestions')} <span className="num">{f.openQuestions}</span></p>
     </li>
   )
 }
@@ -67,7 +67,6 @@ export default function Home({ project, seen }: { project: Project; seen: Seen }
   const all = project.constitution ? [...docs, project.constitution] : docs
   const byKind: Record<string, number> = {}
   for (const d of all) byKind[d.kind] = (byKind[d.kind] ?? 0) + 1
-  const kinds = Object.entries(byKind).map(([k, n]) => `${k} ${n}`).join(', ')
   const done = project.features.reduce((n, f) => n + (f.tasks?.done ?? 0), 0)
   const total = project.features.reduce((n, f) => n + (f.tasks?.total ?? 0), 0)
   const questions = project.features.reduce((n, f) => n + f.openQuestions, 0)
@@ -76,18 +75,23 @@ export default function Home({ project, seen }: { project: Project; seen: Seen }
   return (
     <>
       <h1>{project.name}</h1>
-      <p>
+      <p className="constitution">
         {c && !c.error ? <a href={href(c)}>{t('constitution')}</a> : <span>{c ? t('constitution') : t('noConstitution')}</span>}
-        {c && project.constitutionVersion && <> · {t('version')} {project.constitutionVersion}</>}
+        {c && project.constitutionVersion && <span>{t('version')} <span className="num">{project.constitutionVersion}</span></span>}
         {c && markOf(c, seen) && <span className={`mark ${markOf(c, seen)}`}> {t(markOf(c, seen)!)}</span>}
       </p>
       <dl className="totals">
         <div><dt>{t('features')}</dt><dd>{project.features.length}</dd></div>
-        <div><dt>{t('documents')}</dt><dd title={kinds}>{all.length}</dd></div>
+        <div><dt>{t('documents')}</dt><dd>{all.length}</dd></div>
         <div><dt>{t('tasks')}</dt><dd>{done}/{total}</dd></div>
-        <div><dt>{t('openQuestions')}</dt><dd>{questions}</dd></div>
+        <div className={questions > 0 ? 'open' : undefined}><dt>{t('openQuestions')}</dt><dd>{questions}</dd></div>
       </dl>
-      {project.features.length === 0 ? <p>{t('noFeatures')}</p> : (
+      {all.length > 0 && (
+        <ul className="kinds" aria-label={t('documents')}>
+          {Object.entries(byKind).map(([k, n]) => <li key={k}>{k} <span className="num">{n}</span></li>)}
+        </ul>
+      )}
+      {project.features.length === 0 ? <p className="empty">{t('noFeatures')}</p> : (
         <ul className="features">
           {project.features.map(f => <FeatureCard key={f.id} f={f} current={f.id === project.currentFeature} seen={seen} />)}
         </ul>
