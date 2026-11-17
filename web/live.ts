@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import type { Project } from '../server/types.ts'
 
+// Applies only the result of the most recently started request; failures change nothing.
+export function latestOnly<T>(apply: (v: T) => void) {
+  let latest = 0
+  return (p: Promise<T>) => {
+    const mine = ++latest
+    p.then(v => { if (mine === latest) apply(v) }, () => {})
+  }
+}
+
 export function useProject() {
   const [project, setProject] = useState<Project | null>(null)
   const [connected, setConnected] = useState(true)
@@ -8,7 +17,8 @@ export function useProject() {
 
   useEffect(() => {
     let alive = true
-    const load = () => fetch('/api/project').then(r => r.json()).then(p => alive && setProject(p), () => {})
+    const apply = latestOnly<Project>(p => alive && setProject(p))
+    const load = () => apply(fetch('/api/project').then(r => r.json()))
     load()
     const es = new EventSource('/api/events')
     es.addEventListener('changed', () => { setVersion(v => v + 1); load() })
