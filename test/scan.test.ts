@@ -77,6 +77,38 @@ test('scanProject: nested docs, dot-entries, unreadable file', () => {
   if (process.getuid?.() !== 0) expect(docs[0]).toMatchObject({ hash: '', error: expect.any(String) })
 })
 
+const root0 = process.getuid?.() === 0
+
+test('scanProject: symlinked .specify, memory or specs is never followed', () => {
+  const outside = tmp(); write(outside, 'memory/constitution.md', '**Version**: 9.9.9\n'); write(outside, '001-a/spec.md', '# a')
+  const r1 = tmp(); fs.symlinkSync(outside, path.join(r1, '.specify'))
+  expect(scanProject(r1, null).constitution).toBeNull()
+  const r2 = tmp(); fs.mkdirSync(path.join(r2, '.specify'))
+  fs.symlinkSync(path.join(outside, 'memory'), path.join(r2, '.specify/memory'))
+  expect(scanProject(r2, null)).toMatchObject({ constitution: null, constitutionVersion: null })
+  const r3 = tmp(); fs.symlinkSync(outside, path.join(r3, 'specs'))
+  expect(scanProject(r3, null).features).toEqual([])
+})
+
+test('scanProject: .specify as a regular file does not abort', () => {
+  const r = tmp(); write(r, '.specify', 'x')
+  expect(scanProject(r, null).constitution).toBeNull()
+  expect(isSpecKit(r)).toBe(false)
+})
+
+test('scanProject: unreadable directories are skipped', () => {
+  const r = tmp()
+  write(r, 'specs/001-a/spec.md', '# a'); write(r, 'specs/001-a/sub/x.md', 'x'); write(r, 'specs/002-b/spec.md', '# b')
+  const locked = [path.join(r, 'specs/001-a/sub'), path.join(r, 'specs/002-b')]
+  locked.forEach((d) => fs.chmodSync(d, 0))
+  try {
+    const p = scanProject(r, null)
+    if (!root0) {
+      expect(p.features.map((f) => [f.id, f.docs.length])).toEqual([['001-a', 1], ['002-b', 0]])
+    }
+  } finally { locked.forEach((d) => fs.chmodSync(d, 0o755)) }
+})
+
 test('isSpecKit', () => {
   const root = tmp()
   expect(isSpecKit(root)).toBe(false)

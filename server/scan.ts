@@ -12,7 +12,11 @@ const NAMED: Record<string, DocKind> = {
   'data-model.md': 'data-model', 'quickstart.md': 'quickstart',
 }
 
-const isDir = (p: string) => fs.lstatSync(p, { throwIfNoEntry: false })?.isDirectory() ?? false
+// lstat that never throws; symlinks report isDirectory()/isFile() false.
+const lst = (p: string) => { try { return fs.lstatSync(p) } catch { return undefined } }
+const isDir = (p: string) => lst(p)?.isDirectory() ?? false
+// Entries of a directory, or [] when it cannot be read.
+const entries = (dir: string) => { try { return fs.readdirSync(dir, { withFileTypes: true }) } catch { return [] } }
 
 export function isSpecKit(root: string): boolean {
   return isDir(path.join(root, 'specs')) || isDir(path.join(root, '.specify'))
@@ -54,7 +58,7 @@ function readDoc(root: string, rel: string, kind: DocKind): { ref: DocRef; text:
 // Recursive, skips symlinks and dot-entries. Returns paths relative to `dir`, forward slashes.
 function walk(dir: string, prefix = ''): string[] {
   const out: string[] = []
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+  for (const e of entries(dir)) {
     if (e.isSymbolicLink() || e.name.startsWith('.')) continue
     if (e.isDirectory()) out.push(...walk(path.join(dir, e.name), prefix + e.name + '/'))
     else if (e.isFile()) out.push(prefix + e.name)
@@ -85,7 +89,8 @@ export function scanProject(root: string, branch: string | null = currentBranch(
   let constitution: DocRef | null = null
   let constitutionVersion: string | null = null
   const cp = path.join(root, CONSTITUTION)
-  if (fs.lstatSync(cp, { throwIfNoEntry: false })?.isFile()) {
+  // every component must be a real directory/file: a symlinked parent would escape the root
+  if (isDir(path.join(root, '.specify')) && isDir(path.dirname(cp)) && lst(cp)?.isFile()) {
     const c = readDoc(root, CONSTITUTION, 'constitution')
     constitution = c.ref
     const src = clean(c.text)
@@ -94,7 +99,7 @@ export function scanProject(root: string, branch: string | null = currentBranch(
 
   const specs = path.join(root, 'specs')
   const ids = isDir(specs)
-    ? fs.readdirSync(specs, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)
+    ? entries(specs).filter((e) => e.isDirectory()).map((e) => e.name)
     : []
   ids.sort((a, b) => {
     const [x, y] = [num(a), num(b)]
