@@ -28,7 +28,7 @@ export function useProject() {
     load()
     const es = new EventSource('/api/events')
     es.addEventListener('changed', () => { setVersion(v => v + 1); load() })
-    es.addEventListener('open', () => { setConnected(true); load() })
+    es.addEventListener('open', () => { setConnected(true); setVersion(v => v + 1); load() })
     es.addEventListener('error', () => setConnected(false))
     return () => { alive = false; es.close() }
   }, [])

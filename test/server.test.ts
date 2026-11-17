@@ -95,3 +95,20 @@ test('a file change sends one changed event', async () => {
 test('the listen error for a used port rejects', async () => {
   await expect(startServer({ root, port, webDir })).rejects.toMatchObject({ code: 'EADDRINUSE' })
 })
+
+test('folders created after start are watched', async () => {
+  const late = tmp()
+  fs.mkdirSync(path.join(late, '.specify'))
+  const s = await startServer({ root: late, port: 0, webDir })
+  const events = collectSse(`http://127.0.0.1:${s.port}/api/events`)
+  await events.ready
+  await wait(300)
+  fs.mkdirSync(path.join(late, 'specs/001-a'), { recursive: true })
+  await wait(400)
+  fs.writeFileSync(path.join(late, 'specs/001-a/spec.md'), '# A\n')
+  await wait(400)
+  expect(events.count).toBeGreaterThanOrEqual(2)
+  events.close()
+  await s.close()
+  fs.rmSync(late, { recursive: true, force: true })
+})

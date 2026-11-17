@@ -24,14 +24,26 @@ export function startServer(opts: { root: string; port: number; webDir: string }
     clearTimeout(timer)
     timer = setTimeout(() => { for (const r of sse) r.write('event: changed\ndata: {}\n\n') }, 100)
   }
-  for (const d of ['specs', '.specify']) {
-    try {
-      if (!fs.statSync(path.join(root, d)).isDirectory()) continue
-      const w = fs.watch(path.join(root, d), { recursive: true }, notify)
-      w.on('error', () => w.close()) // folder deleted etc.: stop watching it, keep serving
-      watchers.push(w)
-    } catch { /* unwatchable folder: serve without live updates for it */ }
+  const watched = new Set<string>()
+  const attach = () => {
+    for (const d of ['specs', '.specify']) {
+      if (watched.has(d)) continue
+      try {
+        if (!fs.statSync(path.join(root, d)).isDirectory()) continue
+        const w = fs.watch(path.join(root, d), { recursive: true }, notify)
+        w.on('error', () => { w.close(); watched.delete(d) }) // folder deleted etc.: a later root event may re-attach
+        watched.add(d)
+        watchers.push(w)
+      } catch { /* unwatchable folder: serve without live updates for it */ }
+    }
   }
+  attach()
+  try {
+    // Non-recursive: only picks up `specs` / `.specify` appearing later.
+    const rw = fs.watch(root, (_e, name) => { if (name === 'specs' || name === '.specify') { attach(); notify() } })
+    rw.on('error', () => rw.close())
+    watchers.push(rw)
+  } catch { /* root unwatchable: no late-folder detection */ }
 
   const send = (res: http.ServerResponse, status: number, type: string, body: string | Buffer) => {
     res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' })
