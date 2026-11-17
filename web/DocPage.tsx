@@ -31,7 +31,8 @@ function Stories({ b }: { b: B<'stories'> }) {
     <>
       {items.map((s, i) => (
         <article key={i} className="card story">
-          <h3>{s.priority && <span className="badge">{s.priority}</span>} {s.title}</h3>
+          <h3>{s.priority && <span className="badge">{s.priority}</span>} <Markdown heading>{s.title}</Markdown></h3>
+          <Rest md={s.rest} />
           {s.why && <div><strong>Why this priority</strong> <Markdown inline>{s.why}</Markdown></div>}
           {s.test && <div><strong>Independent Test</strong> <Markdown inline>{s.test}</Markdown></div>}
           {s.scenarios.map((sc, j) => (
@@ -41,7 +42,6 @@ function Stories({ b }: { b: B<'stories'> }) {
               <dt>Then</dt><dd><Markdown inline>{sc.then}</Markdown></dd>
             </dl>
           ))}
-          <Rest md={s.rest} />
         </article>
       ))}
     </>
@@ -52,7 +52,7 @@ function IdList({ b }: { b: B<'idList'> }) {
   const H = level(b.depth)
   return (
     <section>
-      <H>{b.heading}</H>
+      <H><Markdown heading>{b.heading}</Markdown></H>
       <ul className="idlist">
         {b.items.map((it, i) => (
           <li key={i} className={clarify(it.text) ? 'clarify' : undefined}>
@@ -70,7 +70,7 @@ function Phase({ b, story, onStory }: { b: B<'phase'>; story: string | null; onS
   const items: CheckItem[] = story ? b.items.filter(i => i.story === story) : b.items
   return (
     <section className="phase">
-      <h2>{b.title}</h2>
+      <h2><Markdown heading>{b.title}</Markdown></h2>
       <Bar done={b.items.filter(i => i.done).length} total={b.items.length} />
       <Fields items={b.fields} />
       <ul className="items">
@@ -89,15 +89,15 @@ function Phase({ b, story, onStory }: { b: B<'phase'>; story: string | null; onS
 }
 
 function FieldsBlock({ b }: { b: B<'fields'> }) {
-  return <section><h2>{b.heading}</h2><Fields items={b.items} /><Rest md={b.rest} /></section>
+  return <section><h2><Markdown heading>{b.heading}</Markdown></h2><Fields items={b.items} /><Rest md={b.rest} /></section>
 }
 
 function Cards({ b }: { b: B<'cards'> }) {
   return (
     <section>
-      <h2>{b.heading}</h2>
+      <h2><Markdown heading>{b.heading}</Markdown></h2>
       <div className="grid">
-        {b.items.map((c, i) => <article key={i} className="card"><h3>{c.title}</h3><Markdown>{c.markdown}</Markdown></article>)}
+        {b.items.map((c, i) => <article key={i} className="card"><h3><Markdown heading>{c.title}</Markdown></h3><Markdown>{c.markdown}</Markdown></article>)}
       </div>
     </section>
   )
@@ -110,7 +110,7 @@ function Decisions({ b }: { b: B<'decisions'> }) {
         const main = d.fields.find(f => f.label === 'Decision')
         return (
           <article key={i} className="card">
-            <h3>{d.title}</h3>
+            <h3><Markdown heading>{d.title}</Markdown></h3>
             {main && <div className="decision"><Markdown>{main.value}</Markdown></div>}
             <Fields items={d.fields.filter(f => f !== main)} />
             <Rest md={d.rest} />
@@ -123,7 +123,7 @@ function Decisions({ b }: { b: B<'decisions'> }) {
 
 function Raw({ b }: { b: B<'raw'> }) {
   const H = level(b.depth)
-  return <section>{b.heading && <H>{b.heading}</H>}{b.markdown && <Markdown>{b.markdown}</Markdown>}</section>
+  return <section>{b.heading && <H><Markdown heading>{b.heading}</Markdown></H>}{b.markdown && <Markdown>{b.markdown}</Markdown>}</section>
 }
 
 function Code({ b }: { b: B<'code'> }) {
@@ -196,7 +196,7 @@ export function DocPage({ path, project, version, onSeen }: {
     <article className={`doc kind-${doc.ref.kind}`}>
       <p className="crumb">{home}<span>{feature?.id ?? t('constitution')}</span>{feature && <span>{doc.ref.kind}</span>}</p>
       {mine?.failed && <p role="status" className="notice">{t('refreshError')}</p>}
-      <h1>{doc.title ?? path}</h1>
+      <h1>{doc.title ? <Markdown heading>{doc.title}</Markdown> : path}</h1>
       <div className="meta"><Fields items={doc.meta} /></div>
       <Body key={path} doc={doc} />
     </article>

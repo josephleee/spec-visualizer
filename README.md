@@ -44,6 +44,8 @@ The "new" and "changed" marks are kept in your browser's local storage, per proj
 | constitution | `.specify/memory/constitution.md` | Principle cards; the version on the home screen |
 | other | any other `.md` in a feature folder | Markdown |
 
+Outside `contracts/`, only `.md` files are read: in the demo fixture, `specs/001-login/analysis.md` is an `other` document and `notes.txt` is ignored.
+
 The home screen shows, per feature, its stage (Specify, Plan, Tasks, Implement, Done), which documents exist and which of spec, plan and tasks are missing, task progress and open questions. The feature whose folder name matches the current git branch is listed first and marked current.
 
 A section that does not match the template is shown as markdown in its place; nothing is dropped.

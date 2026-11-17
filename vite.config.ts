@@ -5,6 +5,7 @@ export default defineConfig({
   root: 'web',
   plugins: [react()],
   build: { outDir: '../dist/web', emptyOutDir: true },
-  server: { proxy: { '/api': 'http://127.0.0.1:4321' } },
+  // changeOrigin: the server answers only Host 127.0.0.1:4321 or localhost:4321, not the dev server's own.
+  server: { proxy: { '/api': { target: 'http://127.0.0.1:4321', changeOrigin: true } } },
   test: { root: '.', include: ['test/**/*.test.ts'] },
 })
