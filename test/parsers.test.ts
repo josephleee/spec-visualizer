@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { parseSpec } from '../server/parsers.ts'
+import { parseChecklist, parseSpec, parseTasks } from '../server/parsers.ts'
 
 const SPEC = `# Feature Specification: Pager
 
@@ -66,4 +66,53 @@ test('spec: text between ## and first ### stays raw, unknown labels survive', ()
   const blocks = parseSpec('## Req\n\nintro\n\n### User Story 2 - Two\n\n**Note**: keep me\n')
   expect(blocks[0]).toEqual({ kind: 'raw', heading: 'Req', depth: 2, markdown: 'intro' })
   expect(blocks[1]).toMatchObject({ kind: 'stories', items: [{ title: 'Two', priority: null, rest: '**Note**: keep me' }] })
+})
+
+const TASKS = `# Tasks: Pager
+
+## Format: \`[ID] [P?] [Story] Description\`
+
+- **[P]**: Can run in parallel
+
+## Phase 1: Setup (Shared Infrastructure)
+
+**Purpose**: Project initialization
+
+- [x] T001 Add which crate
+- [ ] T003 [P] Create config
+
+## Phase 3: User Story 1 - Configure (Priority: P1) 🎯 MVP
+
+**Goal**: Deliver config
+
+### Tests for User Story 1
+
+- [ ] T010 [P] [US1] Contract test
+
+**Checkpoint**: Story 1 works
+`
+
+test('tasks: phases, fields, items; sections with no checkbox stay raw', () => {
+  const blocks = parseTasks(TASKS)
+  expect(blocks.map((b) => b.kind)).toEqual(['raw', 'phase', 'phase'])
+  const [, p1, p3] = blocks as any[]
+  expect(p1.title).toBe('Phase 1: Setup (Shared Infrastructure)')
+  expect(p1.fields).toEqual([{ label: 'Purpose', value: 'Project initialization' }])
+  expect(p1.items.map((i: any) => [i.id, i.done, i.parallel])).toEqual([['T001', true, false], ['T003', false, true]])
+  expect(p3.items[0]).toMatchObject({ id: 'T010', story: 'US1', parallel: true })
+  expect(p3.fields.map((f: any) => f.label)).toEqual(['Goal', 'Checkpoint'])
+  expect(p3.rest).toContain('Tests for User Story 1')
+})
+
+test('checklist: items without an ID count', () => {
+  const blocks = parseChecklist('# Checklist\n\n## Content Quality\n\n- [x] No implementation details\n- [ ] CHK002 Focused on value\n\n## Notes\n\n- plain\n')
+  expect(blocks.map((b) => b.kind)).toEqual(['phase', 'raw'])
+  expect((blocks[0] as any).items).toHaveLength(2)
+  expect((blocks[0] as any).items[0]).toMatchObject({ id: null, done: true })
+})
+
+test('phase: plain lists stay in content, checkbox lists do not leak into fields', () => {
+  const [p] = parseTasks('## P\n\n**Goal**: g\n\n- plain note\n\n* [ ] T001 x\n') as any[]
+  expect(p.fields).toEqual([{ label: 'Goal', value: 'g\n\n- plain note' }])
+  expect(p.items).toHaveLength(1)
 })

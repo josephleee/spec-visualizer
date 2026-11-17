@@ -1,4 +1,4 @@
-import { parse, slice, splitAt, takeLabels } from './md.ts'
+import { checkItems, parse, slice, splitAt, takeLabels } from './md.ts'
 import type { Node, Sec } from './md.ts'
 import type { Block, Scenario } from './types.ts'
 
@@ -74,3 +74,23 @@ export function parseSpec(src: string): Block[] {
   }
   return blocks
 }
+
+const isCheckList = (n: Node) => n.type === 'list' && n.children.some((i) => i.checked != null)
+const at = (n: Node) => n.position!.start.offset!
+
+function parseChecks(src: string): Block[] {
+  const blocks: Block[] = []
+  for (const sec of splitAt(parse(src), 2)) {
+    if (sec.heading === null) continue
+    const items = checkItems(sec.nodes)
+    if (!items.length) { blocks.push(rawBlock(src, sec)); continue }
+    const heads = sec.nodes.filter((n) => n.type === 'heading')
+    const { fields, rest } = takeLabels(src, sec.nodes.filter((n) => n.type !== 'heading' && !isCheckList(n)))
+    const left = [...rest, ...heads].sort((a, b) => at(a) - at(b)).map((n) => slice(src, [n]))
+    blocks.push({ kind: 'phase', title: sec.heading, fields, items, rest: left.join('\n\n') })
+  }
+  return blocks
+}
+
+export const parseTasks = parseChecks
+export const parseChecklist = parseChecks
