@@ -202,3 +202,17 @@ test('parseDoc: quickstart and other are raw sections', () => {
     { kind: 'raw', heading: 'Findings', depth: 2, markdown: 'body' },
   ])
 })
+
+test('research: topics written at ## level', () => {
+  const one = parseResearch('# Research: Login\n\n## Session storage\n\n**Decision**: Signed cookie\n**Rationale**: No server-side store to run.\n**Alternatives considered**: Server sessions in Redis; JWT in local storage.\n')
+  expect(one).toHaveLength(1)
+  expect(one[0]).toMatchObject({ kind: 'decisions' })
+  const it = (one[0] as any).items
+  expect(it).toHaveLength(1)
+  expect(it[0].title).toBe('Session storage')
+  expect(it[0].fields.map((f: any) => f.label)).toEqual(['Decision', 'Rationale', 'Alternatives considered'])
+  const two = parseResearch('## A\n\n**Decision**: x\n\n## B\n\n**decision**: y\n\n## Notes\n\nfree text\n')
+  expect(two.map((b) => b.kind)).toEqual(['decisions', 'raw'])
+  expect((two[0] as any).items.map((i: any) => i.title)).toEqual(['A', 'B'])
+  expect(two[1]).toMatchObject({ heading: 'Notes', markdown: 'free text' })
+})

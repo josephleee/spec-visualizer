@@ -155,22 +155,32 @@ export const parseDataModel = (src: string): Block[] =>
 type Decision = Extract<Block, { kind: 'decisions' }>['items'][number]
 
 export function parseResearch(src: string): Block[] {
-  return bySection(src, (sec) => {
+  const out: Block[] = []
+  let items: Decision[] = []
+  const flush = () => { if (items.length) out.push({ kind: 'decisions', items }); items = [] }
+  const decision = (title: string, nodes: Node[]) => {
+    const { fields, rest } = takeLabels(src, nodes)
+    if (!fields.some((f) => f.label.toLowerCase() === 'decision')) return false
+    items.push({ title, fields, rest: slice(src, rest) })
+    return true
+  }
+  for (const sec of sections(src)) {
     const subs = splitAt(sec.nodes, 3)
-    if (!subs.some((s) => s.heading !== null)) return null
+    if (!subs.some((s) => s.heading !== null)) { // a topic written directly under ##
+      if (!decision(sec.heading!, sec.nodes)) { flush(); out.push(rawBlock(src, sec)) }
+      continue
+    }
     // `decisions` has no heading, so the ## title gets its own block.
-    const out: Block[] = [rawBlock(src, { heading: sec.heading, depth: 2, nodes: subs[0].heading === null ? subs[0].nodes : [] })]
-    let items: Decision[] = []
-    const flush = () => { if (items.length) out.push({ kind: 'decisions', items }); items = [] }
+    flush()
+    out.push(rawBlock(src, { heading: sec.heading, depth: 2, nodes: subs[0].heading === null ? subs[0].nodes : [] }))
     for (const sub of subs) {
       if (sub.heading === null) continue
-      const { fields, rest } = takeLabels(src, sub.nodes)
-      if (fields.some((f) => f.label === 'Decision')) items.push({ title: sub.heading, fields, rest: slice(src, rest) })
-      else { flush(); out.push(rawBlock(src, sub)) }
+      if (!decision(sub.heading, sub.nodes)) { flush(); out.push(rawBlock(src, sub)) }
     }
     flush()
-    return out
-  })
+  }
+  flush()
+  return out
 }
 
 const PARSERS: Partial<Record<DocRef['kind'], (src: string) => Block[]>> = {
