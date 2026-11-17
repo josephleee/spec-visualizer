@@ -32,8 +32,8 @@ export function markOf(doc: DocRef, seen: Seen): 'new' | 'changed' | null {
   return seen[doc.path] !== doc.hash ? 'changed' : null
 }
 
-export function markSeen(root: string, doc: DocRef, store?: Storage): Seen {
-  const seen = { ...(read(root, store) ?? {}), [doc.path]: doc.hash }
+export function markSeen(root: string, doc: DocRef, store?: Storage, base?: Seen): Seen {
+  const seen = { ...(read(root, store) ?? base ?? {}), [doc.path]: doc.hash }
   write(root, seen, store)
   return seen
 }

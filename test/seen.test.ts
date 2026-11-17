@@ -43,3 +43,10 @@ test('a stored value that is not a plain object counts as absent', () => {
     expect(() => markOf(doc('a.md', 'h1'), seen)).not.toThrow()
   }
 })
+
+test('with unreadable storage, opening one document keeps the marks of the others', () => {
+  const broken = { getItem() { throw new Error('x') }, setItem() { throw new Error('x') } } as any
+  const before = { 'a.md': 'h1', 'b.md': 'h2' }
+  const seen = markSeen('/p', doc('a.md', 'H1B'), broken, before)
+  expect(seen).toEqual({ 'a.md': 'H1B', 'b.md': 'h2' })
+})

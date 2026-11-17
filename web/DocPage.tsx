@@ -130,7 +130,7 @@ function Code({ b }: { b: B<'code'> }) {
   return <pre><code className={b.lang ? `language-${b.lang}` : undefined}>{b.text}</code></pre>
 }
 
-function Body({ doc }: { doc: ParsedDoc }) {
+function Body({ doc, tasks }: { doc: ParsedDoc; tasks: { done: number; total: number } | null | undefined }) {
   const { t } = useLang()
   const [story, setStory] = useState<string | null>(null)
   const phases = doc.blocks.filter((b): b is B<'phase'> => b.kind === 'phase')
@@ -139,7 +139,7 @@ function Body({ doc }: { doc: ParsedDoc }) {
   if (story && !stories.includes(story)) setStory(null) // a refetch removed the selected story
   return (
     <>
-      {doc.ref.kind === 'tasks' && <p className="summary"><strong>{t('tasks')}</strong> <Bar done={all.filter(i => i.done).length} total={all.length} /></p>}
+      {doc.ref.kind === 'tasks' && <p className="summary"><strong>{t('tasks')}</strong> <Bar done={tasks?.done ?? 0} total={tasks?.total ?? 0} /></p>}
       {stories.length > 0 && (
         <div className="filter" role="group" aria-label={t('storyFilter')}>
           <button type="button" aria-pressed={story === null} onClick={() => setStory(null)}>{t('all')}</button>
@@ -162,8 +162,8 @@ function Body({ doc }: { doc: ParsedDoc }) {
   )
 }
 
-export function DocPage({ path, project, version, onSeen }: {
-  path: string; project: Project; version: number; onSeen: (s: Seen) => void
+export function DocPage({ path, project, version, seen, onSeen }: {
+  path: string; project: Project; version: number; seen: Seen; onSeen: (s: Seen) => void
 }) {
   const { t } = useLang()
   const [result, setResult] = useState<Loaded<ParsedDoc> | null>(null)
@@ -182,7 +182,7 @@ export function DocPage({ path, project, version, onSeen }: {
   const mine = result?.path === path ? result : null
   const doc = mine ? mine.doc : undefined // undefined = not loaded yet
   const hash = doc?.ref.hash
-  useEffect(() => { if (doc) onSeen(markSeen(project.root, doc.ref)) }, [path, hash])
+  useEffect(() => { if (doc) onSeen(markSeen(project.root, doc.ref, undefined, seen)) }, [path, hash])
 
   const ref = [project.constitution, ...project.features.flatMap(f => f.docs)].find(d => d?.path === path)
   const feature = project.features.find(f => f.docs.some(d => d.path === path))
@@ -198,7 +198,7 @@ export function DocPage({ path, project, version, onSeen }: {
       {mine?.failed && <p role="status" className="notice">{t('refreshError')}</p>}
       <h1>{doc.title ? <Markdown heading>{doc.title}</Markdown> : path}</h1>
       <div className="meta"><Fields items={doc.meta} /></div>
-      <Body key={path} doc={doc} />
+      <Body key={path} doc={doc} tasks={feature?.tasks} />
     </article>
   )
 }

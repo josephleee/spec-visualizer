@@ -39,7 +39,7 @@ function App() {
       </header>
       <main>
         {!project || !seen ? <p>{t('loading')}</p>
-          : docPath ? <DocPage path={docPath} project={project} version={version} onSeen={setSeen} />
+          : docPath ? <DocPage path={docPath} project={project} version={version} seen={seen} onSeen={setSeen} />
           : <Home project={project} seen={seen} />}
       </main>
     </>

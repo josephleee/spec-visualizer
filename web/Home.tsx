@@ -53,7 +53,7 @@ function FeatureCard({ f, current, seen }: { f: Feature; current: boolean; seen:
       </ul>
       {f.tasks && (
         <p className="progress">
-          <progress max={f.tasks.total} value={f.tasks.done} aria-label={t('progress')} /> {f.tasks.done}/{f.tasks.total}
+          {f.tasks.total > 0 && <progress max={f.tasks.total} value={f.tasks.done} aria-label={t('progress')} />} {f.tasks.done}/{f.tasks.total}
         </p>
       )}
       <p className={f.openQuestions > 0 ? 'questions open' : 'questions'}>{t('openQuestions')} <span className="num">{f.openQuestions}</span></p>
