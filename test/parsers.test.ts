@@ -52,7 +52,9 @@ test('spec: nothing is dropped and order is kept', () => {
   const all = JSON.stringify(blocks)
   for (const s of ['What if less is missing?', 'Old configs keep PAGER.', 'NEEDS CLARIFICATION: which default?'])
     expect(all).toContain(s)
-  expect(blocks.map((b) => b.kind)).toEqual(['stories', 'raw', 'idList', 'raw'])
+  expect(blocks.map((b) => b.kind)).toEqual(['raw', 'stories', 'raw', 'raw', 'idList', 'raw'])
+  expect(blocks[0]).toEqual({ kind: 'raw', heading: 'User Scenarios & Testing', depth: 2, markdown: '' })
+  expect(blocks[3]).toEqual({ kind: 'raw', heading: 'Requirements', depth: 2, markdown: '' })
 })
 
 test('spec: a file that matches nothing is all raw', () => {

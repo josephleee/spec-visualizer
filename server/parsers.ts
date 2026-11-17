@@ -60,11 +60,13 @@ export function parseSpec(src: string): Block[] {
     if (sec.heading === null) continue // title and preamble before the first ##
     const subs = splitAt(sec.nodes, 3)
     if (!subs.length) { blocks.push(rawBlock(src, sec)); continue }
+    // The ## heading always survives; text before the first ### is its markdown.
+    blocks.push(rawBlock(src, { heading: sec.heading, depth: 2, nodes: subs[0].heading === null ? subs[0].nodes : [] }))
     let stories: Story[] = []
     const flush = () => { if (stories.length) blocks.push({ kind: 'stories', items: stories }); stories = [] }
     for (const sub of subs) {
       const m = sub.heading === null ? null : STORY.exec(sub.heading)
-      if (sub.heading === null) { flush(); blocks.push(rawBlock(src, { ...sub, heading: sec.heading, depth: 2 })) }
+      if (sub.heading === null) continue
       else if (m) stories.push(story(src, sub, m))
       else { flush(); blocks.push(idList(src, sub) ?? rawBlock(src, sub)) }
     }
