@@ -271,3 +271,15 @@ test('spec: a ### with no #### keeps one idList with its depth', () => {
   const fr = parseSpec(SPEC).find((b) => b.kind === 'idList')!
   expect(fr).toMatchObject({ heading: 'Functional Requirements', depth: 3 })
 })
+
+test('a plain item holding checkboxes keeps every paragraph, in file order', () => {
+  const [p] = parseTasks('## P\n\n- Group A\n\n  SECOND PARAGRAPH\n\n  - [ ] T001 x\n\n  THIRD PARAGRAPH\n') as any[]
+  expect(p.items).toHaveLength(1)
+  expect(p.rest).toBe('Group A\n\nSECOND PARAGRAPH\n\nTHIRD PARAGRAPH')
+})
+
+test('images in headings and checkbox text keep their markdown source', () => {
+  const [p] = parseTasks('## Shot ![alt text](x.png)\n\n- [ ] T001 see ![diagram](flow.png) here\n') as any[]
+  expect(p.title).toBe('Shot ![alt text](x.png)')
+  expect(p.items[0].text).toContain('![diagram](flow.png)')
+})

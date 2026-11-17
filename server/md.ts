@@ -57,6 +57,7 @@ const inline = (n: Node): string => {
     case 'strong': return '**' + kids(n).map(inline).join('') + '**'
     case 'emphasis': return '*' + kids(n).map(inline).join('') + '*'
     case 'delete': return '~~' + kids(n).map(inline).join('') + '~~'
+    case 'image': return '![' + (n.alt ?? '') + '](' + n.url + ')'
     case 'link': return '[' + kids(n).map(inline).join('') + '](' + n.url + ')'
     default: return 'value' in n ? String(n.value) : kids(n).map(inline).join('')
   }

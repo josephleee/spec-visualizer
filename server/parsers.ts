@@ -106,10 +106,12 @@ function parseChecks(src: string): Block[] {
     const keep = (n: Node) => left.push({ pos: at(n), text: slice(src, [n]) })
     const takeList = (list: Node & { type: 'list' }) => {
       for (const i of list.children) {
-        const sub = i.children.filter((c) => c.type !== 'paragraph')
         if (i.checked == null && !hasCheck(i)) { keep(i); continue }
-        if (i.checked == null) keep(i.children[0]) // plain item holding checkboxes: keep its own text
-        for (const c of sub) c.type === 'list' && hasCheck(c) ? takeList(c) : keep(c)
+        // A checkbox item's own paragraph is its text; a plain item holding checkboxes keeps all of its text.
+        for (const c of i.children) {
+          if (c.type === 'list' && hasCheck(c)) takeList(c)
+          else if (i.checked == null || c.type !== 'paragraph') keep(c)
+        }
       }
     }
     for (const n of sec.nodes) {
