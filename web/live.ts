@@ -10,6 +10,12 @@ export function latestOnly<T>(apply: (v: T) => void) {
   }
 }
 
+export type Loaded<T> = { path: string; doc: T | null; failed?: boolean } // doc null = gone (or nothing to show)
+
+// A failed refetch keeps what is shown for the same path and flags it; a failed first load has nothing to keep.
+export const settle = <T>(prev: Loaded<T> | null, next: Loaded<T>): Loaded<T> =>
+  next.failed && prev?.path === next.path && prev.doc ? { ...prev, failed: true } : next
+
 export function useProject() {
   const [project, setProject] = useState<Project | null>(null)
   const [connected, setConnected] = useState(true)

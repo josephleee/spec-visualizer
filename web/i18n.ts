@@ -12,6 +12,7 @@ const LABELS = {
     stage: 'Stage', progress: 'Task progress', loading: 'Loading…', version: 'version', stages: 'Stages',
     storyFilter: 'Filter by story', all: 'All',
     stageDone: 'completed', stageCurrent: 'current', stageTodo: 'upcoming',
+    itemDone: 'done', itemOpen: 'open', refreshError: 'Could not refresh this document. Showing the last version read.',
   },
   ko: {
     features: '기능', documents: '문서', tasks: '태스크', openQuestions: '미해결 질문',
@@ -22,6 +23,7 @@ const LABELS = {
     stage: '단계', progress: '태스크 진행률', loading: '불러오는 중…', version: '버전', stages: '단계 목록',
     storyFilter: '스토리로 거르기', all: '전체',
     stageDone: '완료', stageCurrent: '현재', stageTodo: '예정',
+    itemDone: '완료', itemOpen: '미완료', refreshError: '문서를 새로 읽지 못했습니다. 마지막으로 읽은 내용을 보여 줍니다.',
   },
 } satisfies Record<Lang, Record<string, string>>
 

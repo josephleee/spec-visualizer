@@ -34,3 +34,12 @@ test('a storage that throws does not break the page', () => {
   expect(loadSeen(project, broken)).toEqual({ 'c.md': 'h0', 'a.md': 'h1', 'b.md': 'h2' })
   expect(() => markSeen('/p', doc('a.md', 'h1'), broken)).not.toThrow()
 })
+
+test('a stored value that is not a plain object counts as absent', () => {
+  for (const bad of ['5', '"x"', '[]', 'null', '{oops']) {
+    const store = fakeStore(); store.setItem('specviz:seen:/p', bad)
+    const seen = loadSeen(project, store)
+    expect(seen).toEqual({ 'c.md': 'h0', 'a.md': 'h1', 'b.md': 'h2' })
+    expect(() => markOf(doc('a.md', 'h1'), seen)).not.toThrow()
+  }
+})

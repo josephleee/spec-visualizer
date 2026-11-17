@@ -6,7 +6,12 @@ const key = (root: string) => `specviz:seen:${root}`
 const defaultStore = () => { try { return globalThis.localStorage } catch { return undefined } }
 
 function read(root: string, store?: Storage): Seen | null {
-  try { const raw = (store ?? defaultStore())?.getItem(key(root)); return raw ? JSON.parse(raw) : null } catch { return null }
+  try {
+    const raw = (store ?? defaultStore())?.getItem(key(root))
+    const v: unknown = raw ? JSON.parse(raw) : null
+    // Anything but a plain object (e.g. a stored `5`) would make markOf throw during render.
+    return v && typeof v === 'object' && !Array.isArray(v) ? v as Seen : null
+  } catch { return null }
 }
 function write(root: string, seen: Seen, store?: Storage) {
   try { (store ?? defaultStore())?.setItem(key(root), JSON.stringify(seen)) } catch { /* storage unavailable: marks just reset */ }

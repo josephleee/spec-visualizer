@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Block, CheckItem, Field, ParsedDoc, Project } from '../server/types.ts'
 import { useLang } from './i18n.ts'
-import { latestOnly } from './live.ts'
+import { latestOnly, settle, type Loaded } from './live.ts'
 import { Markdown } from './Markdown.tsx'
 import { markSeen, type Seen } from './seen.ts'
 
-type Result = { path: string; doc: ParsedDoc | null } // doc null = gone
 type B<K extends Block['kind']> = Extract<Block, { kind: K }>
 
 const clarify = (s: string) => s.includes('NEEDS CLARIFICATION')
@@ -19,9 +18,10 @@ const Fields = ({ items }: { items: Field[] }) => (items.length === 0 ? null : (
     ))}
   </dl>
 ))
-const Bar = ({ done, total }: { done: number; total: number }) => (
-  <span className="bar"><progress max={total} value={done} /> {done}/{total}</span>
-)
+function Bar({ done, total }: { done: number; total: number }) {
+  const { t } = useLang()
+  return <span className="bar">{total > 0 && <progress max={total} value={done} aria-label={t('progress')} />} {done}/{total}</span>
+}
 
 function Stories({ b }: { b: B<'stories'> }) {
   const rank = (p: string | null) => (p ? Number(p.replace(/\D/g, '')) || 99 : 100)
@@ -31,8 +31,8 @@ function Stories({ b }: { b: B<'stories'> }) {
       {items.map((s, i) => (
         <article key={i} className="card story">
           <h3>{s.priority && <span className="badge">{s.priority}</span>} {s.title}</h3>
-          {s.why && <p><strong>Why this priority:</strong> <Markdown inline>{s.why}</Markdown></p>}
-          {s.test && <p><strong>Independent Test:</strong> <Markdown inline>{s.test}</Markdown></p>}
+          {s.why && <div><strong>Why this priority:</strong> <Markdown inline>{s.why}</Markdown></div>}
+          {s.test && <div><strong>Independent Test:</strong> <Markdown inline>{s.test}</Markdown></div>}
           {s.scenarios.map((sc, j) => (
             <dl key={j} className="scenario">
               <dt>Given</dt><dd><Markdown inline>{sc.given}</Markdown></dd>
@@ -64,6 +64,7 @@ function IdList({ b }: { b: B<'idList'> }) {
 }
 
 function Phase({ b, story, onStory }: { b: B<'phase'>; story: string | null; onStory: (s: string) => void }) {
+  const { t } = useLang()
   const items: CheckItem[] = story ? b.items.filter(i => i.story === story) : b.items
   return (
     <section>
@@ -73,7 +74,7 @@ function Phase({ b, story, onStory }: { b: B<'phase'>; story: string | null; onS
       <ul className="items">
         {items.map((it, i) => (
           <li key={i} className={it.done ? 'done' : undefined}>
-            <span aria-hidden>{it.done ? '☑' : '☐'}</span> {it.id && <code>{it.id}</code>}{' '}
+            <span aria-hidden>{it.done ? '☑' : '☐'}</span><span className="sr-only">{t(it.done ? 'itemDone' : 'itemOpen')}</span> {it.id && <code>{it.id}</code>}{' '}
             <Markdown inline>{it.text}</Markdown>
             {it.parallel && <span className="badge"> [P]</span>}
             {it.story && <button type="button" className="badge" onClick={() => onStory(it.story!)}>{it.story}</button>}
@@ -133,6 +134,7 @@ function Body({ doc }: { doc: ParsedDoc }) {
   const phases = doc.blocks.filter((b): b is B<'phase'> => b.kind === 'phase')
   const all = phases.flatMap(p => p.items)
   const stories = [...new Set(all.map(i => i.story).filter((s): s is string => !!s))]
+  if (story && !stories.includes(story)) setStory(null) // a refetch removed the selected story
   return (
     <>
       {doc.ref.kind === 'tasks' && <p><strong>{t('tasks')}</strong> <Bar done={all.filter(i => i.done).length} total={all.length} /></p>}
@@ -162,20 +164,21 @@ export function DocPage({ path, project, version, onSeen }: {
   path: string; project: Project; version: number; onSeen: (s: Seen) => void
 }) {
   const { t } = useLang()
-  const [result, setResult] = useState<Result | null>(null)
+  const [result, setResult] = useState<Loaded<ParsedDoc> | null>(null)
   // One shared guard so a slow older response never overwrites a newer one.
-  const apply = useRef<ReturnType<typeof latestOnly<Result>>>(null)
-  apply.current ??= latestOnly<Result>(setResult)
+  const apply = useRef<ReturnType<typeof latestOnly<Loaded<ParsedDoc>>>>(null)
+  apply.current ??= latestOnly<Loaded<ParsedDoc>>(next => setResult(prev => settle(prev, next)))
 
   useEffect(() => {
     apply.current!(fetch(`/api/doc?path=${encodeURIComponent(path)}`).then(async r => {
       if (r.status === 404) return { path, doc: null }
       if (!r.ok) throw new Error(String(r.status))
       return { path, doc: await r.json() as ParsedDoc }
-    }))
+    }).catch(() => ({ path, doc: null, failed: true })))
   }, [path, version])
 
-  const doc = result?.path === path ? result.doc : undefined // undefined = not loaded yet
+  const mine = result?.path === path ? result : null
+  const doc = mine ? mine.doc : undefined // undefined = not loaded yet
   const hash = doc?.ref.hash
   useEffect(() => { if (doc) onSeen(markSeen(project.root, doc.ref)) }, [path, hash])
 
@@ -184,11 +187,13 @@ export function DocPage({ path, project, version, onSeen }: {
   const home = <p><a href="#/">{t('home')}</a></p>
 
   if (ref?.error) return <section>{home}<h1>{path}</h1><p role="alert">{t('readError')}: {ref.error}</p></section>
+  if (mine?.failed && !doc) return <section>{home}<h1>{path}</h1><p role="alert">{t('readError')}</p></section>
   if (doc === null) return <section>{home}<p role="alert">{t('docGone')}</p></section>
   if (!doc) return <section>{home}<p>{t('loading')}</p></section>
   return (
     <article>
       {home}
+      {mine?.failed && <p role="status" className="notice">{t('refreshError')}</p>}
       <p className="crumb">{feature?.id ?? t('constitution')} · {doc.ref.kind}</p>
       <h1>{doc.title ?? path}</h1>
       <Fields items={doc.meta} />

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { latestOnly } from '../web/live.ts'
+import { latestOnly, settle } from '../web/live.ts'
 
 const deferred = <T>() => {
   let resolve!: (v: T) => void, reject!: (e: unknown) => void
@@ -26,4 +26,12 @@ test('a rejected promise applies nothing and does not throw', async () => {
   a.reject(new Error('x'))
   await new Promise(r => setTimeout(r, 0))
   expect(applied).toEqual([])
+})
+
+test('a failed fetch keeps the content already shown for that path, flagged', () => {
+  const shown = { path: 'a.md', doc: 'A' }
+  expect(settle(null, { path: 'a.md', doc: null, failed: true })).toEqual({ path: 'a.md', doc: null, failed: true })
+  expect(settle(shown, { path: 'a.md', doc: null, failed: true })).toEqual({ path: 'a.md', doc: 'A', failed: true })
+  expect(settle(shown, { path: 'b.md', doc: null, failed: true })).toEqual({ path: 'b.md', doc: null, failed: true })
+  expect(settle({ ...shown, failed: true }, { path: 'a.md', doc: 'A2' })).toEqual({ path: 'a.md', doc: 'A2' })
 })
