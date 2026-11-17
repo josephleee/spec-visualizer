@@ -112,3 +112,31 @@ test('folders created after start are watched', async () => {
   await s.close()
   fs.rmSync(late, { recursive: true, force: true })
 })
+test('a deleted scanned document gets 404', async () => {
+  const f = path.join(root, 'specs/001-x/gone.md')
+  fs.writeFileSync(f, '# Gone\n')
+  expect((await fetch(`${base}/api/doc?path=specs/001-x/gone.md`)).status).toBe(200)
+  fs.rmSync(f)
+  expect((await fetch(`${base}/api/doc?path=specs/001-x/gone.md`)).status).toBe(404)
+})
+
+test('security: traversal, NUL and symlinks out of webDir are 404', async () => {
+  fs.writeFileSync(path.join(root, 'secret.txt'), 'secret')
+  const link = path.join(webDir, 'link.txt')
+  if (!fs.existsSync(link)) fs.symlinkSync(path.join(root, 'secret.txt'), link)
+  const h = { Host: `127.0.0.1:${port}` }
+  expect((await rawGet(port, '/..%2f..%2fetc%2fpasswd', h)).statusCode).toBe(404)
+  expect((await rawGet(port, '/link.txt', h)).statusCode).toBe(404)
+  expect((await rawGet(port, '/app.js%00', h)).statusCode).toBe(404)
+})
+
+test('security: Host must match this server', async () => {
+  expect((await rawGet(port, '/', { Host: `127.0.0.1:${port + 1}` })).statusCode).toBe(403)
+  for (const url of ['/', '/api/events']) expect((await rawGet(port, url, { Host: 'evil.example' })).statusCode).toBe(403)
+  const noHost = await new Promise<number>((resolve) => {
+    const req = http.request({ host: '127.0.0.1', port, path: '/', setHost: false, headers: {} }, (res) => { res.resume(); resolve(res.statusCode!) })
+    req.on('error', () => resolve(0))
+    req.end()
+  })
+  expect(noHost).not.toBe(200)
+})
