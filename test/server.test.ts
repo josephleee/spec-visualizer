@@ -1,0 +1,97 @@
+import { afterAll, beforeAll, expect, test } from 'vitest'
+import fs from 'node:fs'
+import http from 'node:http'
+import os from 'node:os'
+import path from 'node:path'
+import { startServer } from '../server/server.ts'
+
+const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'specviz-srv-'))
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const root = tmp()
+const webDir = tmp()
+let port = 0
+let base = ''
+let close: () => Promise<void>
+
+const rawGet = (p: number, url: string, headers: Record<string, string>) =>
+  new Promise<http.IncomingMessage>((resolve, reject) => {
+    http.get({ host: '127.0.0.1', port: p, path: url, headers }, (res) => { res.resume(); resolve(res) }).on('error', reject)
+  })
+
+// Counts `changed` events on the SSE stream.
+function collectSse(url: string) {
+  const ac = new AbortController()
+  const out = { count: 0, ready: Promise.resolve(), close: () => ac.abort() }
+  out.ready = fetch(url, { signal: ac.signal }).then(async (res) => {
+    const reader = res.body!.getReader()
+    const dec = new TextDecoder()
+    ;(async () => {
+      try {
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) return
+          out.count += dec.decode(value).split('event: changed').length - 1
+        }
+      } catch { /* aborted */ }
+    })()
+  })
+  return out
+}
+
+beforeAll(async () => {
+  fs.mkdirSync(path.join(root, 'specs/001-x'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'specs/001-x/spec.md'), '# Spec\n')
+  fs.writeFileSync(path.join(root, 'package.json'), '{}')
+  fs.writeFileSync(path.join(webDir, 'index.html'), '<h1>hi</h1>')
+  fs.writeFileSync(path.join(webDir, 'app.js'), 'x')
+  ;({ port, close } = await startServer({ root, port: 0, webDir }))
+  base = `http://127.0.0.1:${port}`
+  await wait(300) // late fs events for files created just before the watcher started
+})
+afterAll(async () => {
+  await close()
+  fs.rmSync(root, { recursive: true, force: true })
+  fs.rmSync(webDir, { recursive: true, force: true })
+})
+
+test('project and doc routes', async () => {
+  const p = await (await fetch(`${base}/api/project`)).json()
+  expect(p.features[0].id).toBe('001-x')
+  const d = await (await fetch(`${base}/api/doc?path=specs/001-x/spec.md`)).json()
+  expect(d.ref.kind).toBe('spec')
+})
+
+test('unknown and escaping paths get 404', async () => {
+  for (const p of ['../../etc/passwd', 'package.json', 'specs/001-x/../../secret.md', '/etc/passwd'])
+    expect((await fetch(`${base}/api/doc?path=${encodeURIComponent(p)}`)).status).toBe(404)
+  expect((await fetch(`${base}/%2e%2e/%2e%2e/etc/passwd`)).status).not.toBe(200)
+})
+
+test('static files: index, existing file, everything else 404', async () => {
+  const idx = await fetch(`${base}/`)
+  expect(idx.status).toBe(200)
+  expect(idx.headers.get('content-type')).toContain('text/html')
+  expect(idx.headers.get('x-content-type-options')).toBe('nosniff')
+  expect(idx.headers.get('cache-control')).toBe('no-store')
+  expect((await fetch(`${base}/app.js`)).headers.get('content-type')).toContain('javascript')
+  expect((await fetch(`${base}/nope`)).status).toBe(404)
+})
+
+test('a foreign Host header gets 403 and POST gets 405', async () => {
+  expect((await rawGet(port, '/api/project', { Host: 'evil.example' })).statusCode).toBe(403)
+  expect((await fetch(`${base}/api/project`, { method: 'POST' })).status).toBe(405)
+})
+
+test('a file change sends one changed event', async () => {
+  const events = collectSse(`${base}/api/events`)
+  await events.ready
+  fs.appendFileSync(path.join(root, 'specs/001-x/spec.md'), '\nmore\n')
+  fs.appendFileSync(path.join(root, 'specs/001-x/spec.md'), '\nmore\n')
+  await wait(400)
+  expect(events.count).toBe(1)
+  events.close()
+})
+
+test('the listen error for a used port rejects', async () => {
+  await expect(startServer({ root, port, webDir })).rejects.toMatchObject({ code: 'EADDRINUSE' })
+})
