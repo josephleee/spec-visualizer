@@ -1,6 +1,6 @@
-import { checkItems, parse, slice, splitAt, takeLabels } from './md.ts'
+import { checkItems, clean, headingText, parse, slice, splitAt, takeLabels } from './md.ts'
 import type { Node, Sec } from './md.ts'
-import type { Block, Field, Scenario } from './types.ts'
+import type { Block, DocRef, Field, ParsedDoc, Scenario } from './types.ts'
 
 export function rawBlock(src: string, sec: Sec): Block {
   return { kind: 'raw', heading: sec.heading, depth: sec.depth, markdown: slice(src, sec.nodes) }
@@ -118,3 +118,82 @@ function parseChecks(src: string): Block[] {
 
 export const parseTasks = parseChecks
 export const parseChecklist = parseChecks
+
+const sections = (src: string) => splitAt(parse(src), 2).filter((s) => s.heading !== null)
+
+// Run `special` on sections it claims; every other section is raw.
+function bySection(src: string, special: (sec: Sec) => Block[] | null): Block[] {
+  return sections(src).flatMap((sec) => special(sec) ?? [rawBlock(src, sec)])
+}
+
+// One card per ###. Text between the ## and the first ### is kept as a raw block with the ## title.
+function cardsOf(src: string, sec: Sec): Block[] | null {
+  const subs = splitAt(sec.nodes, 3)
+  const cards = subs.filter((s) => s.heading !== null)
+  if (!cards.length) return null
+  const out: Block[] = []
+  if (subs[0].heading === null && slice(src, subs[0].nodes)) out.push(rawBlock(src, { heading: sec.heading, depth: 2, nodes: subs[0].nodes }))
+  out.push({ kind: 'cards', heading: sec.heading!, items: cards.map((c) => ({ title: c.heading!, markdown: slice(src, c.nodes) })) })
+  return out
+}
+
+// shortcut: a section with no labels stays raw instead of an empty fields block.
+function fieldsOf(src: string, sec: Sec): Block[] | null {
+  const { fields, rest } = takeLabels(src, sec.nodes)
+  return fields.length ? [{ kind: 'fields', heading: sec.heading!, items: fields, rest: slice(src, rest) }] : null
+}
+
+export const parsePlan = (src: string): Block[] =>
+  bySection(src, (sec) => (sec.heading === 'Technical Context' ? fieldsOf(src, sec) : null))
+
+export const parseConstitution = (src: string): Block[] =>
+  bySection(src, (sec) => (/^Core Principles/i.test(sec.heading!) ? cardsOf(src, sec) : fieldsOf(src, sec)))
+
+export const parseDataModel = (src: string): Block[] =>
+  bySection(src, (sec) => (/^entities/i.test(sec.heading!) ? cardsOf(src, sec) : null))
+
+type Decision = Extract<Block, { kind: 'decisions' }>['items'][number]
+
+export function parseResearch(src: string): Block[] {
+  return bySection(src, (sec) => {
+    const subs = splitAt(sec.nodes, 3)
+    if (!subs.some((s) => s.heading !== null)) return null
+    // `decisions` has no heading, so the ## title gets its own block.
+    const out: Block[] = [rawBlock(src, { heading: sec.heading, depth: 2, nodes: subs[0].heading === null ? subs[0].nodes : [] })]
+    let items: Decision[] = []
+    const flush = () => { if (items.length) out.push({ kind: 'decisions', items }); items = [] }
+    for (const sub of subs) {
+      if (sub.heading === null) continue
+      const { fields, rest } = takeLabels(src, sub.nodes)
+      if (fields.some((f) => f.label === 'Decision')) items.push({ title: sub.heading, fields, rest: slice(src, rest) })
+      else { flush(); out.push(rawBlock(src, sub)) }
+    }
+    flush()
+    return out
+  })
+}
+
+const PARSERS: Partial<Record<DocRef['kind'], (src: string) => Block[]>> = {
+  spec: parseSpec, plan: parsePlan, tasks: parseTasks, checklist: parseChecklist,
+  constitution: parseConstitution, research: parseResearch, 'data-model': parseDataModel,
+}
+
+export function parseDoc(ref: DocRef, src: string): ParsedDoc {
+  if (ref.kind === 'contract' && !ref.path.endsWith('.md')) {
+    return { ref, title: null, meta: [], blocks: [{ kind: 'code', lang: ref.path.split('.').pop() ?? '', text: src }] }
+  }
+  const text = clean(src)
+  const nodes = parse(text)
+  const h1 = nodes.find((n) => n.type === 'heading' && n.depth === 1)
+  const pre = splitAt(nodes, 2).find((s) => s.heading === null)?.nodes.filter((n) => n !== h1) ?? []
+  const { fields: meta, rest } = takeLabels(text, pre)
+  const blocks: Block[] = []
+  if (slice(text, rest)) blocks.push(rawBlock(text, { heading: null, depth: 0, nodes: rest }))
+  try {
+    blocks.push(...(PARSERS[ref.kind] ?? ((t) => bySection(t, () => null)))(text))
+  } catch {
+    blocks.length = 0
+    blocks.push({ kind: 'raw', heading: null, depth: 0, markdown: text })
+  }
+  return { ref, title: h1 ? headingText(h1) : null, meta, blocks }
+}

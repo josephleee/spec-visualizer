@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { parseChecklist, parseSpec, parseTasks } from '../server/parsers.ts'
+import { parseChecklist, parseConstitution, parseDataModel, parseDoc, parsePlan, parseResearch, parseSpec, parseTasks } from '../server/parsers.ts'
 
 const SPEC = `# Feature Specification: Pager
 
@@ -143,4 +143,62 @@ test('phase: content nested under a checkbox item is kept in rest', () => {
   expect(p.rest).toContain('code')
   expect(p.rest).toContain('> quote')
   expect(p.rest).not.toContain('T002')
+})
+
+const ref = (kind: any, path = 'specs/001-x/f.md') => ({ path, kind, hash: 'h' })
+
+test('plan: Technical Context becomes fields', () => {
+  const b = parsePlan('## Summary\n\nShort.\n\n## Technical Context\n\n**Language/Version**: Rust 1.75\n\n**Storage**: NEEDS CLARIFICATION\n')
+  expect(b[0]).toMatchObject({ kind: 'raw', heading: 'Summary' })
+  expect(b[1]).toMatchObject({ kind: 'fields', heading: 'Technical Context' })
+  expect((b[1] as any).items).toEqual([{ label: 'Language/Version', value: 'Rust 1.75' }, { label: 'Storage', value: 'NEEDS CLARIFICATION' }])
+})
+
+test('constitution: principles become cards', () => {
+  const b = parseConstitution('## Core Principles\n\nlead text\n\n### I. Library-First\n\nEvery feature starts as a library.\n\n### II. CLI\n\nText in, text out.\n\n## Governance\n\nRules.\n\n**Version**: 2.1.1 | **Ratified**: 2025-06-13 | **Last Amended**: 2025-07-16\n')
+  expect(b[0]).toMatchObject({ kind: 'raw', heading: 'Core Principles', markdown: 'lead text' })
+  expect((b[1] as any).items.map((i: any) => i.title)).toEqual(['I. Library-First', 'II. CLI'])
+  const gov = b.find((x) => x.kind === 'fields') as any
+  expect(gov.items[0]).toEqual({ label: 'Version', value: '2.1.1' })
+  expect(gov.rest).toContain('Rules.')
+})
+
+test('research: decision cards; a topic with no Decision stays raw', () => {
+  const b = parseResearch('## Research Topics\n\n### 1. PATH Lookup\n\n**Question**: How?\n\n**Decision**: Use which.\n\n**Rationale**:\n\n- small\n\n**Alternatives Considered**:\n\n- manual\n\n### 2. Notes\n\nfree text\n')
+  expect(b[0]).toMatchObject({ kind: 'raw', heading: 'Research Topics', depth: 2 })
+  const d = b.find((x) => x.kind === 'decisions') as any
+  expect(d.items[0].title).toBe('1. PATH Lookup')
+  expect(d.items[0].fields.map((f: any) => f.label)).toEqual(['Question', 'Decision', 'Rationale', 'Alternatives Considered'])
+  expect(JSON.stringify(b)).toContain('free text')
+})
+
+test('data-model: entities become cards', () => {
+  const b = parseDataModel('## Overview\n\nx\n\n## Entities\n\n### 1. PagerConfig\n\n| Field | Type |\n|---|---|\n| name | string |\n\n### 2. PagerProfile\n\ny\n')
+  const c = b.find((x) => x.kind === 'cards') as any
+  expect(c.items.map((i: any) => i.title)).toEqual(['1. PagerConfig', '2. PagerProfile'])
+  expect(c.items[0].markdown).toContain('| name | string |')
+})
+
+test('parseDoc: title, meta, comments hidden, raw HTML kept as text', () => {
+  const d = parseDoc(ref('plan'), '# Implementation Plan: Pager\n\n**Branch**: `010-pager` | **Date**: 2025-01-15\n\n## Summary\n\n<!-- ACTION REQUIRED -->\n\n<img src=x onerror=alert(1)>\n')
+  expect(d.title).toBe('Implementation Plan: Pager')
+  expect(d.meta.map((m) => m.label)).toEqual(['Branch', 'Date'])
+  expect(JSON.stringify(d)).not.toContain('ACTION REQUIRED')
+  expect(JSON.stringify(d)).toContain('onerror')
+})
+
+test('parseDoc: empty file, title only, CRLF, non-md contract', () => {
+  expect(parseDoc(ref('spec'), '')).toMatchObject({ title: null, meta: [], blocks: [] })
+  expect(parseDoc(ref('spec'), '# Only a title\n').blocks).toEqual([])
+  expect(parseDoc(ref('tasks'), '## Phase 1: Setup\r\n\r\n- [x] T001 a\r\n').blocks[0]).toMatchObject({ kind: 'phase' })
+  expect(parseDoc(ref('contract', 'specs/001-x/contracts/api.yaml'), 'openapi: 3.0.0\n').blocks)
+    .toEqual([{ kind: 'code', lang: 'yaml', text: 'openapi: 3.0.0\n' }])
+})
+
+test('parseDoc: quickstart and other are raw sections', () => {
+  const d = parseDoc(ref('other'), '# Analysis\n\nintro\n\n## Findings\n\nbody\n')
+  expect(d.blocks).toEqual([
+    { kind: 'raw', heading: null, depth: 0, markdown: 'intro' },
+    { kind: 'raw', heading: 'Findings', depth: 2, markdown: 'body' },
+  ])
 })
