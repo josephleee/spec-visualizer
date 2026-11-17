@@ -75,6 +75,7 @@ export function parseSpec(src: string): Block[] {
   return blocks
 }
 
+const hasCheck = (n: Node): boolean => (n.type === 'listItem' && n.checked != null) || ('children' in n && (n.children as Node[]).some(hasCheck))
 const at = (n: Node) => n.position!.start.offset!
 
 function parseChecks(src: string): Block[] {
@@ -93,14 +94,20 @@ function parseChecks(src: string): Block[] {
       for (const n of t.rest) left.push({ pos: at(n), text: slice(src, [n]) })
       seg = []
     }
+    // Checkbox items go to `items`; everything else under a checkbox list stays visible in `rest`.
+    const keep = (n: Node) => left.push({ pos: at(n), text: slice(src, [n]) })
+    const takeList = (list: Node & { type: 'list' }) => {
+      for (const i of list.children) {
+        const sub = i.children.filter((c) => c.type !== 'paragraph')
+        if (i.checked == null && !hasCheck(i)) { keep(i); continue }
+        if (i.checked == null) keep(i.children[0]) // plain item holding checkboxes: keep its own text
+        for (const c of sub) c.type === 'list' && hasCheck(c) ? takeList(c) : keep(c)
+      }
+    }
     for (const n of sec.nodes) {
       if (n.type === 'heading') { flush(); left.push({ pos: at(n), text: slice(src, [n]) }) }
-      else if (n.type === 'list' && n.children.some((i) => i.checked != null)) {
-        // Checkbox items go to `items`; plain items of a mixed list stay visible in `rest`.
-        n.children.forEach((i, k) => {
-          if (i.checked == null) left.push({ pos: at(i), text: (n.ordered ? `${(n.start ?? 1) + k}. ` : '- ') + slice(src, [i]) })
-        })
-      } else seg.push(n)
+      else if (n.type === 'list' && hasCheck(n)) takeList(n)
+      else seg.push(n)
     }
     flush()
     left.sort((x, y) => x.pos - y.pos)

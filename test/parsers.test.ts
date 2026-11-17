@@ -120,7 +120,7 @@ test('phase: plain lists stay in content, checkbox lists do not leak into fields
 test('phase: plain items of a mixed list go to rest', () => {
   const [p] = parseTasks('## P\n\n- [x] T001 a\n- plain note\n- [ ] T002 b\n') as any[]
   expect(p.items).toHaveLength(2)
-  expect(p.rest).toContain('- plain note')
+  expect(p.rest).toBe('- plain note')
 })
 
 test('phase: a heading ends the label value', () => {
@@ -128,4 +128,19 @@ test('phase: a heading ends the label value', () => {
   expect(p.fields).toEqual([{ label: 'Goal', value: 'Deliver' }, { label: 'Checkpoint', value: 'ok' }])
   expect(p.rest).toContain('### Tests')
   expect(p.rest).toContain('Write these first.')
+})
+
+test('phase: ordered mixed list keeps its markers exactly', () => {
+  const [p] = parseTasks('## P\n\n1. [ ] T001 a\n2. second plain\n') as any[]
+  expect(p.items).toHaveLength(1)
+  expect(p.rest).toBe('2. second plain')
+})
+
+test('phase: content nested under a checkbox item is kept in rest', () => {
+  const [p] = parseTasks('## P\n\n- [ ] T001 a\n  - nested detail\n  ```\n  code\n  ```\n\n  second para\n  - [x] T002 sub\n    > quote\n') as any[]
+  expect(p.items.map((i: any) => i.id)).toEqual(['T001', 'T002'])
+  expect(p.rest).toContain('- nested detail')
+  expect(p.rest).toContain('code')
+  expect(p.rest).toContain('> quote')
+  expect(p.rest).not.toContain('T002')
 })
