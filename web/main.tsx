@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import type { Project } from '../server/types.ts'
+import { DocPage } from './DocPage.tsx'
 import Home from './Home.tsx'
 import { useLang } from './i18n.ts'
 import { useProject } from './live.ts'
-import { loadSeen, markSeen, type Seen } from './seen.ts'
+import { loadSeen, type Seen } from './seen.ts'
 import './styles.css'
 
 function useHash() {
@@ -17,21 +17,8 @@ function useHash() {
   return hash
 }
 
-// Placeholder: Task 8 replaces this with the real document page.
-function DocPlaceholder({ project, path, onSeen }: { project: Project; path: string; onSeen: (s: Seen) => void }) {
-  const { t } = useLang()
-  const ref = [project.constitution, ...project.features.flatMap(f => f.docs)].find(d => d?.path === path)
-  useEffect(() => { if (ref) onSeen(markSeen(project.root, ref)) }, [path, ref?.hash])
-  return (
-    <section>
-      <p><a href="#/">{t('home')}</a></p>
-      <p>{path}</p>
-    </section>
-  )
-}
-
 function App() {
-  const { project, connected } = useProject()
+  const { project, connected, version } = useProject()
   const { lang, setLang, t } = useLang()
   const hash = useHash()
   const [seen, setSeen] = useState<Seen | null>(null)
@@ -52,7 +39,7 @@ function App() {
       </header>
       <main>
         {!project || !seen ? <p>{t('loading')}</p>
-          : docPath ? <DocPlaceholder project={project} path={docPath} onSeen={setSeen} />
+          : docPath ? <DocPage path={docPath} project={project} version={version} onSeen={setSeen} />
           : <Home project={project} seen={seen} />}
       </main>
     </>

@@ -15,3 +15,15 @@ main { max-width: 960px; margin: 0 auto; padding: 0 16px 32px; }
 .chip.missing { border-style: dashed; color: #777; } .chip.error { border-color: #b00; color: #b00; background: none; cursor: pointer; }
 .mark { font-weight: 700; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.card { border: 1px solid #ccc; padding: 8px 16px; margin: 12px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.fields > div { display: grid; grid-template-columns: 12em 1fr; gap: 8px; }
+.fields dt { font-weight: 600; } .fields dd, .scenario dd { margin: 0; }
+.scenario { display: grid; grid-template-columns: 4em 1fr; margin: 8px 0; }
+.items { list-style: none; padding: 0; } .items .done { color: #666; }
+.badge { font: inherit; font-size: 0.85em; border: 1px solid #888; border-radius: 4px; padding: 0 4px; }
+.filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.filter [aria-pressed="true"] { font-weight: 700; }
+.clarify { background: #fef3c7; font-weight: 600; }
+.decision { font-size: 1.25em; font-weight: 600; }
+pre { overflow-x: auto; }

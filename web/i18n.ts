@@ -10,6 +10,7 @@ const LABELS = {
     noConstitution: 'No constitution', home: 'Home', docGone: 'This document no longer exists.',
     readError: 'Could not read this document', language: 'Language', missing: 'missing',
     stage: 'Stage', progress: 'Task progress', loading: 'Loading…', version: 'version', stages: 'Stages',
+    storyFilter: 'Filter by story', all: 'All',
     stageDone: 'completed', stageCurrent: 'current', stageTodo: 'upcoming',
   },
   ko: {
@@ -19,6 +20,7 @@ const LABELS = {
     noConstitution: 'Constitution 없음', home: '홈', docGone: '이 문서는 더 이상 없습니다.',
     readError: '이 문서를 읽을 수 없습니다', language: '언어', missing: '없음',
     stage: '단계', progress: '태스크 진행률', loading: '불러오는 중…', version: '버전', stages: '단계 목록',
+    storyFilter: '스토리로 거르기', all: '전체',
     stageDone: '완료', stageCurrent: '현재', stageTodo: '예정',
   },
 } satisfies Record<Lang, Record<string, string>>

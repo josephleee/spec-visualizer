@@ -31,18 +31,10 @@ function Stages({ stage }: { stage: Stage }) {
 
 function Chip({ doc, seen }: { doc: DocRef; seen: Seen }) {
   const { t } = useLang()
-  if (doc.error) {
-    return (
-      <button type="button" className="chip error" title={doc.error}
-        onClick={() => alert(`${t('readError')}: ${doc.path}\n${doc.error}`)}>
-        ⚠ {label(doc)}
-      </button>
-    )
-  }
   const mark = markOf(doc, seen)
   return (
-    <a className="chip" href={href(doc)} title={doc.path}>
-      {doc.kind === 'other' ? label(doc) : doc.kind}
+    <a className={doc.error ? 'chip error' : 'chip'} href={href(doc)} title={doc.error ?? doc.path}>
+      {doc.error && '⚠ '}{doc.kind === 'other' ? label(doc) : doc.kind}
       {mark && <span className={`mark ${mark}`}> {t(mark)}</span>}
     </a>
   )
