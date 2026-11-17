@@ -8,6 +8,7 @@ import { markSeen, type Seen } from './seen.ts'
 type B<K extends Block['kind']> = Extract<Block, { kind: K }>
 
 const clarify = (s: string) => s.includes('NEEDS CLARIFICATION')
+const level = (depth: number) => (depth >= 4 ? 'h4' : depth === 3 ? 'h3' : 'h2')
 const Rest = ({ md }: { md: string }) => (md ? <Markdown>{md}</Markdown> : null)
 const Fields = ({ items }: { items: Field[] }) => (items.length === 0 ? null : (
   <dl className="fields">
@@ -48,9 +49,10 @@ function Stories({ b }: { b: B<'stories'> }) {
 }
 
 function IdList({ b }: { b: B<'idList'> }) {
+  const H = level(b.depth)
   return (
     <section>
-      <h2>{b.heading}</h2>
+      <H>{b.heading}</H>
       <ul className="idlist">
         {b.items.map((it, i) => (
           <li key={i} className={clarify(it.text) ? 'clarify' : undefined}>
@@ -120,7 +122,7 @@ function Decisions({ b }: { b: B<'decisions'> }) {
 }
 
 function Raw({ b }: { b: B<'raw'> }) {
-  const H = b.depth === 3 ? 'h3' : 'h2'
+  const H = level(b.depth)
   return <section>{b.heading && <H>{b.heading}</H>}{b.markdown && <Markdown>{b.markdown}</Markdown>}</section>
 }
 

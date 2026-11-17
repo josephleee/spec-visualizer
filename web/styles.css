@@ -137,7 +137,9 @@ progress::-moz-progress-bar { background: var(--color-cool); }
 .meta .fields > div { display: block; flex: 1 1 auto; min-width: min(100%, 11rem); padding: var(--space-sm) var(--space-md); border: 0; background: var(--color-paper-2); }
 .meta .fields dd { margin-top: var(--space-3xs); }
 .doc > section { margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px solid var(--color-rule); }
-.doc > .meta:empty + section:not(:has(> h2, > h3)) { margin-top: var(--space-lg); padding-top: 0; border-top: 0; }
+.doc > section:has(> h3:first-child, > h4:first-child) { margin-top: var(--space-lg); }
+.doc > section:has(> h4:first-child) { padding-top: 0; border-top: 0; }
+.doc > .meta:empty + section:not(:has(> h2, > h3, > h4)) { margin-top: var(--space-lg); padding-top: 0; border-top: 0; }
 .doc > section > * + *, .card > * + * { margin-top: var(--space-md); }
 .doc > section + .card, .doc > .card + .card { margin-top: var(--space-md); }
 

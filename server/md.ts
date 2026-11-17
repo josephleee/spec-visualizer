@@ -100,7 +100,7 @@ export function checkItems(nodes: Node[]): CheckItem[] {
     for (const n of ns) {
       if (n.type === 'listItem' && n.checked != null) {
         let text = kids(n).filter((c) => c.type === 'paragraph').map(inline).join(' ').trim()
-        const id = /^([A-Z]+\d+)(?:\s+|$)/.exec(text)
+        const id = /^([A-Z]+\d+[a-z]?)(?:\s+|$)/.exec(text)
         if (id) text = text.slice(id[0].length)
         const parallel = /\[P\]/.test(text)
         const story = /\[(US\d+)\]/.exec(text)?.[1] ?? null

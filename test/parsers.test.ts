@@ -216,3 +216,58 @@ test('research: topics written at ## level', () => {
   expect((two[0] as any).items.map((i: any) => i.title)).toEqual(['A', 'B'])
   expect(two[1]).toMatchObject({ heading: 'Notes', markdown: 'free text' })
 })
+
+test('spec: an id with one lowercase letter suffix is an id', () => {
+  const fr = parseSpec('## Requirements\n\n### Functional Requirements\n\n- **FR-003a**: text\n').find((b) => b.kind === 'idList')!
+  expect(fr.items).toEqual([{ id: 'FR-003a', text: 'text' }])
+})
+
+const GROUPED = `## Requirements
+
+### Functional Requirements
+
+Grouped by area.
+
+#### Paging Modes
+
+- **FR-001**: System MUST page long output
+- **FR-003a**: System MUST spawn the pager first
+
+#### Security
+
+- **FR-005a**: System MUST not run a shell
+- a note with no id
+
+#### Notes
+
+Free text about the groups.
+
+### Key Entities
+
+- **Pager**: a program
+`
+
+test('spec: #### groups under a ### become their own blocks, in file order, nothing dropped', () => {
+  expect(parseSpec(GROUPED)).toEqual([
+    { kind: 'raw', heading: 'Requirements', depth: 2, markdown: '' },
+    { kind: 'raw', heading: 'Functional Requirements', depth: 3, markdown: 'Grouped by area.' },
+    { kind: 'idList', heading: 'Paging Modes', depth: 4, items: [
+      { id: 'FR-001', text: 'System MUST page long output' }, { id: 'FR-003a', text: 'System MUST spawn the pager first' }], rest: '' },
+    { kind: 'idList', heading: 'Security', depth: 4, items: [{ id: 'FR-005a', text: 'System MUST not run a shell' }], rest: '- a note with no id' },
+    { kind: 'raw', heading: 'Notes', depth: 4, markdown: 'Free text about the groups.' },
+    { kind: 'raw', heading: 'Key Entities', depth: 3, markdown: '- **Pager**: a program' },
+  ])
+})
+
+test('spec: id items before the first #### make an idList with the ### title', () => {
+  const blocks = parseSpec('## Requirements\n\n### Functional Requirements\n\n- **FR-001**: first\n\n#### Later\n\n- **FR-002**: second\n')
+  expect(blocks.slice(1)).toEqual([
+    { kind: 'idList', heading: 'Functional Requirements', depth: 3, items: [{ id: 'FR-001', text: 'first' }], rest: '' },
+    { kind: 'idList', heading: 'Later', depth: 4, items: [{ id: 'FR-002', text: 'second' }], rest: '' },
+  ])
+})
+
+test('spec: a ### with no #### keeps one idList with its depth', () => {
+  const fr = parseSpec(SPEC).find((b) => b.kind === 'idList')!
+  expect(fr).toMatchObject({ heading: 'Functional Requirements', depth: 3 })
+})

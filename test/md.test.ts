@@ -42,3 +42,7 @@ test('takeLabels reads line-start labels inside one paragraph', () => {
   const { fields } = takeLabels(src, parse(src))
   expect(fields).toEqual([{ label: 'A', value: 'x' }, { label: 'B', value: 'y' }])
 })
+
+test('checkItems reads an ID with one lowercase letter suffix', () => {
+  expect(checkItems(parse('- [ ] T006a [P] Do it\n'))[0]).toEqual({ id: 'T006a', done: false, parallel: true, story: null, text: 'Do it' })
+})

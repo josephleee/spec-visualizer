@@ -18,7 +18,7 @@ export type Scenario = { given: string; when: string; then: string }
 export type Block =
   | { kind: 'raw'; heading: string | null; depth: number; markdown: string }
   | { kind: 'stories'; items: { title: string; priority: string | null; why: string | null; test: string | null; scenarios: Scenario[]; rest: string }[] }
-  | { kind: 'idList'; heading: string; items: { id: string; text: string }[]; rest: string }
+  | { kind: 'idList'; heading: string; depth: number; items: { id: string; text: string }[]; rest: string }
   | { kind: 'phase'; title: string; fields: Field[]; items: CheckItem[]; rest: string }
   | { kind: 'fields'; heading: string; items: Field[]; rest: string }
   | { kind: 'cards'; heading: string; items: { title: string; markdown: string }[] }

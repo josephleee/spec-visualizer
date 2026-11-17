@@ -10,7 +10,7 @@ type Story = Extract<Block, { kind: 'stories' }>['items'][number]
 
 const STORY = /^User Story\s+\d+\s*[-–—:]\s*(.+?)(?:\s*\(Priority:\s*(\w+)\))?$/
 const GWT = /^\*\*Given\*\*\s*([\s\S]*?)\s*,?\s*\*\*When\*\*\s*([\s\S]*?)\s*,?\s*\*\*Then\*\*\s*([\s\S]*)$/
-const ID_ITEM = /^\*\*([A-Z]+-\d+)\*\*:\s*([\s\S]*)$/
+const ID_ITEM = /^\*\*([A-Z]+-\d+[a-z]?)\*\*:\s*([\s\S]*)$/
 
 const kids = (n: Node): Node[] => ('children' in n ? (n.children as Node[]) : [])
 const body = (src: string, item: Node) => slice(src, kids(item))
@@ -51,7 +51,15 @@ function idList(src: string, sec: Sec): Block | null {
       else rest.push(slice(src, [item]))
     }
   }
-  return items.length ? { kind: 'idList', heading: sec.heading ?? '', items, rest: rest.filter(Boolean).join('\n\n') } : null
+  return items.length ? { kind: 'idList', heading: sec.heading ?? '', depth: sec.depth, items, rest: rest.filter(Boolean).join('\n\n') } : null
+}
+
+// A ### with #### groups: the ### part first (text before the first ####), then one block per group, in file order.
+function grouped(src: string, sec: Sec): Block[] {
+  const groups = splitAt(sec.nodes, 4)
+  if (!groups.some((g) => g.heading !== null)) return [idList(src, sec) ?? rawBlock(src, sec)]
+  const lead: Sec = { heading: sec.heading, depth: sec.depth, nodes: groups[0].heading === null ? groups[0].nodes : [] }
+  return [lead, ...groups.filter((g) => g.heading !== null)].map((g) => idList(src, g) ?? rawBlock(src, g))
 }
 
 export function parseSpec(src: string): Block[] {
@@ -68,7 +76,7 @@ export function parseSpec(src: string): Block[] {
       const m = sub.heading === null ? null : STORY.exec(sub.heading)
       if (sub.heading === null) continue
       else if (m) stories.push(story(src, sub, m))
-      else { flush(); blocks.push(idList(src, sub) ?? rawBlock(src, sub)) }
+      else { flush(); blocks.push(...grouped(src, sub)) }
     }
     flush()
   }
