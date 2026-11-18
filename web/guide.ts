@@ -55,10 +55,13 @@ export function leadFeature(p: Project): Feature | null {
   return open.find(f => f.id === p.currentFeature) ?? open.find(busy) ?? [...open].sort((a, b) => stageIndex(b) - stageIndex(a))[0] ?? null
 }
 
+// Whole percent, rounded down so a task left never reads 100%. Multiply first: 29 / 100 * 100 is 28.999… in floating point.
+export const percent = (done: number, total: number) => (total ? Math.floor(done * 100 / total) : 0)
+
 export function projectTotals(p: Project) {
   const done = p.features.reduce((n, f) => n + (f.tasks?.done ?? 0), 0)
   const total = p.features.reduce((n, f) => n + (f.tasks?.total ?? 0), 0)
-  return { done, total, pct: total ? Math.floor(done / total * 100) : 0, finished: p.features.filter(f => f.stage === 'done').length }
+  return { done, total, pct: percent(done, total), finished: p.features.filter(f => f.stage === 'done').length }
 }
 
 // ---------- aggregates the document forms draw ----------

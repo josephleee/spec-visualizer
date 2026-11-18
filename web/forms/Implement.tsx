@@ -1,4 +1,4 @@
-import { CMD, byStory, doneCount, nextUp, phasesOf } from '../guide.ts'
+import { CMD, byStory, doneCount, nextUp, percent, phasesOf } from '../guide.ts'
 import { Bar, CmdRow, FieldsSheet, Mark, Rich, Sec, TaskRows, Title } from '../parts.tsx'
 import type { Form } from './types.ts'
 
@@ -14,7 +14,7 @@ export const implement: Form = (doc, { t, feature }) => {
     body: (
       <>
         <section className="sec prog">
-          <div className="prog-n"><b>{done}</b><span>/ {total}</span><em>{t('i.pct', total ? Math.floor(done / total * 100) : 0, left)}</em></div>
+          <div className="prog-n"><b>{done}</b><span>/ {total}</span><em>{t('i.pct', percent(done, total), left)}</em></div>
           <div className="cellstrip" role="img" aria-label={t('i.aria', total, done)}>
             {phases.map((p, i) => <span key={i} className="cg">{p.items.map((x, j) => <Mark key={j} item={x} next={next.has(x)} />)}</span>)}
           </div>

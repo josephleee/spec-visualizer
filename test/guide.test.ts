@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import type { Block, CheckItem, Feature, Project, Stage } from '../server/types.ts'
-import { busy, byStory, leadFeature, nextCommand, nextUp, projectTotals, specCounts, stageCommand, stageCounts, stageGuide, taskColumns } from '../web/guide.ts'
+import { busy, byStory, percent, leadFeature, nextCommand, nextUp, projectTotals, specCounts, stageCommand, stageCounts, stageGuide, taskColumns } from '../web/guide.ts'
 
 const feature = (id: string, stage: Stage, done = 0, total = 0, openQuestions = 0): Feature =>
   ({ id, stage, docs: [], tasks: total ? { done, total } : null, openQuestions })
@@ -60,6 +60,9 @@ test('project totals count tasks across features', () => {
   expect(projectTotals(p)).toEqual({ done: 93, total: 108, pct: 86, finished: 1 })
   expect(projectTotals(project([]))).toEqual({ done: 0, total: 0, pct: 0, finished: 0 })
   expect(projectTotals(project([feature('a', 'implement', 199, 200)])).pct).toBe(99) // never 100% with a task left
+  expect(projectTotals(project([feature('a', 'implement', 29, 100)])).pct).toBe(29) // 29 / 100 * 100 is 28.999… in floating point
+  expect(percent(29, 100)).toBe(29)
+  expect(percent(0, 0)).toBe(0)
 })
 
 test('consecutive parallel tasks share a column', () => {
