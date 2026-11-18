@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Component, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import { Board } from './Board.tsx'
@@ -14,6 +14,13 @@ import './styles.css'
 type DocRoute = Exclude<Route, { kind: 'board' }>
 const isDoc = (r: Route): r is DocRoute => r.kind !== 'board'
 const stageNo = (r: Route) => (r.kind === 'stage' ? STAGES.indexOf(r.stage) : -1)
+
+// A page that throws while drawing shows this instead of a blank screen. `at` changes with the address, which clears it.
+class Guard extends Component<{ at: string; fallback: ReactNode; children: ReactNode }, { failedAt: string | null }> {
+  state = { failedAt: null as string | null }
+  static getDerivedStateFromError() { return { failedAt: location.hash } }
+  render() { return this.state.failedAt !== null && this.state.failedAt === this.props.at ? this.props.fallback : this.props.children }
+}
 
 function useRoute(): Route {
   const [hash, setHash] = useState(location.hash)
@@ -55,14 +62,14 @@ function App() {
     const from = prev.current
     prev.current = route
     if (from === route) return
-    if (!isDoc(route)) { // back on the board: focus returns to the card that was open
-      if (isDoc(from)) board.current?.querySelector<HTMLElement>(`[data-i="${stageNo(from)}"] .stage-link`)?.focus({ preventScroll: true })
+    if (!isDoc(route)) { // back on the board: focus returns to the card that was open, or to the board heading when no card was
+      if (isDoc(from)) board.current?.querySelector<HTMLElement>(from.kind === 'stage' ? `[data-i="${stageNo(from)}"] .stage-link` : 'h1')?.focus({ preventScroll: true })
       return
     }
     const sameStage = from.kind === 'stage' && route.kind === 'stage' && from.stage === route.stage
     if (from.kind === 'stage' && route.kind === 'stage' && !sameStage && !reducedMotion() && doc.current) slide(doc.current, Math.sign(stageNo(route) - stageNo(from)))
-    // Another feature of the same stage was chosen in the select: focus stays there.
-    if (!(sameStage && from.kind === 'stage' && route.kind === 'stage' && from.feature !== route.feature)) doc.current?.querySelector('h1')?.focus({ preventScroll: true })
+    // Within one stage (another feature from the select, another plan document from its tab) focus stays on the control used.
+    if (!sameStage) doc.current?.querySelector('h1')?.focus({ preventScroll: true })
   }, [route])
 
   useEffect(() => {
@@ -73,21 +80,23 @@ function App() {
 
   const name = project?.name ?? 'spec-visualizer'
   useEffect(() => {
-    document.title = route.kind === 'stage' ? `${stageNo(route) + 1} / 6 ${t(`n.${route.stage}`)}${route.feature ? ` · ${route.feature}` : ''} · ${name}`
+    document.title = route.kind === 'stage' ? `${stageNo(route) + 1} / 6 ${t(`n.${route.stage}`)}${route.feature && route.stage !== 'constitution' ? ` · ${route.feature}` : ''} · ${name}`
       : route.kind === 'doc' ? `${route.path} · ${name}` : t('title', name)
   })
 
+  const at = location.hash
+  const failed = <div className="paper"><section className="sec empty" role="alert"><h2>{t('err.title')}</h2><p>{t('err.say')}</p><a className="empty-go" href="#/">{t('back')} →</a></section></div>
   return (
     <>
       {!connected && <div role="alert" className="banner">{t('disconnected')}</div>}
       <Strip project={project} />
       <main className="cam" ref={cam}>
         <section ref={board} className="layer board" aria-label={t('board', name)} hidden={isDoc(route) && move !== 'in'}>
-          <Board project={seen ? project : null} seen={seen ?? {}} />
+          <Guard at={at} fallback={failed}><Board project={seen ? project : null} seen={seen ?? {}} /></Guard>
         </section>
         {shown && (
           <section ref={doc} className="layer doc" aria-label={t('doc.layer')}>
-            {project && seen ? <StagePage route={shown} project={project} version={version} seen={seen} onSeen={setSeen} /> : <DocSkeleton />}
+            <Guard at={at} fallback={failed}>{project && seen ? <StagePage route={shown} project={project} version={version} seen={seen} onSeen={setSeen} /> : <DocSkeleton />}</Guard>
           </section>
         )}
       </main>

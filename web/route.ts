@@ -19,16 +19,14 @@ export function parseRoute(hash: string): Route {
     if (doc) return { kind: 'doc', path: decodeURIComponent(doc[1]) }
     const [head, stage, feature, sub] = hash.replace(/^#\//, '').split('/').map(decodeURIComponent)
     if (head !== 'stage' || !stage || !isStage(stage)) return BOARD
-    const hasFeature = stage !== 'constitution' && !!feature
-    return { kind: 'stage', stage, feature: hasFeature ? feature : null, sub: stage === 'plan' && hasFeature && isSub(sub) ? sub : null }
+    return { kind: 'stage', stage, feature: feature || null, sub: stage === 'plan' && feature && isSub(sub) ? sub : null }
   } catch { return BOARD }
 }
 
 export function formatRoute(r: Route): string {
   if (r.kind === 'board') return '#/'
   if (r.kind === 'doc') return `#/doc/${encodeURIComponent(r.path)}`
-  const feature = r.stage === 'constitution' ? null : r.feature
-  return `#/stage/${r.stage}` + (feature ? `/${encodeURIComponent(feature)}` + (r.stage === 'plan' && r.sub ? `/${r.sub}` : '') : '')
+  return `#/stage/${r.stage}` + (r.feature ? `/${encodeURIComponent(r.feature)}` + (r.stage === 'plan' && r.sub ? `/${r.sub}` : '') : '')
 }
 
 export const stageHref = (stage: StageKey, feature?: string | null, sub?: PlanSub | null) =>
@@ -59,6 +57,10 @@ export function defaultFeature(p: Project, kind: DocKind): Feature | null {
 // A feature named in the address is that feature or nobody (it may have been deleted); only a bare address gets the default.
 export const resolveFeature = (p: Project, kind: DocKind, id: string | null): Feature | null =>
   id === null ? defaultFeature(p, kind) : p.features.find(f => f.id === id) ?? null
+
+// Switching to another feature on the same stage keeps the plan document being read when that feature has it.
+export const featureHref = (stage: StageKey, f: Feature, sub: PlanSub | null) =>
+  stageHref(stage, f.id, sub && f.docs.some(d => d.kind === sub) ? sub : null)
 
 // Where a feature's document opens: its stage page when it has one, else the generic page.
 export function docHref(feature: Feature, d: DocRef): string {

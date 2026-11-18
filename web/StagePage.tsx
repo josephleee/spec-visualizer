@@ -2,12 +2,11 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import type { DocKind, DocRef, Feature, Project } from '../server/types.ts'
 import { Zoom } from './Board.tsx'
 import { reducedMotion } from './camera.ts'
-import { formFor } from './forms/index.ts'
-import { Generic, More, outline } from './forms/Outline.tsx'
+import { renderDoc } from './forms/render.tsx'
 import { CMD, busy, nextCommand, stageCommand, stageCounts } from './guide.ts'
 import { useLang } from './i18n.ts'
 import { CmdRow, SeenMark, Title, Value } from './parts.tsx'
-import { KIND_FILE, PLAN_SUBS, STAGES, docHref, formatRoute, resolveTarget, stageHref, stageIndex, type Route, type StageKey } from './route.ts'
+import { KIND_FILE, PLAN_SUBS, STAGES, docHref, featureHref, resolveTarget, stageHref, stageIndex, type Route, type StageKey } from './route.ts'
 import { markSeen, type Seen } from './seen.ts'
 import { useDoc } from './useDoc.ts'
 
@@ -53,7 +52,9 @@ export function StagePage({ route, project, version, seen, onSeen }: {
   const hash = doc?.ref.hash
   useEffect(() => { if (doc) onSeen(markSeen(project.root, doc.ref, undefined, seen)) }, [doc?.ref.path, hash])
 
-  const si = stage ? STAGES.indexOf(stage) : -1, fid = feature?.id ?? null
+  const si = stage ? STAGES.indexOf(stage) : -1
+  // The feature the stage links carry: the constitution page has none of its own, so the one chosen before rides along.
+  const fid = feature?.id ?? (route.kind === 'stage' ? route.feature : null)
   const sub = route.kind === 'stage' ? route.sub : null
   const counts = stageCounts(project)
   const cmd = stage && stageCommand(stage), next = feature && nextCommand(feature).cmd
@@ -61,7 +62,8 @@ export function StagePage({ route, project, version, seen, onSeen }: {
 
   // ---------- the section index: read from the sheets that were drawn, so its numbers match their title bands ----------
   const sheet = useRef<HTMLDivElement>(null)
-  const sections = () => [...(sheet.current?.querySelectorAll<HTMLElement>(':scope > .sec:has(> .sec-h)') ?? [])]
+  // The sheets that have a title band (found without :has(), which older browsers throw on).
+  const sections = () => [...(sheet.current?.children ?? [])].filter((e): e is HTMLElement => e instanceof HTMLElement && e.classList.contains('sec') && !!e.firstElementChild?.classList.contains('sec-h'))
   const [toc, setToc] = useState<string[]>([])
   const [at, setAt] = useState(0)
   useLayoutEffect(() => {
@@ -82,18 +84,13 @@ export function StagePage({ route, project, version, seen, onSeen }: {
 
   // ---------- body: one of the states, or the form for this kind of document ----------
   let body: ReactNode
-  if (route.kind === 'stage' && route.feature && !feature) body = <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
+  if (route.kind === 'stage' && stage !== 'constitution' && route.feature && !feature) body = <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
   else if (route.kind === 'stage' && stage !== 'constitution' && !feature) body = <State title={t('e.project')}><p>{t('e.project.say')}</p><CmdRow cmd={CMD.specify} big /></State>
   else if (!ref) body = stage ? <Missing stage={stage} feature={feature} kind={kind} /> : <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
   else if (ref.error) body = <State title={t('readError')} alert><p>{ref.path}</p><p>{ref.error}</p></State>
   else if (doc === undefined) body = <section className="sec skel-sheet" aria-busy="true"><span className="sr">{t('loading')}</span><span className="skel skel-head" /><span className="skel skel-line" /><span className="skel skel-line" /></section>
   else if (doc === null) body = failed ? <State title={t('readError')} alert><p>{ref.path}</p></State> : <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
-  else {
-    const form = formFor(kind, stage === 'implement'), drawn = form?.(doc, { feature, t })
-    body = drawn ? <>{drawn.body}<More blocks={doc.blocks.filter(b => !drawn.used.includes(b))} t={t} /></>
-      : doc.blocks.length === 1 && doc.blocks[0].kind === 'code' ? <section className="sec"><Generic b={doc.blocks[0]} /></section>
-      : outline(doc, t, !!form)
-  }
+  else body = renderDoc(doc, kind, stage === 'implement', { feature, t })
 
   const planTabs = stage === 'plan' && feature
     ? (['plan', ...PLAN_SUBS] as const).filter(k => k !== 'contract' || sub === 'contract' || feature.docs.some(d => d.kind === 'contract'))
@@ -115,7 +112,7 @@ export function StagePage({ route, project, version, seen, onSeen }: {
         {stage && <span className="docbar-at"><b>{si + 1} / 6</b>{name}</span>}
         {stage && feature && (
           <label className="pick"><span>{t('bar.feature')}</span>
-            <select value={feature.id} onChange={e => { location.hash = stageHref(stage, e.target.value) }}>
+            <select value={feature.id} onChange={e => { const to = project.features.find(x => x.id === e.target.value); if (to) location.hash = featureHref(stage, to, sub) }}>
               {project.features.map(x => <option key={x.id} value={x.id}>{x.id} · {t(`n.${x.stage}`)}{x.docs.some(d => d.kind === kind) ? '' : ` (${t('nodoc')})`}</option>)}
             </select>
           </label>

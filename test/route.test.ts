@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import type { DocKind, Feature, Project, Stage } from '../server/types.ts'
-import { defaultFeature, docHref, formatRoute, parseRoute, resolveFeature, resolveTarget, stageDocKind, type Route, type StageRoute } from '../web/route.ts'
+import { defaultFeature, docHref, featureHref, formatRoute, parseRoute, resolveFeature, resolveTarget, stageDocKind, type Route, type StageRoute } from '../web/route.ts'
 
 const feature = (id: string, stage: Stage, kinds: DocKind[]): Feature => ({
   id, stage, tasks: null, openQuestions: 0,
@@ -12,6 +12,7 @@ test('routes survive a format and parse round trip', () => {
   const routes: Route[] = [
     { kind: 'board' },
     { kind: 'stage', stage: 'constitution', feature: null, sub: null },
+    { kind: 'stage', stage: 'constitution', feature: '010-pager', sub: null }, // the chosen feature rides along
     { kind: 'stage', stage: 'specify', feature: null, sub: null },
     { kind: 'stage', stage: 'tasks', feature: '010-pager', sub: null },
     { kind: 'stage', stage: 'plan', feature: '010-pager', sub: 'data-model' },
@@ -33,7 +34,7 @@ test('a sub document belongs only to the plan stage and needs a feature', () => 
   expect(parseRoute('#/stage/tasks/010-pager/research')).toEqual({ kind: 'stage', stage: 'tasks', feature: '010-pager', sub: null })
   expect(parseRoute('#/stage/plan/010-pager/nope')).toEqual({ kind: 'stage', stage: 'plan', feature: '010-pager', sub: null })
   expect(formatRoute({ kind: 'stage', stage: 'plan', feature: null, sub: 'research' })).toBe('#/stage/plan')
-  expect(parseRoute('#/stage/constitution/010-pager')).toEqual({ kind: 'stage', stage: 'constitution', feature: null, sub: null })
+  expect(parseRoute('#/stage/constitution/010-pager/research')).toEqual({ kind: 'stage', stage: 'constitution', feature: '010-pager', sub: null })
 })
 
 test('an unreadable address is the board', () => {
@@ -89,6 +90,19 @@ test('an address resolves to its stage, feature and the documents of that kind',
   expect(resolveTarget(p, { kind: 'doc', path: a.docs[4].path })).toEqual({ stage: null, feature: a, kind: 'other', refs: [a.docs[4]] })
   expect(resolveTarget(p, { kind: 'doc', path: 'c.md' })).toEqual({ stage: null, feature: null, kind: 'constitution', refs: [p.constitution] })
   expect(resolveTarget(p, { kind: 'doc', path: 'nope.md' }).refs).toEqual([])
+})
+
+test('the constitution belongs to no feature, whichever one rides along in its address', () => {
+  const p = { ...project([feature('a', 'specify', ['spec'])]), constitution: { path: 'c.md', kind: 'constitution', hash: 'h' } } as Project
+  for (const f of ['a', 'gone', null]) expect(resolveTarget(p, { kind: 'stage', stage: 'constitution', feature: f, sub: null })).toEqual({ stage: 'constitution', feature: null, kind: 'constitution', refs: [p.constitution] })
+})
+
+test('switching feature keeps the plan document when the new feature has it', () => {
+  const full = feature('a', 'plan', ['spec', 'plan', 'research']), bare = feature('b', 'plan', ['spec', 'plan'])
+  expect(featureHref('plan', full, 'research')).toBe('#/stage/plan/a/research')
+  expect(featureHref('plan', bare, 'research')).toBe('#/stage/plan/b')
+  expect(featureHref('plan', full, null)).toBe('#/stage/plan/a')
+  expect(featureHref('tasks', full, null)).toBe('#/stage/tasks/a')
 })
 
 test('a document opens on its stage page, or on the generic page when it has none', () => {

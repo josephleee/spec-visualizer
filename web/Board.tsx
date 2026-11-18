@@ -109,7 +109,7 @@ export function Board({ project, seen }: { project: Project | null; seen: Seen }
   }, [!project])
   return (
     <>
-      <h1 className="sr">{project ? t('board', project.name) : t('loading')}</h1>
+      <h1 className="sr" tabIndex={-1}>{project ? t('board', project.name) : t('loading')}</h1>
       <section className={intro && project ? 'zone stages intro' : 'zone stages'} aria-busy={!project}>
         <header className="zone-h">
           <h2>{t('zone')}</h2>

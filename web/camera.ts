@@ -5,6 +5,8 @@ export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)'
 // Board and document move as one camera: the stage card maps onto the viewport while the two layers cross over.
 // Only transform and opacity are animated. Returns a stop function; `done` runs when the move finishes on its own.
 export function zoom(cam: HTMLElement, board: HTMLElement, doc: HTMLElement, frame: Element | null, out: boolean, done: () => void): () => void {
+  // The cards may still be landing (the intro) or lifting (hover): settle them first, or the card is measured where it is not going to be.
+  board.getAnimations({ subtree: true }).forEach(a => a.finish())
   const v = cam.getBoundingClientRect(), r = (frame ?? cam).getBoundingClientRect()
   const s = v.width / r.width, x = r.left - v.left, y = r.top - v.top
   const opts: KeyframeAnimationOptions = { duration: 760, easing: EASE, fill: 'both', direction: out ? 'reverse' : 'normal' }
