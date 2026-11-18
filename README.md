@@ -1,7 +1,11 @@
 # spec-visualizer
 
+English | [한국어](README.ko.md)
+
 A local, read-only dashboard for a [GitHub spec-kit](https://github.com/github/spec-kit) project.
 It lays the six spec-driven stages out on one board, shows which feature stands where and what to type next, and turns every spec document into a page that fits its kind, instead of plain rendered markdown.
+
+![The board with its six stage cards, then a zoom from one card into that stage's document page](docs/media/board-to-document.gif)
 
 ## Install
 
@@ -23,7 +27,7 @@ The plugin starts, opens and stops the same dashboard from a Claude Code session
 /plugin install spec-visualizer@spec-visualizer
 ```
 
-Or from a shell: `claude plugin marketplace add josephleee/spec-visualizer`, then `claude plugin install spec-visualizer@spec-visualizer`. On Claude Code 2.1.275 or later one line does both: `/plugin install spec-visualizer --marketplace josephleee/spec-visualizer`.
+From a shell, `claude plugin install spec-visualizer --marketplace josephleee/spec-visualizer` does both.
 
 Then run `/spec-visualizer:dashboard` in a spec-kit project (`/spec-visualizer:dashboard stop` to stop it), or ask Claude to show the spec status.
 
@@ -42,19 +46,13 @@ Without a path it uses the current folder. The page updates by itself when files
 | `--no-open` | | Do not open the browser. It is also not opened when the output is not a terminal. |
 | `--help`, `--version` | | Print the usage or the version. |
 
-## Read-only
-
-spec-visualizer never writes to the project it shows. It listens on `127.0.0.1` only, answers only requests whose `Host` is `127.0.0.1:<port>` or `localhost:<port>`, and serves only the files its scan found. Raw HTML inside markdown is shown as text, never run, and HTML comments are hidden.
-
-The "new" and "changed" marks are kept in your browser's local storage, per project folder. The first time a project is opened, every document counts as already seen.
-
 ## The board
 
-The first screen is one board with six stage cards: Constitution, Specify, Plan, Tasks, Implement, Done. Each card shows what the stage is for, its command, how many features stand there and how many have passed, the features standing there as links, the documents the stage leaves, and the next command for those features with a copy button. The Constitution card lists the principles. A stage holding a feature with unfinished tasks is drawn in green.
+The first screen is one board with six stage cards: Constitution, Specify, Plan, Tasks, Implement, Done. Each card shows the stage's command, how many features stand there and how many have passed, the features standing there as links, the documents the stage leaves, and the next command for those features with a copy button. The Constitution card lists the principles. A stage holding a feature with unfinished tasks is drawn in green.
 
 The dark strip above it names the project (with the first paragraph of its `README.md`), the share of tasks done, the features finished and the next command for the feature in progress.
 
-A feature whose documents are new or changed since you last opened them carries a mark.
+A feature whose documents are new or changed since you last opened them carries a mark. The marks are kept in your browser's local storage, per project folder. The first time a project is opened, every document counts as already seen.
 
 ## Stage pages
 
@@ -70,12 +68,25 @@ Clicking a card or a feature zooms into that stage's document (`#/stage/<stage>/
 | | `quickstart.md` | Its sections as numbered steps |
 | | `contracts/*` | Markdown for `.md`, a code view for anything else |
 | 4 Tasks | `specs/<feature>/tasks.md` | Structure: phases, one mark per task (filled = done, outline = open), parallel `[P]` tasks stacked, story tags, the task text on demand |
-| 5 Implement | the same `tasks.md` | Progress: done of total, every task as a cell, what is left per phase and per story, the next command. Green marks only what is next |
+| 5 Implement | the same `tasks.md` | Progress: done of total, every task as a cell, what is left per phase and per story, the next command |
 | 6 Done | `specs/<feature>/checklists/*.md` | Items by group with counts; a chooser when there are several checklists |
 
-Any other `.md` in a feature folder is an `other` document: it is linked from the feature's pages and shown section by section (`#/doc/<path>`). Outside `contracts/`, only `.md` files are read: in the test fixture (`test/fixtures/demo`), `specs/001-login/analysis.md` is an `other` document and `notes.txt` is ignored.
+Any other `.md` in a feature folder is an `other` document: it is linked from the feature's pages and shown section by section (`#/doc/<path>`). Outside `contracts/`, only `.md` files are read.
 
-Nothing is dropped: parts of a document that a page does not draw are listed under a disclosure at its end, and a document that does not follow the template is shown in its own order.
+## How it reads your documents
+
+The server reads each document with a markdown parser and turns the parts it recognises (user stories, scenarios, requirement lists, task phases, labelled fields, decisions, entities) into typed blocks; the browser draws those blocks. No AI is involved, so a page always shows what the file says now.
+
+Nothing is dropped: a part that does not match a rule is kept as markdown, parts a page does not draw are listed under a disclosure at its end, and a document that does not follow the template is shown in its own order. HTML comments are the one exception; they are hidden.
+
+The exact rules per document type are in [docs/parsing-rules.md](docs/parsing-rules.md) (Korean). The design of the whole tool is in [docs/design.md](docs/design.md) (Korean).
+
+## Security
+
+- **Local only.** The server listens on `127.0.0.1` and answers only requests whose `Host` is `127.0.0.1:<port>` or `localhost:<port>`.
+- **Read-only.** It never writes to the project it shows, and accepts only `GET` requests.
+- **Only what the scan found.** A document is served only if the scan of `specs/` and `.specify/` listed it. Symbolic links are not followed.
+- **Document content is untrusted.** Raw HTML inside markdown is shown as text, never run. Images are not loaded: their alt text and address are shown instead. Only `http`, `https` and `#` links can be followed.
 
 ## What it does not do
 
@@ -89,16 +100,23 @@ Nothing is dropped: parts of a document that a page does not draw are listed und
 
 ## Development
 
+Use Node.js 24 or later: it runs the TypeScript sources directly.
+
 ```sh
+git clone https://github.com/josephleee/spec-visualizer.git
+cd spec-visualizer
 npm install
-npm start -- <path>   # run from the TypeScript sources (Node.js 24 or later); needs one `npm run build` for the web files
 npm test              # vitest
 npx tsc --noEmit      # type check
 npm run build         # web files into dist/web, the server as JavaScript into dist/server
+npm start -- --demo   # run from the TypeScript sources; needs the web files from one `npm run build`
+npm start -- <path>   # the same, for a project of your own
 ```
 
-The published package runs `dist/server/cli.js`. The Claude Code plugin is in `plugin/`, and `.claude-plugin/marketplace.json` makes this repository its marketplace.
+`npm run dev` serves the web sources with Vite and passes `/api` on to a server running on port 4321.
+
+The published package runs `dist/server/cli.js` and contains `dist/server`, `dist/web` and `examples/demo`. The Claude Code plugin is in `plugin/`, and `.claude-plugin/marketplace.json` makes this repository its marketplace. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-MIT
+[MIT](LICENSE)
