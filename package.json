@@ -14,7 +14,10 @@
   ],
   "license": "MIT",
   "author": "josephleee",
-  "repository": "github:josephleee/spec-visualizer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/josephleee/spec-visualizer.git"
+  },
   "homepage": "https://github.com/josephleee/spec-visualizer#readme",
   "bugs": "https://github.com/josephleee/spec-visualizer/issues",
   "type": "module",
