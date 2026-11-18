@@ -2,7 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { checkItems, clean, parse, takeLabels } from './md.ts'
+import { checkItems, clean, kids, parse, splitAt, takeLabels } from './md.ts'
+import type { Node } from './md.ts'
 import type { DocKind, DocRef, Feature, Project, Stage } from './types.ts'
 
 const CONSTITUTION = '.specify/memory/constitution.md'
@@ -83,18 +84,45 @@ function scanFeature(root: string, id: string): Feature {
   return { id, stage: stageOf({ tasks, hasPlan: docs.some((d) => d.rel === 'plan.md') }), docs: docs.map((d) => d.ref), tasks, openQuestions }
 }
 
+// Text only: links keep their text, images and HTML vanish.
+const plain = (n: Node): string =>
+  n.type === 'text' || n.type === 'inlineCode' ? n.value : n.type === 'image' || n.type === 'html' ? '' : n.type === 'break' ? ' ' : kids(n).map(plain).join('')
+
+// First README paragraph that has words (so badge and image lines are skipped), at most 300 characters.
+function readAbout(root: string): string | null {
+  // Dirent types come from lstat, so a symlinked README is not a file here.
+  const name = entries(root).find((e) => e.isFile() && /^readme\.md$/i.test(e.name))?.name
+  if (!name) return null
+  try {
+    for (const n of parse(clean(fs.readFileSync(path.join(root, name), 'utf8')))) {
+      const text = n.type === 'paragraph' ? plain(n).replace(/\s+/g, ' ').trim() : ''
+      if (text) return text.length <= 300 ? text : text.slice(0, 300).replace(/\s+\S*$/, '').slice(0, 299) + '…'
+    }
+  } catch { /* unreadable: no about */ }
+  return null
+}
+
 const num = (id: string) => /^\d+/.exec(id)?.[0]
 
 export function scanProject(root: string, branch: string | null = currentBranch(root)): Project {
   let constitution: DocRef | null = null
   let constitutionVersion: string | null = null
+  let constitutionRatified: string | null = null
+  let constitutionAmended: string | null = null
+  let principles: string[] = []
   const cp = path.join(root, CONSTITUTION)
   // every component must be a real directory/file: a symlinked parent would escape the root
   if (isDir(path.join(root, '.specify')) && isDir(path.dirname(cp)) && lst(cp)?.isFile()) {
     const c = readDoc(root, CONSTITUTION, 'constitution')
     constitution = c.ref
     const src = clean(c.text)
-    constitutionVersion = takeLabels(src, parse(src)).fields.find((f) => f.label === 'Version')?.value ?? null
+    const nodes = parse(src)
+    const label = (name: string) => takeLabels(src, nodes).fields.find((f) => f.label === name)?.value ?? null
+    constitutionVersion = label('Version')
+    constitutionRatified = label('Ratified')
+    constitutionAmended = label('Last Amended')
+    const core = splitAt(nodes, 2).find((s) => /^Core Principles/i.test(s.heading ?? ''))
+    principles = splitAt(core?.nodes ?? [], 3).filter((s) => s.heading !== null).map((s) => s.heading!.replace(/^(?:[IVXLCDM]+|\d+)[.)]\s+/, ''))
   }
 
   const specs = path.join(root, 'specs')
@@ -110,5 +138,8 @@ export function scanProject(root: string, branch: string | null = currentBranch(
   const features = ids.map((id) => scanFeature(root, id))
   const currentFeature = features.find((f) => f.id === branch)?.id ?? null
   if (currentFeature) features.sort((a, b) => +(b.id === currentFeature) - +(a.id === currentFeature)) // stable
-  return { root, name: path.basename(root), constitution, constitutionVersion, currentFeature, features }
+  return {
+    root, name: path.basename(root), about: readAbout(root),
+    constitution, constitutionVersion, constitutionRatified, constitutionAmended, principles, currentFeature, features,
+  }
 }

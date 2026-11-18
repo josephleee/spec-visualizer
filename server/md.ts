@@ -8,7 +8,7 @@ export type Sec = { heading: string | null; depth: number; nodes: Node[] }
 
 const processor = unified().use(remarkParse).use(remarkGfm)
 
-const kids = (n: Node): Node[] => ('children' in n ? (n.children as Node[]) : [])
+export const kids = (n: Node): Node[] => ('children' in n ? (n.children as Node[]) : [])
 const start = (n: Node) => n.position!.start.offset!
 const end = (n: Node) => n.position!.end.offset!
 

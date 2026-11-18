@@ -115,3 +115,43 @@ test('isSpecKit', () => {
   fs.mkdirSync(path.join(root, '.specify'))
   expect(isSpecKit(root)).toBe(true)
 })
+
+const CONSTITUTION = '# C\n\n## Core Principles\n\n### I. Library First\n\nx\n\n### 2. Test First\n\ny\n\n### Plain Title\n\nz\n\n## Governance\n\n### IV. Not a principle\n\nRules.\n\n**Version**: 2.1.1 | **Ratified**: 2025-06-13 | **Last Amended**: 2025-07-16\n'
+
+test('scanProject: constitution dates and principle titles', () => {
+  const root = tmp()
+  write(root, '.specify/memory/constitution.md', CONSTITUTION)
+  expect(scanProject(root, null)).toMatchObject({
+    constitutionVersion: '2.1.1', constitutionRatified: '2025-06-13', constitutionAmended: '2025-07-16',
+    principles: ['Library First', 'Test First', 'Plain Title'], about: null,
+  })
+  expect(scanProject(tmp(), null)).toMatchObject({ constitutionRatified: null, constitutionAmended: null, principles: [], about: null })
+})
+
+test('scanProject: about is the first prose paragraph of the README', () => {
+  const root = tmp()
+  write(root, 'readme.md', '<p align="center"><img src="logo.png"></p>\n\n# hl\n\n[![ci](https://x/b.svg)](https://x/ci) ![cov](c.svg)\n\n![shot](shot.png)\n\n<!-- hidden -->\n\nA **fast** log viewer for\n[JSON logs](https://example.com) and `logfmt`.\n\nSecond paragraph.\n')
+  expect(scanProject(root, null).about).toBe('A fast log viewer for JSON logs and logfmt.')
+})
+
+test('scanProject: a long about is cut at a word boundary within 300 characters', () => {
+  const root = tmp()
+  write(root, 'README.md', '# T\n\n' + 'word '.repeat(100) + '\n')
+  const about = scanProject(root, null).about!
+  expect(about.length).toBeLessThanOrEqual(300)
+  expect(about).toMatch(/^(word )+word…$/)
+  const one = tmp(); write(one, 'README.md', 'x'.repeat(400))
+  expect(scanProject(one, null).about).toBe('x'.repeat(299) + '…')
+})
+
+test('scanProject: README that is a symlink, a directory, unreadable or without prose gives null', () => {
+  const outside = tmp(); write(outside, 'secret.md', 'secret words')
+  const r1 = tmp(); fs.symlinkSync(path.join(outside, 'secret.md'), path.join(r1, 'README.md'))
+  expect(scanProject(r1, null).about).toBeNull()
+  const r2 = tmp(); fs.mkdirSync(path.join(r2, 'README.md'))
+  expect(scanProject(r2, null).about).toBeNull()
+  const r3 = tmp(); write(r3, 'README.md', '# Only a title\n\n![img](a.png)\n')
+  expect(scanProject(r3, null).about).toBeNull()
+  const r4 = tmp(); write(r4, 'README.md', 'words'); fs.chmodSync(path.join(r4, 'README.md'), 0)
+  if (!root0) expect(scanProject(r4, null).about).toBeNull()
+})

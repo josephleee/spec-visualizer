@@ -9,7 +9,10 @@ export type Feature = {
 }
 export type Project = {
   root: string; name: string
+  about: string | null                                          // first prose paragraph of the README, plain text
   constitution: DocRef | null; constitutionVersion: string | null
+  constitutionRatified: string | null; constitutionAmended: string | null
+  principles: string[]
   currentFeature: string | null; features: Feature[]
 }
 export type Field = { label: string; value: string }            // value is markdown

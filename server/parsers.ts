@@ -1,4 +1,4 @@
-import { checkItems, clean, headingText, parse, slice, splitAt, takeLabels } from './md.ts'
+import { checkItems, clean, headingText, kids, parse, slice, splitAt, takeLabels } from './md.ts'
 import type { Node, Sec } from './md.ts'
 import type { Block, DocRef, Field, ParsedDoc, Scenario } from './types.ts'
 
@@ -19,7 +19,6 @@ const GWT = new RegExp(`^${word('Given')}\\s*([\\s\\S]*?)\\s*,?\\s*${word('When'
 const STEP = /^(?:\*\*(Given|When|Then|And|But):?\*\*|(Given|When|Then|And|But)\b):?\s*([\s\S]*)$/i
 const ID_ITEM = /^\*\*([A-Z]+-\d+[a-z]?)\*\*:\s*([\s\S]*)$/
 
-const kids = (n: Node): Node[] => ('children' in n ? (n.children as Node[]) : [])
 const body = (src: string, item: Node) => slice(src, kids(item))
 
 // Reads acceptance lists into scenarios; items that cannot be placed go to `extra` as written.
