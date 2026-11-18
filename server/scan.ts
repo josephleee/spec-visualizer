@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { checkItems, clean, kids, parse, splitAt, takeLabels } from './md.ts'
+import { checkItems, clean, kids, parse, slice, splitAt } from './md.ts'
 import type { Node } from './md.ts'
 import type { DocKind, DocRef, Feature, Project, Stage } from './types.ts'
 
@@ -89,6 +89,7 @@ const plain = (n: Node): string =>
   n.type === 'text' || n.type === 'inlineCode' ? n.value : n.type === 'image' || n.type === 'html' ? '' : n.type === 'break' ? ' ' : kids(n).map(plain).join('')
 
 // First README paragraph that has words (so badge and image lines are skipped), at most 300 characters.
+const CAP = 64 * 1024
 function readAbout(root: string): string | null {
   // Dirent types come from lstat, so a symlinked README is not a file here.
   const name = entries(root).find((e) => e.isFile() && /^readme\.md$/i.test(e.name))?.name
@@ -96,11 +97,11 @@ function readAbout(root: string): string | null {
   try {
     // O_NOFOLLOW: a README swapped for a symlink after the listing is still not followed. 64 KB is enough for a first paragraph.
     const fd = fs.openSync(path.join(root, name), fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW)
-    const buf = Buffer.alloc(64 * 1024)
+    const buf = Buffer.alloc(CAP + 1) // one byte more tells a cut file from one of exactly CAP bytes
     let len = 0
     try { len = fs.readSync(fd, buf, 0, buf.length, 0) } finally { fs.closeSync(fd) }
-    let text = buf.toString('utf8', 0, len)
-    if (len === buf.length) text = text.slice(0, text.lastIndexOf('\n\n') + 1) // a cut file ends mid-block: drop that block
+    let text = buf.toString('utf8', 0, Math.min(len, CAP)).replace(/\r\n?/g, '\n')
+    if (len > CAP) text = text.slice(0, text.lastIndexOf('\n\n') + 1) // a cut file ends mid-block: drop that block
     for (const n of parse(clean(text))) {
       const chars = n.type === 'paragraph' ? [...plain(n).replace(/\s+/g, ' ').trim()] : [] // code points, so no split surrogate pair
       if (chars.length > 300) return [...chars.slice(0, 300).join('').replace(/\s+\S*$/, '')].slice(0, 299).join('') + '…'
@@ -125,16 +126,16 @@ export function scanProject(root: string, branch: string | null = currentBranch(
     constitution = c.ref
     const src = clean(c.text)
     const nodes = parse(src)
-    // A value is the label's own line: takeLabels would add every block up to the next label.
-    const fields = takeLabels(src, nodes).fields
-    const label = (name: string) => fields.find((f) => f.label === name)?.value.split('\n')[0].trim() || null
+    // A value is what stands on the label's own line, up to a `|`; an empty one is null, never the next block.
+    const lines = nodes.filter((n) => n.type === 'paragraph').map((n) => slice(src, [n])).join('\n')
+    const label = (name: string) => new RegExp(`(?:^|\\|)[ \\t]*\\*\\*${name}\\*\\*:[ \\t]*([^|\\n]*)`, 'm').exec(lines)?.[1].trim() || null
     constitutionVersion = label('Version')
     constitutionRatified = label('Ratified')
     constitutionAmended = label('Last Amended')
     const core = splitAt(nodes, 2).find((s) => /^Core Principles/i.test(s.heading ?? ''))
     // Only I/V/X numerals or digits are a numbering prefix: "C. Consistency" and "MIX. Odd" are titles.
     principles = (core?.nodes ?? []).filter((n) => n.type === 'heading' && n.depth === 3)
-      .map((n) => plain(n).replace(/\s+/g, ' ').trim().replace(/^(?:[IVX]+|\d+)[.)]\s+/, ''))
+      .map((n) => plain(n).replace(/\s+/g, ' ').trim().replace(/^(?:[IVX]+|\d+)[.)]\s+/, '')).filter(Boolean)
   }
 
   const specs = path.join(root, 'specs')

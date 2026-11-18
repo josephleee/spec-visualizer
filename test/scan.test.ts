@@ -178,3 +178,25 @@ test('scanProject: about is cut by code points and only the first 64 KB of the R
   const huge = tmp(); write(huge, 'README.md', '![i](a.png)\n\n'.repeat(6000) + 'late prose\n')
   expect(scanProject(huge, null).about).toBeNull()
 })
+
+test('scanProject: a long CRLF README and one of exactly 64 KB still give the first paragraph', () => {
+  const crlf = tmp(); write(crlf, 'README.md', '# T\r\n\r\nFirst words.\r\n\r\n' + 'filler line\r\n'.repeat(6000))
+  expect(scanProject(crlf, null).about).toBe('First words.')
+  const exact = tmp(); write(exact, 'README.md', 'x '.repeat(32768).trimEnd() + 'y')
+  expect(fs.statSync(path.join(exact, 'README.md')).size).toBe(65536)
+  expect(scanProject(exact, null).about).toMatch(/^(x )+x…$/)
+  const over = tmp(); write(over, 'README.md', 'x '.repeat(40000))
+  expect(scanProject(over, null).about).toBeNull() // one unfinished block: nothing complete to show
+})
+
+test('scanProject: an empty constitution label is null, not the next block', () => {
+  const root = tmp()
+  write(root, '.specify/memory/constitution.md', '# C\n\n**Version**:\n\nSome paragraph.\n\n**Ratified**: | **Last Amended**:\nnext line\n\n- list\n')
+  expect(scanProject(root, null)).toMatchObject({ constitutionVersion: null, constitutionRatified: null, constitutionAmended: null })
+})
+
+test('scanProject: principle titles with no text are left out', () => {
+  const root = tmp()
+  write(root, '.specify/memory/constitution.md', '## Core Principles\n\n### ![img](a.png)\n\nx\n\n###\n\ny\n\n### I. Real\n\nz\n')
+  expect(scanProject(root, null).principles).toEqual(['Real'])
+})
