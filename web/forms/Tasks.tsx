@@ -2,8 +2,6 @@ import { byStory, doneCount, phasesOf, taskColumns } from '../guide.ts'
 import { FieldsSheet, Mark, Rich, Sec, Stats, TaskRows, Title, Value, fieldOf } from '../parts.tsx'
 import type { Form } from './types.ts'
 
-const GOALS = ['goal', 'purpose']
-
 // Structure: how many phases, which tasks can run together, which story each phase serves.
 export const tasks: Form = (doc, { t }) => {
   const phases = phasesOf(doc.blocks), all = phases.flatMap(p => p.items)
@@ -21,10 +19,10 @@ export const tasks: Form = (doc, { t }) => {
           {phases.map((p, i) => {
             const goal = fieldOf(p.fields, 'Goal') ?? fieldOf(p.fields, 'Purpose'), done = doneCount(p.items)
             const story = p.items.find(x => x.story)?.story
-            const others = p.fields.filter(f => !GOALS.includes(f.label.toLowerCase()) || f.value !== goal)
+            const others = p.fields.filter(f => f !== goal)
             return (
               <article key={i} className="lane">
-                <div className="lane-h"><h3><Title>{p.title}</Title></h3>{goal && <div className="lane-goal"><Value md={goal} /></div>}</div>
+                <div className="lane-h"><h3><Title>{p.title}</Title></h3>{goal && <div className="lane-goal"><Value md={goal.value} /></div>}</div>
                 <div className="track" role="img" aria-label={t('i.aria', p.items.length, done)}>
                   {taskColumns(p.items).map((col, j) => <span key={j} className="col">{col.map((x, k) => <Mark key={k} item={x} />)}</span>)}
                 </div>

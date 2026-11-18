@@ -58,7 +58,7 @@ export function leadFeature(p: Project): Feature | null {
 export function projectTotals(p: Project) {
   const done = p.features.reduce((n, f) => n + (f.tasks?.done ?? 0), 0)
   const total = p.features.reduce((n, f) => n + (f.tasks?.total ?? 0), 0)
-  return { done, total, pct: total ? Math.round(done / total * 100) : 0, finished: p.features.filter(f => f.stage === 'done').length }
+  return { done, total, pct: total ? Math.floor(done / total * 100) : 0, finished: p.features.filter(f => f.stage === 'done').length }
 }
 
 // ---------- aggregates the document forms draw ----------

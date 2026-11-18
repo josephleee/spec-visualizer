@@ -11,7 +11,8 @@ export function splitNo(title: string, n: number): [string, string] {
   const m = clean(title).match(/^(?:Decision\s+)?(\d+[a-z]?|[IVX]+)[.:]\s+(.*)$/)
   return m ? [m[1], m[2]] : [String(n + 1), clean(title)]
 }
-export const fieldOf = (items: Field[], label: string) => items.find(f => f.label.toLowerCase() === label.toLowerCase())?.value
+// The first field with this label, as the object itself: what was drawn is told apart by identity, so a repeated label is never dropped.
+export const fieldOf = (items: Field[], label: string) => items.find(f => f.label.toLowerCase() === label.toLowerCase())
 export const cssVars = (vars: Record<string, string | number>) => vars as CSSProperties
 
 export const Title = ({ children }: { children: string }) => <Markdown heading>{clean(children)}</Markdown>
@@ -30,7 +31,7 @@ export function Copy({ cmd }: { cmd: string }) {
   // Fails quietly: no clipboard, no permission, insecure context.
   const copy = () => { try { navigator.clipboard.writeText(cmd).then(() => setOk(true), () => {}) } catch { /* quiet */ } }
   return (
-    <button type="button" className={ok ? 'copy ok' : 'copy'} aria-label={t('copy.aria', cmd)} onClick={copy}>
+    <button type="button" className={ok ? 'copy ok' : 'copy'} onClick={copy}>
       <span aria-live="polite">{t(ok ? 'copied' : 'copy')}</span>
     </button>
   )
@@ -96,6 +97,11 @@ export function Mark({ item, next }: { item: CheckItem; next?: boolean }) {
   )
 }
 
+export function TaskTags({ item }: { item: CheckItem }) {
+  const { t } = useLang()
+  return <span className="trow-tags">{item.parallel && <i>{t('t.partag')}</i>}{item.story && <i>{item.story}</i>}</span>
+}
+
 export function TaskRows({ items, next }: { items: CheckItem[]; next?: Set<CheckItem> }) {
   const { t } = useLang()
   return (
@@ -105,7 +111,7 @@ export function TaskRows({ items, next }: { items: CheckItem[]; next?: Set<Check
           <Mark item={x} next={next?.has(x)} />
           <span className="sr">{t(x.done ? 't.done' : next?.has(x) ? 't.next' : 't.open')}</span>
           <code>{x.id ?? ''}</code>
-          <span className="trow-tags">{x.parallel && <i>{t('t.partag')}</i>}{x.story && <i>{x.story}</i>}</span>
+          <TaskTags item={x} />
           <div><Value md={x.text} /></div>
         </li>
       ))}

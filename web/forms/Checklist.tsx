@@ -1,5 +1,5 @@
 import { doneCount, phasesOf } from '../guide.ts'
-import { FieldsSheet, Rich, Sec, Stats, Tick, Title, Value } from '../parts.tsx'
+import { FieldsSheet, Rich, Sec, Stats, TaskTags, Tick, Title, Value } from '../parts.tsx'
 import type { Form } from './types.ts'
 
 // What was checked, group by group.
@@ -23,7 +23,7 @@ export const checklist: Form = (doc, { t, feature }) => {
                   {g.items.map((x, j) => (
                     <li key={j} className={x.done ? 'done' : undefined}>
                       <Tick on={x.done} /><span className="sr">{t(x.done ? 't.done' : 't.open')}</span>
-                      <div>{x.id && <code>{x.id}</code>} <Value md={x.text} /></div>
+                      <div>{x.id && <code>{x.id}</code>} <TaskTags item={x} /> <Value md={x.text} /></div>
                     </li>
                   ))}
                 </ul>

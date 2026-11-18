@@ -14,7 +14,7 @@ export function Generic({ b }: { b: Block }) {
     case 'raw': return <Rich md={b.markdown} />
     case 'fields': return <><FieldsSheet items={b.items} /><Rich md={b.rest} /></>
     case 'idList': return <><IdRows items={b.items} /><Rich md={b.rest} /></>
-    case 'code': return <pre className="code" tabIndex={0}><code>{b.text}</code></pre>
+    case 'code': return <>{b.lang && <span className="lbl">{b.lang}</span>}<pre className="code" tabIndex={0}><code>{b.text}</code></pre></>
     case 'cards': return <>{b.items.map((c, i) => <div key={i} className="sub"><h4><Title>{c.title}</Title></h4><Rich md={c.markdown} /></div>)}</>
     case 'phase': return <><FieldsSheet items={b.fields} /><TaskRows items={b.items} /><Rich md={b.rest} /></>
     case 'stories': return <Stories items={b.items} />
@@ -24,7 +24,8 @@ export function Generic({ b }: { b: Block }) {
 
 // Blocks the form did not draw: say how many, keep them one click away.
 export function More({ blocks, t }: { blocks: Block[]; t: T }) {
-  const left = blocks.filter(hasBody)
+  // A heading with nothing under it is still shown, as its heading line; only a block with neither is nothing.
+  const left = blocks.filter(b => hasBody(b) || (b.kind === 'raw' && b.heading))
   if (!left.length) return null
   return (
     <section className="sec more">

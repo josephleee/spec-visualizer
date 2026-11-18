@@ -13,7 +13,7 @@ const LABELS = {
     'say.implement': 'Build the tasks one by one and tick them off',
     'say.done': 'Confirm that every task is finished',
     'f.stages': 'Stages', 'f.stages.u': 'stages', 'f.tasks': 'Tasks', 'f.feats': 'Features', 'f.done': 'done',
-    nextcmd: 'Next command', copy: 'Copy', copied: 'Copied', 'copy.aria': 'Copy command: {0}',
+    nextcmd: 'Next command', copy: 'Copy', copied: 'Copied',
     'strip.left': '{0} · {1} tasks left', 'strip.at': '{0} · now at {1}', 'strip.none': 'No feature in progress', 'strip.empty': 'No features yet. Start the first one',
     title: '{0} spec board', board: '{0} project board', language: 'Language', project: 'Project',
     zone: 'Six SDD stages', 'zone.hint': 'Left to right. A stage zooms into its document, a feature into that feature’s document',
@@ -52,10 +52,11 @@ const LABELS = {
     't.struct.n': 'Left to right in order; stacked marks can run together', 't.done': 'Done', 't.open': 'Open', 't.next': 'Next', 't.story': 'User story', 't.expand': 'Show {0} tasks', 't.partag': 'parallel',
     'i.pct': '{0}% done · {1} left', 'i.aria': '{1} of {0} tasks done', 'i.next': 'Command to type next', 'i.cont': 'Continue with the {0} tasks left',
     'i.fin': 'Every task is finished. Nothing to type', 'i.left': 'What is left per phase', 'i.left.n': 'open in {0} phases', 'i.nleft': '{0} left',
-    'i.bystory': 'Progress per story', 'i.groups': '{0} groups', 'i.common': 'Shared',
+    'i.outside': '{0} of the {1} tasks sit outside any phase, so they have no cell here', 'i.bystory': 'Progress per story', 'i.groups': '{0} groups', 'i.common': 'Shared',
     'k.checked': 'Items checked', 'k.groups': 'Groups', 'k.feat': 'Tasks of this feature', 'k.title': 'Checklist', 'k.notasks': 'no tasks', 'k.stage': 'Stage of this feature',
     disconnected: 'Disconnected from the server. Reconnecting…', loading: 'Loading…',
     docGone: 'This document no longer exists.', 'docGone.say': 'Its file was deleted or moved while the page was open.',
+    'err.title': 'This page could not be drawn', 'err.say': 'Something in it broke the page. The project files are untouched.',
     readError: 'Could not read this document', refreshError: 'Could not refresh this document. Showing the last version read.',
   },
   ko: {
@@ -67,7 +68,7 @@ const LABELS = {
     'say.implement': '작업을 하나씩 구현하고 체크한다',
     'say.done': '모든 작업이 끝났는지 확인한다',
     'f.stages': '단계', 'f.stages.u': '단계', 'f.tasks': '작업', 'f.feats': '기능', 'f.done': '완료',
-    nextcmd: '다음 명령', copy: '복사', copied: '복사됨', 'copy.aria': '명령 복사: {0}',
+    nextcmd: '다음 명령', copy: '복사', copied: '복사됨',
     'strip.left': '{0} · 남은 작업 {1}개', 'strip.at': '{0} · 지금 {1} 단계', 'strip.none': '진행 중인 기능 없음', 'strip.empty': '기능이 아직 없다. 첫 기능을 시작',
     title: '{0} 스펙 보드', board: '{0} 프로젝트 보드', language: '언어', project: '프로젝트',
     zone: 'SDD 여섯 단계', 'zone.hint': '왼쪽에서 오른쪽으로 진행. 단계를 누르면 대표 문서로, 기능을 누르면 그 기능의 문서로 확대된다',
@@ -106,10 +107,11 @@ const LABELS = {
     't.struct.n': '왼쪽에서 오른쪽으로 순서대로, 세로로 쌓인 칸은 동시에', 't.done': '완료', 't.open': '남음', 't.next': '다음 차례', 't.story': '사용자 스토리', 't.expand': '작업 {0}개 펼치기', 't.partag': '병렬',
     'i.pct': '{0}% 완료 · {1}개 남음', 'i.aria': '작업 {0}개 중 {1}개 완료', 'i.next': '다음에 입력할 명령', 'i.cont': '남은 작업 {0}개를 이어서 구현',
     'i.fin': '모든 작업이 끝났다. 입력할 명령 없음', 'i.left': '단계별로 남은 것', 'i.left.n': '{0}개 단계에 남음', 'i.nleft': '{0}개 남음',
-    'i.bystory': '스토리별 진행', 'i.groups': '{0}개 묶음', 'i.common': '공통',
+    'i.outside': '작업 {1}개 중 {0}개는 어느 단계에도 속하지 않아 여기 칸이 없다', 'i.bystory': '스토리별 진행', 'i.groups': '{0}개 묶음', 'i.common': '공통',
     'k.checked': '확인한 항목', 'k.groups': '묶음', 'k.feat': '이 기능의 작업', 'k.title': '체크리스트', 'k.notasks': '작업 없음', 'k.stage': '이 기능의 단계',
     disconnected: '서버와 연결이 끊어졌다. 다시 연결하는 중…', loading: '불러오는 중…',
     docGone: '이 문서는 더 이상 없다.', 'docGone.say': '페이지를 연 뒤에 파일이 지워졌거나 옮겨졌다.',
+    'err.title': '이 화면을 그리지 못했다', 'err.say': '화면을 그리다 오류가 났다. 프로젝트 파일은 그대로다.',
     readError: '이 문서를 읽을 수 없다', refreshError: '문서를 새로 읽지 못했다. 마지막으로 읽은 내용을 보여 준다.',
   },
 } satisfies Record<Lang, Record<string, string>>
@@ -141,7 +143,7 @@ function setLang(l: Lang) {
 }
 
 export function useLang(): { lang: Lang; setLang: (l: Lang) => void; t: T } {
-  const l = useSyncExternalStore(f => { listeners.add(f); return () => void listeners.delete(f) }, get)
-  document.documentElement.lang = l
+  const l = useSyncExternalStore(f => { listeners.add(f); return () => void listeners.delete(f) }, get, get)
+  if (typeof document !== 'undefined') document.documentElement.lang = l
   return { lang: l, setLang, t: (key, ...args) => translate(l, key, ...args) }
 }

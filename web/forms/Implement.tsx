@@ -14,13 +14,14 @@ export const implement: Form = (doc, { t, feature }) => {
     body: (
       <>
         <section className="sec prog">
-          <div className="prog-n"><b>{done}</b><span>/ {total}</span><em>{t('i.pct', total ? Math.round(done / total * 100) : 0, left)}</em></div>
+          <div className="prog-n"><b>{done}</b><span>/ {total}</span><em>{t('i.pct', total ? Math.floor(done / total * 100) : 0, left)}</em></div>
           <div className="cellstrip" role="img" aria-label={t('i.aria', total, done)}>
             {phases.map((p, i) => <span key={i} className="cg">{p.items.map((x, j) => <Mark key={j} item={x} next={next.has(x)} />)}</span>)}
           </div>
           {left > 0
             ? <div className="nextbox"><span className="lbl">{t('i.next')}</span><CmdRow cmd={CMD.implement} big /><p>{t('i.cont', left)}</p></div>
             : <div className="nextbox fin"><p>{t('i.fin')}</p></div>}
+          {total > all.length && <p className="prog-note">{t('i.outside', total - all.length, total)}</p>}
         </section>
         <Sec title={t('i.left')} note={t('i.left.n', phases.filter(p => p.items.some(x => !x.done)).length)}>
           {phases.map((p, i) => {
@@ -30,7 +31,9 @@ export const implement: Form = (doc, { t, feature }) => {
                 <h3><Title>{p.title}</Title></h3><Bar done={p.items.length - open.length} total={p.items.length} />
                 <b>{open.length ? t('i.nleft', open.length) : t('t.done')}</b>
                 {open.length > 0 && <TaskRows items={open} next={next} />}
-                {(p.fields.length > 0 || p.rest.trim()) && <details><summary>{t('more.blocks', p.fields.length + (p.rest.trim() ? 1 : 0))}</summary><FieldsSheet items={p.fields} /><Rich md={p.rest} /></details>}
+                {(p.items.length > 0 || p.fields.length > 0 || p.rest.trim()) && (
+                  <details><summary>{t('t.expand', p.items.length)}</summary><FieldsSheet items={p.fields} /><TaskRows items={p.items} next={next} /><Rich md={p.rest} /></details>
+                )}
               </article>
             )
           })}

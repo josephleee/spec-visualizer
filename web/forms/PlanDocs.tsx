@@ -2,7 +2,6 @@ import { useLang } from '../i18n.ts'
 import { Rich, Sec, Title, Value, clean, fieldOf, splitNo } from '../parts.tsx'
 import { hasBody, isKind, type B, type Form } from './types.ts'
 
-const DECISION_FIELDS = ['question', 'decision', 'rationale', 'alternatives considered']
 
 export function Decisions({ items }: { items: B<'decisions'>['items'] }) {
   const { t } = useLang()
@@ -13,15 +12,15 @@ export function Decisions({ items }: { items: B<'decisions'>['items'] }) {
         const question = f('Question'), decision = f('Decision'), why = f('Rationale'), alts = f('Alternatives Considered')
         return (
           <article key={n} className="dec">
-            <header><span className="dec-no">{no}</span><div><h3><Title>{name}</Title></h3>{question && <div className="dec-q"><Value md={question} /></div>}</div></header>
+            <header><span className="dec-no">{no}</span><div><h3><Title>{name}</Title></h3>{question && <div className="dec-q"><Value md={question.value} /></div>}</div></header>
             <div className="dec-cols">
               <div className="dec-yes">
-                <span className="lbl">{t('r.dec')}</span>{decision && <div className="dec-d"><Value md={decision} /></div>}
-                {why && <><span className="lbl">{t('r.why')}</span><Rich md={why} /></>}
+                <span className="lbl">{t('r.dec')}</span>{decision && <div className="dec-d"><Value md={decision.value} /></div>}
+                {why && <><span className="lbl">{t('r.why')}</span><Rich md={why.value} /></>}
               </div>
               <div className="dec-alt">
-                {alts ? <><span className="lbl">{t('r.alt')}</span><div className="alts"><Rich md={alts} /></div></> : <span className="lbl">{t('r.noalt')}</span>}
-                {x.fields.filter(y => !DECISION_FIELDS.includes(y.label.toLowerCase())).map((y, i) => <div key={i}><span className="lbl">{y.label}</span><Rich md={y.value} /></div>)}
+                {alts ? <><span className="lbl">{t('r.alt')}</span><div className="alts"><Rich md={alts.value} /></div></> : <span className="lbl">{t('r.noalt')}</span>}
+                {x.fields.filter(y => ![question, decision, why, alts].includes(y)).map((y, i) => <div key={i}><span className="lbl">{y.label}</span><Rich md={y.value} /></div>)}
               </div>
             </div>
             <Rich md={x.rest} />
@@ -49,12 +48,17 @@ export const dataModel: Form = (doc, { t }) => {
     body: (
       <>
         <Sec title={t('d.ent')} note={t('n.count', all.length)}>
-          <div className="ents">
-            {all.map((c, n) => {
-              const [no, name] = splitNo(c.title, n)
-              return <article key={n} className="ent"><header><span>{no}</span><h3><Title>{name}</Title></h3></header><Rich md={c.markdown} /></article>
-            })}
-          </div>
+          {blocks.map((b, i) => (
+            <div key={i} className="ents-g">
+              <h3><Title>{b.heading}</Title></h3>
+              <div className="ents">
+                {b.items.map((c, n) => {
+                  const [no, name] = splitNo(c.title, n)
+                  return <article key={n} className="ent"><header><span>{no}</span><h3><Title>{name}</Title></h3></header><Rich md={c.markdown} /></article>
+                })}
+              </div>
+            </div>
+          ))}
         </Sec>
         {rel && <Sec title={t('d.rel')}><Rich md={rel.markdown} /></Sec>}
       </>
@@ -64,7 +68,7 @@ export const dataModel: Form = (doc, { t }) => {
 
 // quickstart.md has no parser of its own: every section is a numbered step, in order.
 export const quickstart: Form = (doc, { t }) => {
-  const steps = doc.blocks.filter(isKind('raw')).filter(hasBody)
+  const steps = doc.blocks.filter(isKind('raw')).filter(b => b.heading || hasBody(b))
   if (!steps.length) return null
   return {
     used: steps,

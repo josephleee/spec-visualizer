@@ -59,6 +59,7 @@ test('the strip speaks for the current feature, else the one in progress, else t
 test('project totals count tasks across features', () => {
   expect(projectTotals(p)).toEqual({ done: 93, total: 108, pct: 86, finished: 1 })
   expect(projectTotals(project([]))).toEqual({ done: 0, total: 0, pct: 0, finished: 0 })
+  expect(projectTotals(project([feature('a', 'implement', 199, 200)])).pct).toBe(99) // never 100% with a task left
 })
 
 test('consecutive parallel tasks share a column', () => {

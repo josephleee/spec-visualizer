@@ -1,25 +1,22 @@
 import type { ReactNode } from 'react'
+import type { Field } from '../../server/types.ts'
 import { FieldsSheet, Rich, Sec, Stats, Title, Value, fieldOf, splitNo } from '../parts.tsx'
 import { isKind, type Form } from './types.ts'
-
-const SHOWN_AS_STATS = ['version', 'ratified', 'last amended']
 
 // Principle plates, the version line as large figures, then one sheet per field section.
 export const constitution: Form = (doc, { t }) => {
   const cards = doc.blocks.find(isKind('cards'))
-  if (!cards) return null
+  if (!cards) return null // a second cards block is left to the list of undrawn blocks
   const fields = doc.blocks.filter(isKind('fields'))
   const gov = fields.find(b => fieldOf(b.items, 'Version'))
-  const fig = (label: string, name: string): [ReactNode, string] | null => {
-    const v = gov && fieldOf(gov.items, label)
-    return v ? [<Value md={v} />, name] : null
-  }
+  const version = gov && fieldOf(gov.items, 'Version'), ratified = gov && fieldOf(gov.items, 'Ratified'), amended = gov && fieldOf(gov.items, 'Last Amended')
+  const fig = (f: Field | undefined, name: string): [ReactNode, string] | null => (f ? [<Value md={f.value} />, name] : null)
   return {
     used: [cards, ...fields],
     body: (
       <>
-        <Stats items={[[cards.items.length, t('principles')], fig('Version', t('c.version')), fig('Ratified', t('c.ratified')), fig('Last Amended', t('c.amended'))]} />
-        <Sec title={t('principles')} note={t('n.count', cards.items.length)}>
+        <Stats items={[[cards.items.length, t('principles')], fig(version, t('c.version')), fig(ratified, t('c.ratified')), fig(amended, t('c.amended'))]} />
+        <Sec title={<Title>{cards.heading}</Title>} note={t('n.count', cards.items.length)}>
           <ol className="plates">
             {cards.items.map((c, n) => {
               const [no, name] = splitNo(c.title, n)
@@ -32,7 +29,7 @@ export const constitution: Form = (doc, { t }) => {
           </ol>
         </Sec>
         {fields.map((b, i) => {
-          const items = b === gov ? b.items.filter(f => !SHOWN_AS_STATS.includes(f.label.toLowerCase())) : b.items
+          const items = b.items.filter(f => ![version, ratified, amended].includes(f)) // drawn above as figures
           return <Sec key={i} title={<Title>{b.heading}</Title>} note={t('n.items', items.length)}><FieldsSheet items={items} /><Rich md={b.rest} /></Sec>
         })}
       </>

@@ -24,7 +24,7 @@ export function Stories({ items }: { items: B<'stories'>['items'] }) {
             <ol className="flows">
               {s.scenarios.map((c, i) => (
                 <li key={i} className="gwt">
-                  {STEPS.map(k => <div key={k} className={`gw ${k}`}><span>{k[0].toUpperCase() + k.slice(1)}</span><div><Value md={c[k]} /></div></div>)}
+                  {STEPS.map(k => <div key={k} className={`gw ${k}`}><span>{k[0].toUpperCase() + k.slice(1)}</span><Rich md={c[k]} /></div>)}
                 </li>
               ))}
             </ol>
