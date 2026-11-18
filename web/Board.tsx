@@ -48,12 +48,11 @@ function Scroller({ children }: { children: ReactNode }) {
   )
 }
 
-// spec-kit folders start with a number: it stands apart. Other formats name their units with words (an archived OpenSpec
-// change with its date), so the name is shown whole and an archive date stands apart instead.
+// spec-kit folders start with a number: it stands apart. Other formats name their units with words, so the name is shown
+// whole; an archived OpenSpec change drops its date prefix here (the archive card lists them newest first, the full id is the tooltip).
 export function sheetName(id: string, flow: Flow): [string, string] {
   if (flow.id === 'spec-kit') { const [no, ...rest] = id.split('-'); return [no, rest.length ? rest.join('-') : ''] }
-  const m = /^archive\/(\d{4}-\d{2}-\d{2})-(.+)$/.exec(id)
-  return m ? [m[1], m[2]] : ['', id]
+  return ['', id.replace(/^archive\/\d{4}-\d{2}-\d{2}-/, '')]
 }
 
 function Sheet({ f, wide, seen, flow }: { f: Feature; wide: boolean; seen: Seen; flow: Flow }) {
@@ -61,7 +60,7 @@ function Sheet({ f, wide, seen, flow }: { f: Feature; wide: boolean; seen: Seen;
   const [no, name] = sheetName(f.id, flow)
   return (
     <a className={wide ? (busy(f) ? 'fs wide on' : 'fs wide') : 'fs'} href={stageHref(f.stage, f.id)} title={f.id}>
-      {(no || flow.id === 'spec-kit') && <b>{no}</b>}<span className="fs-name">{name}</span>
+      {flow.id === 'spec-kit' && <b>{no}</b>}<span className="fs-name">{name}</span>
       {f.docs.some(d => d.error) ? <span className="seen err">{t('err.read')}</span> : <SeenMark docs={f.docs} seen={seen} />}
       {wide && f.tasks && <>
         <span className="fs-bar"><i style={cssVars({ '--v': f.tasks.total ? f.tasks.done / f.tasks.total : 0 })} /></span>

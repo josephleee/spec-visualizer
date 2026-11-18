@@ -51,7 +51,7 @@ export function outline(doc: ParsedDoc, t: T, offTemplate: boolean): ReactNode {
     <>
       {offTemplate && <Stats items={[[groups.length, t('o.sections')], [doc.blocks.filter(hasBody).length, t('o.blocks')]]} note={t('o.note')} />}
       {groups.map((g, i) => (
-        <Sec key={i} title={<Title>{headOf(g.b, t)}</Title>} note={g.kids.length ? t('o.sub', g.kids.length) : g.b.kind === 'requirements' && g.b.heading ? t('q.n', g.b.items.length) : null}>
+        <Sec key={i} title={<Title>{headOf(g.b, t)}</Title>} note={g.kids.length ? t('o.sub', g.kids.length) : g.b.kind === 'requirements' && g.b.heading && g.b.items.length ? t('q.n', g.b.items.length) : null}>
           <Generic b={g.b} />
           {g.kids.length > 0 && (
             <div className="subs">
