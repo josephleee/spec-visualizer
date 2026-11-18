@@ -1,6 +1,6 @@
 # spec-visualizer
 
-English | [한국어](README.ko.md)
+English | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 
 A local, read-only dashboard for a [GitHub spec-kit](https://github.com/github/spec-kit) project.
 It lays the six spec-driven stages out on one board, shows which feature stands where and what to type next, and turns every spec document into a page that fits its kind, instead of plain rendered markdown.
