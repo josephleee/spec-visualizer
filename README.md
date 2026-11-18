@@ -3,25 +3,44 @@
 A local, read-only dashboard for a [GitHub spec-kit](https://github.com/github/spec-kit) project.
 It lays the six spec-driven stages out on one board, shows which feature stands where and what to type next, and turns every spec document into a page that fits its kind, instead of plain rendered markdown.
 
-## Requirements
+## Install
 
-Node.js 24 or later.
-
-## Run
+Node.js 20 or later.
 
 ```sh
-npm install && npm run build && node server/cli.ts <path-to-spec-kit-project>
+npx spec-visualizer            # the spec-kit project in the current folder
+npx spec-visualizer --demo     # a bundled example project, to look around
 ```
 
-Then open the address it prints (`http://127.0.0.1:4321` by default). Without a path it uses the current folder. The folder must contain `specs/` or `.specify/`.
+It prints the address (`http://127.0.0.1:4321` by default) and opens it in your browser. The folder must contain `specs/` or `.specify/`.
 
-The page updates by itself when files change. The UI is in Korean or English (the switch at the right of the top strip), and follows the system light or dark setting.
+### Claude Code plugin
 
-### Options
+The plugin starts, opens and stops the same dashboard from a Claude Code session. In Claude Code:
+
+```text
+/plugin marketplace add josephleee/spec-visualizer
+/plugin install spec-visualizer@spec-visualizer
+```
+
+Or from a shell: `claude plugin marketplace add josephleee/spec-visualizer`, then `claude plugin install spec-visualizer@spec-visualizer`. On Claude Code 2.1.275 or later one line does both: `/plugin install spec-visualizer --marketplace josephleee/spec-visualizer`.
+
+Then run `/spec-visualizer:dashboard` in a spec-kit project (`/spec-visualizer:dashboard stop` to stop it), or ask Claude to show the spec status.
+
+## Usage
+
+```sh
+spec-visualizer [path] [options]
+```
+
+Without a path it uses the current folder. The page updates by itself when files change. The UI is in Korean or English (the switch at the right of the top strip), and follows the system light or dark setting.
 
 | Option | Default | Meaning |
 |---|---|---|
-| `--port <n>` | `4321` | Port to listen on. If it is taken, the tool says so and exits. |
+| `--port <n>` | `4321` | Port to listen on. Without this option, a taken port moves on to the next free one (up to 4330). With it, a taken port is an error. |
+| `--demo` | | Show the bundled example project (`examples/demo`) instead of a path. |
+| `--no-open` | | Do not open the browser. It is also not opened when the output is not a terminal. |
+| `--help`, `--version` | | Print the usage or the version. |
 
 ## Read-only
 
@@ -54,7 +73,7 @@ Clicking a card or a feature zooms into that stage's document (`#/stage/<stage>/
 | 5 Implement | the same `tasks.md` | Progress: done of total, every task as a cell, what is left per phase and per story, the next command. Green marks only what is next |
 | 6 Done | `specs/<feature>/checklists/*.md` | Items by group with counts; a chooser when there are several checklists |
 
-Any other `.md` in a feature folder is an `other` document: it is linked from the feature's pages and shown section by section (`#/doc/<path>`). Outside `contracts/`, only `.md` files are read: in the demo fixture, `specs/001-login/analysis.md` is an `other` document and `notes.txt` is ignored.
+Any other `.md` in a feature folder is an `other` document: it is linked from the feature's pages and shown section by section (`#/doc/<path>`). Outside `contracts/`, only `.md` files are read: in the test fixture (`test/fixtures/demo`), `specs/001-login/analysis.md` is an `other` document and `notes.txt` is ignored.
 
 Nothing is dropped: parts of a document that a page does not draw are listed under a disclosure at its end, and a document that does not follow the template is shown in its own order.
 
@@ -71,7 +90,15 @@ Nothing is dropped: parts of a document that a page does not draw are listed und
 ## Development
 
 ```sh
-npm test            # vitest
-npx tsc --noEmit    # type check
-npm run build       # web files into dist/web, which the server serves
+npm install
+npm start -- <path>   # run from the TypeScript sources (Node.js 24 or later); needs one `npm run build` for the web files
+npm test              # vitest
+npx tsc --noEmit      # type check
+npm run build         # web files into dist/web, the server as JavaScript into dist/server
 ```
+
+The published package runs `dist/server/cli.js`. The Claude Code plugin is in `plugin/`, and `.claude-plugin/marketplace.json` makes this repository its marketplace.
+
+## License
+
+MIT
