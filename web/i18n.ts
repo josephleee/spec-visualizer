@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { bootFlow, type Unit } from './flows.ts'
 
 export type Lang = 'en' | 'ko'
 
@@ -25,7 +26,7 @@ const LABELS = {
     'h.cmd': 'Command typed at this stage', 'h.nocmd': 'This stage has no command', 'h.restart': 'A new feature starts again with this',
     'h.feat': '{0} · now at {1}', 'h.featnext': 'Next command for this feature', 'h.all': '{0:The|All} {0} {0:feature follows|features follow} these principles',
     'h.docs': 'Documents of this feature', 'h.kind': 'Document kind',
-    'e.title': 'This document does not exist yet', 'e.where': '{0} is at the {1} stage ({2} / 6).',
+    'e.title': 'This document does not exist yet', 'e.where': '{0} is at the {1} stage ({2} / {3}).',
     'e.missing': 'The {1} of the {0} stage has not been written.', 'e.make': 'Command that creates this document',
     'e.now': 'Command to type for this feature now', 'e.goto': 'Open the {1} document of {0}',
     'e.nomake': 'Done is not created by a command; a feature arrives when every task is finished.',
@@ -54,6 +55,20 @@ const LABELS = {
     docGone: 'This document no longer exists.', 'docGone.say': 'Its file was deleted or moved while the page was open.',
     'err.title': 'This page could not be drawn', 'err.say': 'Something in it broke the page. The project files are untouched.',
     readError: 'Could not read this document', refreshError: 'Could not refresh this document. Showing the last version read.',
+    // ---------- other formats ----------
+    'n.specs': 'Specs', 'n.propose': 'Propose', 'n.design': 'Design', 'n.apply': 'Apply', 'n.archive': 'Archive', 'n.steering': 'Steering', 'n.requirements': 'Requirements',
+    'zone.n': '{0} SDD stages', 'g.start': 'A new feature starts with this',
+    'pr.caps': 'Capabilities', 'pr.caps.none': 'No specs yet. Archiving a change writes them', 'pr.steer': 'Steering files', 'pr.steer.none': 'No steering files yet',
+    'e.project.os': 'A change starts with a proposal. Type this in your agent, then come back: the board updates by itself.',
+    'e.project.kiro': 'A spec starts with its requirements. Type this in the Kiro CLI or start a spec in the Kiro IDE, then come back: the board updates by itself.',
+    'e.shared.os': 'The project has no specs yet. They are written when a change is archived.',
+    'e.shared.kiro': 'The project has no steering files yet. Write them in .kiro/steering/, or generate them in the Kiro IDE.',
+    'p.note.propose': 'The propose stage leaves several documents. proposal.md is the lead one.',
+    'i.archive': 'Every task is finished. Archiving merges the change into the specs',
+    't.opt': 'optional', 't.optional': 'Optional, not counted',
+    'q.reqs': 'Requirements', 'q.scen': 'Scenarios', 'q.crit': 'Criteria', 'q.story': 'User story', 'q.n': '{0} {0:requirement|requirements}',
+    'q.ADDED': 'Added', 'q.MODIFIED': 'Modified', 'q.REMOVED': 'Removed', 'q.RENAMED': 'Renamed',
+    'dz.sections': 'Sections', 'dz.cards': 'Decisions', 'dz.diagrams': 'Diagrams',
   },
   ko: {
     'n.constitution': '헌법', 'n.specify': '명세', 'n.plan': '계획', 'n.tasks': '작업 분해', 'n.implement': '구현', 'n.done': '완료',
@@ -76,7 +91,7 @@ const LABELS = {
     'h.cmd': '이 단계에서 입력하는 명령', 'h.nocmd': '이 단계에는 명령이 없다', 'h.restart': '새 기능은 이 명령으로 다시 시작',
     'h.feat': '{0} · 지금 {1} 단계', 'h.featnext': '이 기능의 다음 명령', 'h.all': '기능 {0}개가 모두 이 원칙을 따른다',
     'h.docs': '이 기능의 문서', 'h.kind': '문서 종류',
-    'e.title': '이 문서는 아직 없다', 'e.where': '{0} 기능은 지금 {1} 단계({2} / 6)에 있다.',
+    'e.title': '이 문서는 아직 없다', 'e.where': '{0} 기능은 지금 {1} 단계({2} / {3})에 있다.',
     'e.missing': '{0} 단계의 {1} 문서가 아직 만들어지지 않았다.', 'e.make': '이 문서를 만드는 명령',
     'e.now': '이 기능에 지금 입력할 명령', 'e.goto': '{0} 의 {1} 문서 보기',
     'e.nomake': '완료 단계는 명령으로 만들지 않는다. 모든 작업이 끝나면 도달한다.',
@@ -105,6 +120,20 @@ const LABELS = {
     docGone: '이 문서는 더 이상 없다.', 'docGone.say': '페이지를 연 뒤에 파일이 지워졌거나 옮겨졌다.',
     'err.title': '이 화면을 그리지 못했다', 'err.say': '화면을 그리다 오류가 났다. 프로젝트 파일은 그대로다.',
     readError: '이 문서를 읽을 수 없다', refreshError: '문서를 새로 읽지 못했다. 마지막으로 읽은 내용을 보여 준다.',
+    // ---------- other formats ----------
+    'n.specs': '스펙', 'n.propose': '제안', 'n.design': '설계', 'n.apply': '적용', 'n.archive': '보관', 'n.steering': '스티어링', 'n.requirements': '요구사항',
+    'zone.n': 'SDD {0}단계', 'g.start': '새 기능은 이 명령으로 시작',
+    'pr.caps': '스펙 영역', 'pr.caps.none': '스펙이 아직 없다. 변경을 보관하면 쓰인다', 'pr.steer': '스티어링 파일', 'pr.steer.none': '스티어링 파일이 아직 없다',
+    'e.project.os': '변경은 제안에서 시작한다. 에이전트에 이 명령을 입력하고 돌아오면 보드가 스스로 바뀐다.',
+    'e.project.kiro': '스펙은 요구사항에서 시작한다. Kiro CLI에 이 명령을 입력하거나 Kiro IDE에서 스펙을 시작하고 돌아오면 보드가 스스로 바뀐다.',
+    'e.shared.os': '프로젝트에 스펙이 아직 없다. 변경을 보관할 때 쓰인다.',
+    'e.shared.kiro': '프로젝트에 스티어링 파일이 아직 없다. .kiro/steering/ 에 쓰거나 Kiro IDE에서 만든다.',
+    'p.note.propose': '제안 단계는 문서를 여러 개 남긴다. proposal.md 가 대표 문서다.',
+    'i.archive': '모든 작업이 끝났다. 보관하면 변경이 스펙에 합쳐진다',
+    't.opt': '선택', 't.optional': '선택 작업, 세지 않음',
+    'q.reqs': '요구사항', 'q.scen': '시나리오', 'q.crit': '수용 기준', 'q.story': '사용자 스토리', 'q.n': '요구사항 {0}개',
+    'q.ADDED': '추가', 'q.MODIFIED': '변경', 'q.REMOVED': '삭제', 'q.RENAMED': '이름 변경',
+    'dz.sections': '구획', 'dz.cards': '결정', 'dz.diagrams': '도표',
   },
 } satisfies Record<Lang, Record<string, string>>
 
@@ -115,10 +144,22 @@ export type T = (key: LabelKey, ...args: (string | number)[]) => string
 const _same: Record<LabelKey, string> = LABELS.ko
 void _same
 
-export const translate = (l: Lang, key: LabelKey, ...args: (string | number)[]) =>
-  LABELS[l][key]
-    .replace(/\{(\d):([^|}]*)\|([^}]*)\}/g, (_, n: string, one: string, many: string) => (Number(args[Number(n)]) === 1 ? one : many)) // {0:task|tasks}
-    .replace(/\{(\d)\}/g, (_, n: string) => String(args[Number(n)] ?? ''))
+// Every label says "feature"; a format that calls its unit of work something else gets its own word, swapped in the
+// label before the arguments go in, so a feature id holding the word is left alone. All three Korean nouns end in a
+// consonant, so the particles after them stay right.
+const NOUN: Record<Unit, Record<Lang, [RegExp, string][]>> = {
+  feature: { en: [], ko: [] },
+  change: { en: [[/\bFeature(s?)\b/g, 'Change$1'], [/\bfeature(s?)\b/g, 'change$1']], ko: [[/기능/g, '변경']] },
+  spec: { en: [[/\bFeature(s?)\b/g, 'Spec$1'], [/\bfeature(s?)\b/g, 'spec$1']], ko: [[/기능/g, '스펙']] },
+}
+
+export const translate = (l: Lang, key: LabelKey, ...args: (string | number)[]) => fill(LABELS[l][key], args)
+export const translateFor = (unit: Unit, l: Lang, key: LabelKey, ...args: (string | number)[]) =>
+  fill(NOUN[unit][l].reduce((s, [from, to]) => s.replace(from, to), LABELS[l][key] as string), args)
+
+const fill = (label: string, args: (string | number)[]) => label
+  .replace(/\{(\d):([^|}]*)\|([^}]*)\}/g, (_, n: string, one: string, many: string) => (Number(args[Number(n)]) === 1 ? one : many)) // {0:task|tasks}
+  .replace(/\{(\d)\}/g, (_, n: string) => String(args[Number(n)] ?? ''))
 
 function initial(): Lang {
   try { const s = localStorage.getItem('specviz:lang'); if (s === 'en' || s === 'ko') return s } catch { /* ignore */ }
@@ -126,8 +167,11 @@ function initial(): Lang {
 }
 
 let lang: Lang | null = null
+let unit: Unit | null = null
 const listeners = new Set<() => void>()
 const get = () => (lang ??= initial())
+const getUnit = () => (unit ??= bootFlow().unit)
+const snapshot = () => `${get()} ${getUnit()}`
 
 function setLang(l: Lang) {
   lang = l
@@ -136,8 +180,16 @@ function setLang(l: Lang) {
   listeners.forEach(f => f())
 }
 
+// The word for a unit of work, from the project's format (the same the page started with, from the server).
+export function setUnit(u: Unit) {
+  if (u === getUnit()) return
+  unit = u
+  listeners.forEach(f => f())
+}
+
 export function useLang(): { lang: Lang; setLang: (l: Lang) => void; t: T } {
-  const l = useSyncExternalStore(f => { listeners.add(f); return () => void listeners.delete(f) }, get, get)
+  useSyncExternalStore(f => { listeners.add(f); return () => void listeners.delete(f) }, snapshot, snapshot)
+  const l = get(), u = getUnit()
   if (typeof document !== 'undefined') document.documentElement.lang = l
-  return { lang: l, setLang, t: (key, ...args) => translate(l, key, ...args) }
+  return { lang: l, setLang, t: (key, ...args) => translateFor(u, l, key, ...args) }
 }

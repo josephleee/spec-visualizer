@@ -3,14 +3,15 @@ import type { DocKind, DocRef, Feature, ParsedDoc, Project } from '../server/typ
 import { Zoom } from './Board.tsx'
 import { reducedMotion } from './camera.ts'
 import { DocMeta, DocTitle, renderDoc } from './forms/render.tsx'
-import { CMD, boundFeatures, busy, creatingCommand, missingWhy, nextCommand, stageCommand, stageCounts } from './guide.ts'
+import { boundFeatures, busy, creatingCommand, missingWhy, nextCommand, stageCommand, stageCounts } from './guide.ts'
+import { flowOf, isProjectStage, lastStage, stageDef, type Flow } from './flows.ts'
 import { useLang } from './i18n.ts'
 import { CmdRow, SeenMark } from './parts.tsx'
-import { KIND_FILE, PLAN_SUBS, STAGES, docHref, featureHref, linkFeature, resolveTarget, stageHref, stageIndex, type Route, type StageKey } from './route.ts'
+import { docHref, featureHref, kindFile, linkFeature, resolveTarget, stageHref, stageIndex, type Route, type StageKey } from './route.ts'
 import { saveScroll, savedScroll } from './scroll.ts'
 import { markSeen, type Seen } from './seen.ts'
 
-const fileOf = (d: DocRef) => d.path.split('/').slice(d.kind === 'checklist' || d.kind === 'contract' ? -2 : -1).join('/')
+const fileOf = (d: DocRef) => d.path.split('/').slice(['checklist', 'contract', 'delta', 'capability'].includes(d.kind) ? -2 : -1).join('/')
 
 // The page before its first document has arrived: the same bar, index column, header sheet and sheets as the real one.
 export const DocSkeleton = () => (
@@ -35,16 +36,19 @@ const State = ({ title, alert, children }: { title: string; alert?: boolean; chi
 )
 
 // The feature has not reached this document yet: where it is, what is missing, what to type.
-function Missing({ stage, feature, kind }: { stage: StageKey; feature: Feature | null; kind: DocKind }) {
+function Missing({ stage, feature, kind, flow }: { stage: StageKey; feature: Feature | null; kind: DocKind; flow: Flow }) {
   const { t } = useLang()
-  if (!feature) return <State title={t('e.title')}><p>{t('e.constitution')}</p><dl className="empty-cmds"><div className="now"><dt>{t('e.make')}</dt><dd><CmdRow cmd={CMD.constitution} big /></dd></div></dl></State>
+  if (!feature) return (
+    <State title={t('e.title')}><p>{t(flow.labels.noShared)}</p>
+      {flow.setup && <dl className="empty-cmds"><div className="now"><dt>{t('e.make')}</dt><dd><CmdRow cmd={flow.setup} big /></dd></div></dl>}</State>
+  )
   // A finished feature without a checklist is not behind: it is complete, and there is nothing to type for it.
-  if (missingWhy(feature, stage) === 'complete') return <State title={t('e.complete.title')}><p>{t('e.complete', feature.id)}</p></State>
-  const next = nextCommand(feature).cmd, make = creatingCommand(kind)
+  if (missingWhy(feature, stage, flow) === 'complete') return <State title={t('e.complete.title')}><p>{t('e.complete', feature.id)}</p></State>
+  const next = nextCommand(feature, flow).cmd, make = creatingCommand(kind, flow, feature)
   return (
     <State title={t('e.title')}>
-      <p>{t('e.where', feature.id, t(`n.${feature.stage}`), stageIndex(feature) + 1)}</p>
-      <p>{t('e.missing', t(`n.${stage}`), KIND_FILE[kind])}</p>
+      <p>{t('e.where', feature.id, t(`n.${feature.stage}`), stageIndex(feature, flow) + 1, flow.stages.length)}</p>
+      <p>{t('e.missing', t(`n.${stage}`), kindFile(kind, flow))}</p>
       <dl className="empty-cmds">
         {next && <div className="now"><dt>{t('e.now')}</dt><dd><CmdRow cmd={next} big /></dd></div>}
         {make ? make !== next && <div><dt>{t('e.make')}</dt><dd><CmdRow cmd={make} /></dd></div> : <div><dd>{t('e.nomake')}</dd></div>}
@@ -62,18 +66,22 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
 }) {
   const { t } = useLang()
   const { route, failed } = view
-  const { stage, feature, kind, refs } = resolveTarget(project, route)
+  const flow = flowOf(project), n = flow.stages.length, stages = flow.stages.map(s => s.key)
+  const target = resolveTarget(project, route)
+  const { stage, feature, refs } = target
   const ref = refs.find(d => d.path === view.path) ?? refs[0] ?? null
+  // The project stage of OpenSpec offers documents of two kinds; the one chosen decides how it is drawn.
+  const kind = ref && stage && isProjectStage(flow, stage) ? ref.kind : target.kind
   // The fetched document belongs to this page only while the project still points at the same file.
   const doc = ref && ref.path === view.path ? view.doc : undefined
   const hash = doc?.ref.hash
   useEffect(() => { if (doc) onSeen(markSeen(project.root, doc.ref, undefined, seen)) }, [doc?.ref.path, hash])
 
-  const si = stage ? STAGES.indexOf(stage) : -1
+  const si = stage ? stages.indexOf(stage) : -1
   const fid = linkFeature(project, route, feature) // what the stage links carry; the page itself speaks of `feature` only
   const sub = route.kind === 'stage' ? route.sub : null
   const counts = stageCounts(project)
-  const cmd = stage && stageCommand(stage), next = feature && nextCommand(feature).cmd
+  const cmd = stage && stageCommand(stage, flow), next = feature && nextCommand(feature, flow).cmd
   const name = stage ? t(`n.${stage}`) : ref ? fileOf(ref) : route.kind === 'doc' ? route.path : ''
 
   // ---------- the section index: read from the sheets that were drawn, so its numbers match their title bands ----------
@@ -126,19 +134,23 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
 
   // ---------- body: one of the states, or the form for this kind of document ----------
   let body: ReactNode
-  if (route.kind === 'stage' && stage !== 'constitution' && route.feature && !feature) body = <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
-  else if (route.kind === 'stage' && stage !== 'constitution' && !feature) body = <State title={t('e.project')}><p>{t('e.project.say')}</p><CmdRow cmd={CMD.specify} big /></State>
-  else if (!ref) body = stage ? <Missing stage={stage} feature={feature} kind={kind} /> : <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
+  const own = route.kind === 'stage' && !isProjectStage(flow, stage)
+  if (own && route.feature && !feature) body = <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
+  else if (own && !feature) body = <State title={t('e.project')}><p>{t(flow.labels.empty)}</p><CmdRow cmd={flow.start} big /></State>
+  else if (!ref) body = stage ? <Missing stage={stage} feature={feature} kind={kind} flow={flow} /> : <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
   else if (ref.error) body = <State title={t('readError')} alert><p>{ref.path}</p><p>{ref.error}</p></State>
   else if (doc === undefined) body = <section className="sec skel-sheet" aria-busy="true"><span className="sr">{t('loading')}</span><span className="skel skel-head" /><span className="skel skel-line" /><span className="skel skel-line" /></section>
   else if (doc === null) body = failed ? <State title={t('readError')} alert><p>{ref.path}</p></State> : <State title={t('docGone')} alert><p>{t('docGone.say')}</p></State>
-  else body = renderDoc(doc, kind, stage === 'implement', { feature, t })
+  else body = renderDoc(doc, kind, !!(stage && stageDef(flow, stage)?.progress), { feature, t, flow })
 
-  const planTabs = stage === 'plan' && feature
-    ? (['plan', ...PLAN_SUBS] as const).filter(k => k !== 'contract' || sub === 'contract' || feature.docs.some(d => d.kind === 'contract'))
+  // A stage that leaves several kinds of document shows them as tabs (spec-kit plan, OpenSpec propose).
+  // spec-kit's contracts tab appears only for a feature that has contracts, or when it is the tab asked for.
+  const def = stage ? stageDef(flow, stage) : undefined
+  const tabs = def && def.kinds.length > 1 && feature
+    ? def.kinds.filter(k => k !== 'contract' || sub === 'contract' || feature.docs.some(d => d.kind === 'contract'))
     : []
-  const step = (i: number, dir: 'prev' | 'next') => (STAGES[i]
-    ? <a className={`step ${dir}`} href={stageHref(STAGES[i], fid)}><span>{t(dir)}</span><b>{i + 1} / 6 {t(`n.${STAGES[i]}`)}</b>{stageCommand(STAGES[i]) && <code>{stageCommand(STAGES[i])}</code>}</a>
+  const step = (i: number, dir: 'prev' | 'next') => (stages[i]
+    ? <a className={`step ${dir}`} href={stageHref(stages[i], fid)}><span>{t(dir)}</span><b>{i + 1} / {n} {t(`n.${stages[i]}`)}</b>{stageCommand(stages[i], flow) && <code>{stageCommand(stages[i], flow)}</code>}</a>
     : <span className={`step off ${dir}`}>{t(dir === 'prev' ? 'first' : 'last')}</span>)
 
   return (
@@ -146,12 +158,12 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
       <div className="docbar">
         <a className="back" href="#/"><Zoom />{t('back')}</a>
         <nav className="cells" aria-label={t('bar.stages')}>
-          {STAGES.map((s, i) => (
+          {stages.map((s, i) => (
             <a key={s} className={counts[i].live ? 'cell live' : counts[i].here.length + counts[i].passed || !i ? 'cell seen' : 'cell'} href={stageHref(s, fid)}
-              title={`${i + 1} / 6 ${t(`n.${s}`)}`} aria-current={i === si ? 'page' : undefined}>{i + 1}<span className="sr">{t(`n.${s}`)}</span></a>
+              title={`${i + 1} / ${n} ${t(`n.${s}`)}`} aria-current={i === si ? 'page' : undefined}>{i + 1}<span className="sr">{t(`n.${s}`)}</span></a>
           ))}
         </nav>
-        {stage && <span className="docbar-at"><b>{si + 1} / 6</b>{name}</span>}
+        {stage && <span className="docbar-at"><b>{si + 1} / {n}</b>{name}</span>}
         {stage && feature && (
           <label className="pick"><span>{t('bar.feature')}</span>
             <select value={choosing ?? feature.id} onChange={e => { const to = project.features.find(x => x.id === e.target.value); if (to) location.hash = featureHref(stage, to, sub) }}>
@@ -161,14 +173,14 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
         )}
         {stage && (
           <span className="docbar-nav">
-            {si > 0 ? <a href={stageHref(STAGES[si - 1], fid)}>← {t(`n.${STAGES[si - 1]}`)}</a> : <span>{t('bar.first')}</span>}
-            {si < 5 ? <a href={stageHref(STAGES[si + 1], fid)}>{t(`n.${STAGES[si + 1]}`)} →</a> : <span>{t('bar.last')}</span>}
+            {si > 0 ? <a href={stageHref(stages[si - 1], fid)}>← {t(`n.${stages[si - 1]}`)}</a> : <span>{t('bar.first')}</span>}
+            {si < n - 1 ? <a href={stageHref(stages[si + 1], fid)}>{t(`n.${stages[si + 1]}`)} →</a> : <span>{t('bar.last')}</span>}
           </span>
         )}
         <i className="docbar-p" aria-hidden />
       </div>
-      <article className={feature && busy(feature) && stageIndex(feature) === si ? 'paper live' : 'paper'}>
-        <div className="tag">{stage && <b>{si + 1} / 6</b>}{stage ? name : !ref ? t('nf.tag') : feature ? t(`n.${feature.stage}`) : t('n.constitution')}<code>{ref ? ref.path : route.kind === 'doc' ? route.path : feature ? `${feature.id} / ${KIND_FILE[kind]}` : KIND_FILE[kind]}</code></div>
+      <article className={feature && busy(feature) && stageIndex(feature, flow) === si ? 'paper live' : 'paper'}>
+        <div className="tag">{stage && <b>{si + 1} / {n}</b>}{stage ? name : !ref ? t('nf.tag') : feature ? t(`n.${feature.stage}`) : t(`n.${stages[0]}`)}<code>{ref ? ref.path : route.kind === 'doc' ? route.path : feature ? `${feature.id} / ${kindFile(kind, flow)}` : kindFile(kind, flow)}</code></div>
         <div className="pgrid">
           {/* The box is always there, in the same place and frame, so nothing jumps and the column never looks empty. */}
           {<nav className="toc" aria-label={t('toc')}>
@@ -187,7 +199,7 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
           {/* One page, one set of sheets: a new page replaces them in one step instead of reshaping the old ones. */}
           <div className="psheet" ref={sheet} key={`${view.entry} ${view.path}`}>
             <header className="phead">
-              {stage && <div className="phead-no">{si + 1}<span>/ 6</span></div>}
+              {stage && <div className="phead-no">{si + 1}<span>/ {n}</span></div>}
               <div className="phead-t">
                 <h1 tabIndex={-1}>{name}</h1>
                 {!stage && <p className="phead-say">{t('h.kind')} · {kind}</p>}
@@ -196,8 +208,8 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
               <div className="phead-cmd">
                 {stage && <>
                   <span className="lbl">{t(cmd ? 'h.cmd' : 'h.nocmd')}</span>
-                  <CmdRow cmd={cmd ?? CMD.specify} big />
-                  {!cmd && <p>{t('h.restart')}</p>}
+                  <CmdRow cmd={cmd ?? flow.start} big />
+                  {!cmd && <p>{t(stage === lastStage(flow) ? 'h.restart' : 'g.start')}</p>}
                 </>}
                 {feature
                   ? <>
@@ -210,21 +222,21 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
               {feature && (
                 <nav className="fdocs" aria-label={t('h.docs')}>
                   <span>{t('h.docs')}</span>
-                  {feature.docs.map(d => <a key={d.path} href={docHref(feature, d)} aria-current={d.path === ref?.path ? 'page' : undefined}>{fileOf(d)}{d.error ? <span className="seen err">{t('err.read')}</span> : d.path !== ref?.path && <SeenMark docs={[d]} seen={seen} />}</a>)}
+                  {feature.docs.map(d => <a key={d.path} href={docHref(feature, d, flow)} aria-current={d.path === ref?.path ? 'page' : undefined}>{fileOf(d)}{d.error ? <span className="seen err">{t('err.read')}</span> : d.path !== ref?.path && <SeenMark docs={[d]} seen={seen} />}</a>)}
                 </nav>
               )}
             </header>
             {failed && doc && <p role="status" className="notice">{t('refreshError')}</p>}
-            {planTabs.length > 0 && feature && (
+            {tabs.length > 0 && feature && def && stage && (
               <section className="sec tabsec">
-                <p>{t('p.note')}</p>
+                <p>{t(def.note ?? 'p.note')}</p>
                 <nav className="tabs" aria-label={t('p.tabs')} onClickCapture={viaTabs('.tabs a[aria-current="page"]')}>
-                  {planTabs.map(k => {
-                    const docs = feature.docs.filter(d => d.kind === k), on = k === (sub ?? 'plan')
+                  {tabs.map(k => {
+                    const docs = feature.docs.filter(d => d.kind === k), lead = k === def.kinds[0], on = k === (sub ?? def.kinds[0])
                     return (
-                      <a key={k} href={stageHref('plan', feature.id, k === 'plan' ? null : k)} aria-current={on ? 'page' : undefined}>
-                        <b>{KIND_FILE[k]}</b>
-                        <span>{!docs.length ? t('nodoc') : k === 'plan' ? t('p.lead') : docs.length > 1 ? t('p.files', docs.length) : t('p.has')}{!on && <SeenMark docs={docs} seen={seen} />}</span>
+                      <a key={k} href={stageHref(stage, feature.id, lead ? null : k)} aria-current={on ? 'page' : undefined}>
+                        <b>{kindFile(k, flow)}</b>
+                        <span>{!docs.length ? t('nodoc') : lead ? t('p.lead') : docs.length > 1 ? t('p.files', docs.length) : t('p.has')}{!on && <SeenMark docs={docs} seen={seen} />}</span>
                       </a>
                     )
                   })}
@@ -234,7 +246,7 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
             {refs.length > 1 && (
               <section className="sec tabsec">
                 <div className="tabs" role="group" aria-label={t('choose')} onClickCapture={viaTabs('.tabs button[aria-pressed="true"]')}>
-                  {refs.map(d => <button key={d.path} type="button" aria-pressed={d === ref} onClick={() => onPick(d.path)}><b>{fileOf(d)}</b><span>{KIND_FILE[d.kind]}{d !== ref && <SeenMark docs={[d]} seen={seen} />}</span></button>)}
+                  {refs.map(d => <button key={d.path} type="button" aria-pressed={d === ref} onClick={() => onPick(d.path)}><b>{fileOf(d)}</b><span>{kindFile(d.kind, flow)}{d !== ref && <SeenMark docs={[d]} seen={seen} />}</span></button>)}
                 </div>
               </section>
             )}

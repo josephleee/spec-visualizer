@@ -6,10 +6,12 @@ import { plan } from './Plan.tsx'
 import { dataModel, quickstart, research } from './PlanDocs.tsx'
 import { spec } from './Spec.tsx'
 import { tasks } from './Tasks.tsx'
+import { design, requirements } from './Requirements.tsx'
 import type { Form } from './types.ts'
 
 // tasks.md is read twice: as structure at the tasks stage, as progress at the implement stage.
 export const formFor = (kind: DocKind, progress: boolean): Form | null => ({
   constitution, spec, plan, research, 'data-model': dataModel, quickstart,
   tasks: progress ? implement : tasks, checklist, contract: null, other: null,
+  capability: requirements, delta: requirements, requirements, design, proposal: null, context: null,
 } satisfies Record<DocKind, Form | null>)[kind]

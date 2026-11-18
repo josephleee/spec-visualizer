@@ -91,7 +91,7 @@ export function Mark({ item, next }: { item: CheckItem; next?: boolean }) {
   const { t } = useLang()
   const state = item.done ? t('t.done') : next ? t('t.next') : t('t.open')
   return (
-    <span className={item.done ? 'mk done' : next ? 'mk next' : 'mk'} title={`${item.id ?? ''} ${state}${item.parallel ? ` · ${t('t.par')}` : ''}`.trim()}>
+    <span className={(item.done ? 'mk done' : next ? 'mk next' : 'mk') + (item.optional ? ' opt' : '')} title={`${item.id ?? ''} ${state}${item.parallel ? ` · ${t('t.par')}` : ''}${item.optional ? ` · ${t('t.opt')}` : ''}`.trim()}>
       {item.parallel ? 'P' : ''}
     </span>
   )
@@ -99,7 +99,7 @@ export function Mark({ item, next }: { item: CheckItem; next?: boolean }) {
 
 export function TaskTags({ item }: { item: CheckItem }) {
   const { t } = useLang()
-  return <span className="trow-tags">{item.parallel && <i>{t('t.partag')}</i>}{item.story && <i>{item.story}</i>}</span>
+  return <span className="trow-tags">{item.parallel && <i>{t('t.partag')}</i>}{item.story && <i>{item.story}</i>}{item.optional && <i>{t('t.opt')}</i>}</span>
 }
 
 export function TaskRows({ items, next }: { items: CheckItem[]; next?: Set<CheckItem> }) {
@@ -112,7 +112,7 @@ export function TaskRows({ items, next }: { items: CheckItem[]; next?: Set<Check
           <span className="sr">{t(x.done ? 't.done' : next?.has(x) ? 't.next' : 't.open')}</span>
           <code>{x.id ?? ''}</code>
           <TaskTags item={x} />
-          <div><Value md={x.text} /></div>
+          <div><Value md={x.text} />{x.notes && <Rich md={x.notes} />}</div>
         </li>
       ))}
     </ol>

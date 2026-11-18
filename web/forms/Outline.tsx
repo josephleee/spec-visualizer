@@ -4,9 +4,11 @@ import type { T } from '../i18n.ts'
 import { FieldsSheet, IdRows, Rich, Sec, Stats, TaskRows, Title, clean } from '../parts.tsx'
 import { Decisions } from './PlanDocs.tsx'
 import { Stories } from './Spec.tsx'
+import { Requirements } from './Requirements.tsx'
 import { hasBody } from './types.ts'
 
-const headOf = (b: Block, t: T) => clean(('heading' in b ? b.heading : 'title' in b ? b.title : null) ?? '') || t('o.intro')
+// A requirement written as its own ## section has no block heading: its title names the sheet.
+const headOf = (b: Block, t: T) => clean(('heading' in b ? b.heading : 'title' in b ? b.title : null) ?? '') || (b.kind === 'requirements' ? clean(b.items[0]?.title ?? '') : '') || t('o.intro')
 
 // Any block, drawn plainly. Every kind has a form here, so nothing is ever dropped.
 export function Generic({ b }: { b: Block }) {
@@ -19,6 +21,7 @@ export function Generic({ b }: { b: Block }) {
     case 'phase': return <><FieldsSheet items={b.fields} /><TaskRows items={b.items} /><Rich md={b.rest} /></>
     case 'stories': return <Stories items={b.items} />
     case 'decisions': return <Decisions items={b.items} />
+    case 'requirements': return <Requirements b={b} />
   }
 }
 
@@ -48,7 +51,7 @@ export function outline(doc: ParsedDoc, t: T, offTemplate: boolean): ReactNode {
     <>
       {offTemplate && <Stats items={[[groups.length, t('o.sections')], [doc.blocks.filter(hasBody).length, t('o.blocks')]]} note={t('o.note')} />}
       {groups.map((g, i) => (
-        <Sec key={i} title={<Title>{headOf(g.b, t)}</Title>} note={g.kids.length ? t('o.sub', g.kids.length) : null}>
+        <Sec key={i} title={<Title>{headOf(g.b, t)}</Title>} note={g.kids.length ? t('o.sub', g.kids.length) : g.b.kind === 'requirements' && g.b.heading ? t('q.n', g.b.items.length) : null}>
           <Generic b={g.b} />
           {g.kids.length > 0 && (
             <div className="subs">

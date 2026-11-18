@@ -4,9 +4,10 @@ import { createRoot } from 'react-dom/client'
 import type { ParsedDoc } from '../server/types.ts'
 import { Board } from './Board.tsx'
 import { reducedMotion, slide, zoom } from './camera.ts'
-import { useLang } from './i18n.ts'
+import { setUnit, useLang } from './i18n.ts'
+import { bootFlow, flowOf, type Flow } from './flows.ts'
 import { useProject } from './live.ts'
-import { STAGES, parseRoute, resolveTarget, type Route } from './route.ts'
+import { fitRoute, parseRoute, resolveTarget, type Route } from './route.ts'
 import { entryId } from './scroll.ts'
 import { loadSeen, type Seen } from './seen.ts'
 import { DocSkeleton, StagePage, type DocView } from './StagePage.tsx'
@@ -16,7 +17,7 @@ import './styles.css'
 
 type DocRoute = Exclude<Route, { kind: 'board' }>
 const isDoc = (r: Route): r is DocRoute => r.kind !== 'board'
-const stageNo = (r: Route) => (r.kind === 'stage' ? STAGES.indexOf(r.stage) : -1)
+const stageNo = (r: Route, flow: Flow) => (r.kind === 'stage' ? flow.stages.findIndex(s => s.key === r.stage) : -1)
 
 // What is on screen: an address together with everything it needs, so a page is only ever drawn whole.
 type View = { route: Route; entry: string; path: string | null; doc: ParsedDoc | null | undefined; failed: boolean }
@@ -32,20 +33,23 @@ class Guard extends Component<{ retryOn: string; fallback: ReactNode; children: 
 }
 
 // The address asked for, and the id of its history entry (which the reading position is kept under).
-function useRoute(): { hash: string; route: Route; entry: string } {
+function useRoute(flow: Flow): { hash: string; route: Route; entry: string } {
   const [at, setAt] = useState(() => ({ hash: location.hash, entry: entryId() }))
   useEffect(() => {
     const f = () => setAt({ hash: location.hash, entry: entryId() })
     addEventListener('hashchange', f)
     return () => removeEventListener('hashchange', f)
   }, [])
-  return { ...at, route: useMemo(() => parseRoute(at.hash), [at.hash]) }
+  return { ...at, route: useMemo(() => fitRoute(parseRoute(at.hash), flow), [at.hash, flow]) }
 }
 
 function App() {
   const { project: fetched, connected, version } = useProject()
   const { t } = useLang()
-  const { hash, route, entry } = useRoute()
+  // The project's format; before it arrives, the one the server put on the page (they are the same).
+  const flow = fetched ? flowOf(fetched) : bootFlow()
+  useLayoutEffect(() => setUnit(flow.unit), [flow])
+  const { hash, route, entry } = useRoute(flow)
   const [seen, setSeen] = useState<Seen | null>(null)
   useEffect(() => { if (fetched && !seen) setSeen(loadSeen(fetched)) }, [fetched])
   const project = seen ? fetched : null
@@ -78,7 +82,7 @@ function App() {
   useLayoutEffect(() => {
     if (!move) return
     if (!cam.current || !board.current || !docEl.current || !docView) { setMove(null); return }
-    const frame = board.current.querySelector(`[data-i="${stageNo(docView.route)}"] .frame`)
+    const frame = board.current.querySelector(`[data-i="${stageNo(docView.route, flow)}"] .frame`)
     return zoom(cam.current, board.current, docEl.current, frame, move !== 'in', () => flushSync(() => setMove(null)))
   }, [move])
 
@@ -88,11 +92,11 @@ function App() {
     prev.current = at
     if (!from || !at || from === at) return // the first page takes no focus
     if (!isDoc(at)) { // back on the board: focus returns to the card that was open, or to the board heading when no card was
-      if (isDoc(from)) board.current?.querySelector<HTMLElement>(from.kind === 'stage' ? `[data-i="${stageNo(from)}"] .stage-link` : 'h1')?.focus({ preventScroll: true })
+      if (isDoc(from)) board.current?.querySelector<HTMLElement>(from.kind === 'stage' ? `[data-i="${stageNo(from, flow)}"] .stage-link` : 'h1')?.focus({ preventScroll: true })
       return
     }
     const sameStage = from.kind === 'stage' && at.kind === 'stage' && from.stage === at.stage
-    if (from.kind === 'stage' && at.kind === 'stage' && !sameStage && !reducedMotion() && docEl.current) slide(docEl.current, Math.sign(stageNo(at) - stageNo(from)))
+    if (from.kind === 'stage' && at.kind === 'stage' && !sameStage && !reducedMotion() && docEl.current) slide(docEl.current, Math.sign(stageNo(at, flow) - stageNo(from, flow)))
     // Within one stage (another feature from the select, another plan document from its tab) focus stays on the control used.
     if (!sameStage) docEl.current?.querySelector('h1')?.focus({ preventScroll: true })
   }, [at])
@@ -107,7 +111,7 @@ function App() {
   useEffect(() => {
     // The title names what is shown: the feature the page resolved to, never an id that is only in the address.
     const feature = project && at && isDoc(at) ? resolveTarget(project, at).feature?.id : null
-    document.title = at?.kind === 'stage' ? `${stageNo(at) + 1} / 6 ${t(`n.${at.stage}`)}${feature ? ` · ${feature}` : ''} · ${name}`
+    document.title = at?.kind === 'stage' ? `${stageNo(at, flow) + 1} / ${flow.stages.length} ${t(`n.${at.stage}`)}${feature ? ` · ${feature}` : ''} · ${name}`
       : at?.kind === 'doc' ? `${at.path} · ${name}` : t('title', name)
   })
 
