@@ -15,10 +15,10 @@ const NAMED: Record<string, DocKind> = {
 }
 
 // lstat that never throws; symlinks report isDirectory()/isFile() false.
-const lst = (p: string) => { try { return fs.lstatSync(p) } catch { return undefined } }
-const isDir = (p: string) => lst(p)?.isDirectory() ?? false
+export const lst = (p: string) => { try { return fs.lstatSync(p) } catch { return undefined } }
+export const isDir = (p: string) => lst(p)?.isDirectory() ?? false
 // Entries of a directory, or [] when it cannot be read.
-const entries = (dir: string) => { try { return fs.readdirSync(dir, { withFileTypes: true }) } catch { return [] } }
+export const entries = (dir: string) => { try { return fs.readdirSync(dir, { withFileTypes: true }) } catch { return [] } }
 
 export function isSpecKit(root: string): boolean {
   return isDir(path.join(root, 'specs')) || isDir(path.join(root, '.specify'))
@@ -51,10 +51,10 @@ export const hashOf = (buf: Buffer) => crypto.createHash('sha1').update(buf).dig
 // What the scan works out from one file's text, kept per path and content hash: files are still read and hashed
 // on every scan, but only a changed one is parsed.
 const kept = memo<unknown>(5000)
-const keep = <T>(root: string, rel: string, hash: string, make: () => T) => kept([root, rel, hash].join('\0'), make) as T
+export const keep = <T>(root: string, rel: string, hash: string, make: () => T) => kept([root, rel, hash].join('\0'), make) as T
 
 // Reads one document; a read failure becomes DocRef.error so the scan goes on.
-function readDoc(root: string, rel: string, kind: DocKind): { ref: DocRef; text: string } {
+export function readDoc(root: string, rel: string, kind: DocKind): { ref: DocRef; text: string } {
   try {
     const buf = fs.readFileSync(path.join(root, rel))
     const hash = hashOf(buf)
@@ -65,7 +65,7 @@ function readDoc(root: string, rel: string, kind: DocKind): { ref: DocRef; text:
 }
 
 // Recursive, skips symlinks and dot-entries. Returns paths relative to `dir`, forward slashes.
-function walk(dir: string, prefix = ''): string[] {
+export function walk(dir: string, prefix = ''): string[] {
   const out: string[] = []
   for (const e of entries(dir)) {
     if (e.isSymbolicLink() || e.name.startsWith('.')) continue
@@ -104,7 +104,7 @@ const plain = (n: Node): string =>
 
 // First README paragraph that has words (so badge and image lines are skipped), at most 300 characters.
 const CAP = 64 * 1024
-function readAbout(root: string): string | null {
+export function readAbout(root: string): string | null {
   // Dirent types come from lstat, so a symlinked README is not a file here.
   const name = entries(root).find((e) => e.isFile() && /^readme\.md$/i.test(e.name))?.name
   if (!name) return null
@@ -129,6 +129,14 @@ function readAbout(root: string): string | null {
 }
 
 const num = (id: string) => /^\d+/.exec(id)?.[0]
+
+// Folders with a number prefix first, in number order; then the rest by name.
+export function byNumber(a: string, b: string): number {
+  const [x, y] = [num(a), num(b)]
+  if (x !== undefined && y !== undefined && +x !== +y) return +x - +y
+  if ((x === undefined) !== (y === undefined)) return x === undefined ? 1 : -1
+  return a < b ? -1 : a > b ? 1 : 0
+}
 
 export function scanProject(root: string, branch: string | null = currentBranch(root)): Project {
   let constitution: DocRef | null = null
@@ -162,12 +170,7 @@ export function scanProject(root: string, branch: string | null = currentBranch(
   const ids = isDir(specs)
     ? entries(specs).filter((e) => e.isDirectory()).map((e) => e.name)
     : []
-  ids.sort((a, b) => {
-    const [x, y] = [num(a), num(b)]
-    if (x !== undefined && y !== undefined && +x !== +y) return +x - +y
-    if ((x === undefined) !== (y === undefined)) return x === undefined ? 1 : -1
-    return a < b ? -1 : a > b ? 1 : 0
-  })
+  ids.sort(byNumber)
   const features = ids.map((id) => scanFeature(root, id))
   const currentFeature = features.find((f) => f.id === branch)?.id ?? null
   if (currentFeature) features.sort((a, b) => +(b.id === currentFeature) - +(a.id === currentFeature)) // stable
