@@ -2,11 +2,11 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import type { DocKind, DocRef, Feature, Project } from '../server/types.ts'
 import { Zoom } from './Board.tsx'
 import { reducedMotion } from './camera.ts'
-import { renderDoc } from './forms/render.tsx'
+import { DocMeta, DocTitle, renderDoc } from './forms/render.tsx'
 import { CMD, busy, nextCommand, stageCommand, stageCounts } from './guide.ts'
 import { useLang } from './i18n.ts'
-import { CmdRow, SeenMark, Title, Value } from './parts.tsx'
-import { KIND_FILE, PLAN_SUBS, STAGES, docHref, featureHref, resolveTarget, stageHref, stageIndex, type Route, type StageKey } from './route.ts'
+import { CmdRow, SeenMark } from './parts.tsx'
+import { KIND_FILE, PLAN_SUBS, STAGES, docHref, featureHref, linkFeature, resolveTarget, stageHref, stageIndex, type Route, type StageKey } from './route.ts'
 import { markSeen, type Seen } from './seen.ts'
 import { useDoc } from './useDoc.ts'
 
@@ -53,8 +53,7 @@ export function StagePage({ route, project, version, seen, onSeen }: {
   useEffect(() => { if (doc) onSeen(markSeen(project.root, doc.ref, undefined, seen)) }, [doc?.ref.path, hash])
 
   const si = stage ? STAGES.indexOf(stage) : -1
-  // The feature the stage links carry: the constitution page has none of its own, so the one chosen before rides along.
-  const fid = feature?.id ?? (route.kind === 'stage' ? route.feature : null)
+  const fid = linkFeature(project, route, feature) // what the stage links carry; the page itself speaks of `feature` only
   const sub = route.kind === 'stage' ? route.sub : null
   const counts = stageCounts(project)
   const cmd = stage && stageCommand(stage), next = feature && nextCommand(feature).cmd
@@ -79,8 +78,10 @@ export function StagePage({ route, project, version, seen, onSeen }: {
     return () => spy.disconnect()
   }, [toc.join('\n'), doc])
   // Another stage, feature or file starts at the top; another plan document or a refresh keeps the place.
-  const place = route.kind === 'doc' ? route.path : `${stage}/${fid}`
+  const place = route.kind === 'doc' ? route.path : `${stage}/${feature?.id}`
   useLayoutEffect(() => { sheet.current?.closest('.layer')?.scrollTo(0, 0); setAt(0) }, [place])
+
+  const loading = !!ref && !ref.error && doc === undefined
 
   // ---------- body: one of the states, or the form for this kind of document ----------
   let body: ReactNode
@@ -126,12 +127,12 @@ export function StagePage({ route, project, version, seen, onSeen }: {
         <i className="docbar-p" aria-hidden />
       </div>
       <article className={feature && busy(feature) && stageIndex(feature) === si ? 'paper live' : 'paper'}>
-        <div className="tag">{stage && <b>{si + 1} / 6</b>}{stage ? name : t(`n.${feature?.stage ?? 'constitution'}`)}<code>{ref ? ref.path : `${fid ?? ''} / ${KIND_FILE[kind]}`}</code></div>
+        <div className="tag">{stage && <b>{si + 1} / 6</b>}{stage ? name : t(`n.${feature?.stage ?? 'constitution'}`)}<code>{ref ? ref.path : feature ? `${feature.id} / ${KIND_FILE[kind]}` : KIND_FILE[kind]}</code></div>
         <div className="pgrid">
-          <nav className="toc" aria-label={t('toc')}>
+          {/* The column is always there, so the page does not jump when the sections arrive; the box only while loading or with sections. */}
+          {!toc.length && !loading ? <div className="toc-space" aria-hidden /> : <nav className="toc" aria-label={t('toc')}>
             <b>{t('toc')}</b>
-            {/* The column is always there, so the page does not jump when the sections arrive. */}
-            {!toc.length && <p className="toc-none">{ref && !ref.error && doc === undefined ? <span className="skel skel-line" /> : t('toc.none')}</p>}
+            {!toc.length && <p className="toc-none"><span className="skel skel-line" /></p>}
             <ol>
               {toc.map((head, n) => (
                 <li key={n}>
@@ -141,14 +142,14 @@ export function StagePage({ route, project, version, seen, onSeen }: {
                 </li>
               ))}
             </ol>
-          </nav>
+          </nav>}
           <div className="psheet" ref={sheet}>
             <header className="phead">
               {stage && <div className="phead-no">{si + 1}<span>/ 6</span></div>}
               <div className="phead-t">
                 <h1 tabIndex={-1}>{name}</h1>
                 {!stage && <p className="phead-say">{t('h.kind')} · {kind}</p>}
-                <p className="phead-doc">{doc?.title ? <Title>{doc.title}</Title> : fid}</p>
+                <p className="phead-doc">{doc?.title ? <DocTitle doc={doc} /> : feature?.id}</p>
               </div>
               <div className="phead-cmd">
                 {stage && <>
@@ -163,7 +164,7 @@ export function StagePage({ route, project, version, seen, onSeen }: {
                   </>
                   : stage && <span className="phead-here">{t('h.all', project.features.length)}</span>}
               </div>
-              {doc && doc.meta.length > 0 && <dl className="meta">{doc.meta.map((m, i) => <div key={i}><dt>{m.label}</dt><dd><Value md={m.value} /></dd></div>)}</dl>}
+              {doc && <DocMeta doc={doc} />}
               {feature && (
                 <nav className="fdocs" aria-label={t('h.docs')}>
                   <span>{t('h.docs')}</span>

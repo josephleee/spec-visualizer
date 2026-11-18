@@ -58,6 +58,13 @@ export function defaultFeature(p: Project, kind: DocKind): Feature | null {
 export const resolveFeature = (p: Project, kind: DocKind, id: string | null): Feature | null =>
   id === null ? defaultFeature(p, kind) : p.features.find(f => f.id === id) ?? null
 
+// The feature the stage links of a page carry. The constitution page has none of its own, so the one that came
+// in its address rides along, but only while it exists: a deleted feature must not ride on every link.
+export function linkFeature(p: Project, r: Exclude<Route, { kind: 'board' }>, feature: Feature | null): string | null {
+  if (feature) return feature.id
+  return r.kind === 'stage' && r.stage === 'constitution' && p.features.some(f => f.id === r.feature) ? r.feature : null
+}
+
 // Switching to another feature on the same stage keeps the plan document being read when that feature has it.
 export const featureHref = (stage: StageKey, f: Feature, sub: PlanSub | null) =>
   stageHref(stage, f.id, sub && f.docs.some(d => d.kind === sub) ? sub : null)

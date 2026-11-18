@@ -6,7 +6,8 @@ export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)'
 // Only transform and opacity are animated. Returns a stop function; `done` runs when the move finishes on its own.
 export function zoom(cam: HTMLElement, board: HTMLElement, doc: HTMLElement, frame: Element | null, out: boolean, done: () => void): () => void {
   // The cards may still be landing (the intro) or lifting (hover): settle them first, or the card is measured where it is not going to be.
-  board.getAnimations({ subtree: true }).forEach(a => a.finish())
+  // finish() throws on an animation that never ends; such a one is left running.
+  board.getAnimations({ subtree: true }).forEach(a => { try { a.finish() } catch { /* endless: cannot be settled */ } })
   const v = cam.getBoundingClientRect(), r = (frame ?? cam).getBoundingClientRect()
   const s = v.width / r.width, x = r.left - v.left, y = r.top - v.top
   const opts: KeyframeAnimationOptions = { duration: 760, easing: EASE, fill: 'both', direction: out ? 'reverse' : 'normal' }

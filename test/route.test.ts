@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import type { DocKind, Feature, Project, Stage } from '../server/types.ts'
-import { defaultFeature, docHref, featureHref, formatRoute, parseRoute, resolveFeature, resolveTarget, stageDocKind, type Route, type StageRoute } from '../web/route.ts'
+import { defaultFeature, docHref, featureHref, formatRoute, linkFeature, parseRoute, resolveFeature, resolveTarget, stageDocKind, type Route, type StageKey, type StageRoute } from '../web/route.ts'
 
 const feature = (id: string, stage: Stage, kinds: DocKind[]): Feature => ({
   id, stage, tasks: null, openQuestions: 0,
@@ -103,6 +103,17 @@ test('switching feature keeps the plan document when the new feature has it', ()
   expect(featureHref('plan', bare, 'research')).toBe('#/stage/plan/b')
   expect(featureHref('plan', full, null)).toBe('#/stage/plan/a')
   expect(featureHref('tasks', full, null)).toBe('#/stage/tasks/a')
+})
+
+test('stage links carry the feature of the page; the constitution page passes on the one that came with it, if it still exists', () => {
+  const a = feature('a', 'specify', ['spec']), p = project([a])
+  const at = (stage: StageKey, f: string | null): StageRoute => ({ kind: 'stage', stage, feature: f, sub: null })
+  expect(linkFeature(p, at('specify', 'a'), a)).toBe('a')
+  expect(linkFeature(p, at('constitution', 'a'), null)).toBe('a')
+  expect(linkFeature(p, at('constitution', 'gone'), null)).toBeNull() // a deleted feature must not ride on every link
+  expect(linkFeature(p, at('constitution', null), null)).toBeNull()
+  expect(linkFeature(p, at('specify', 'gone'), null)).toBeNull() // the links fall back to the default feature
+  expect(linkFeature(p, { kind: 'doc', path: 'x' }, a)).toBe('a')
 })
 
 test('a document opens on its stage page, or on the generic page when it has none', () => {

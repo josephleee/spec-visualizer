@@ -15,27 +15,29 @@ type DocRoute = Exclude<Route, { kind: 'board' }>
 const isDoc = (r: Route): r is DocRoute => r.kind !== 'board'
 const stageNo = (r: Route) => (r.kind === 'stage' ? STAGES.indexOf(r.stage) : -1)
 
-// A page that throws while drawing shows this instead of a blank screen. `at` changes with the address, which clears it.
-class Guard extends Component<{ at: string; fallback: ReactNode; children: ReactNode }, { failedAt: string | null }> {
-  state = { failedAt: null as string | null }
-  static getDerivedStateFromError() { return { failedAt: location.hash } }
-  render() { return this.state.failedAt !== null && this.state.failedAt === this.props.at ? this.props.fallback : this.props.children }
+// A page that throws while drawing shows this instead of a blank screen.
+// It tries again when `retryOn` changes: another address, or new data (the file may have been fixed).
+class Guard extends Component<{ retryOn: string; fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  componentDidUpdate(prev: { retryOn: string }) { if (this.state.failed && prev.retryOn !== this.props.retryOn) this.setState({ failed: false }) }
+  render() { return this.state.failed ? this.props.fallback : this.props.children }
 }
 
-function useRoute(): Route {
+function useRoute(): { hash: string; route: Route } {
   const [hash, setHash] = useState(location.hash)
   useEffect(() => {
     const f = () => setHash(location.hash)
     addEventListener('hashchange', f)
     return () => removeEventListener('hashchange', f)
   }, [])
-  return useMemo(() => parseRoute(hash), [hash])
+  return { hash, route: useMemo(() => parseRoute(hash), [hash]) }
 }
 
 function App() {
   const { project, connected, version } = useProject()
   const { t } = useLang()
-  const route = useRoute()
+  const { hash, route } = useRoute()
   const [seen, setSeen] = useState<Seen | null>(null)
   useEffect(() => { if (project && !seen) setSeen(loadSeen(project)) }, [project])
 
@@ -84,7 +86,7 @@ function App() {
       : route.kind === 'doc' ? `${route.path} · ${name}` : t('title', name)
   })
 
-  const at = location.hash
+  const retryOn = `${hash} ${version}`
   const failed = <div className="paper"><section className="sec empty" role="alert"><h2>{t('err.title')}</h2><p>{t('err.say')}</p><a className="empty-go" href="#/">{t('back')} →</a></section></div>
   return (
     <>
@@ -92,11 +94,11 @@ function App() {
       <Strip project={project} />
       <main className="cam" ref={cam}>
         <section ref={board} className="layer board" aria-label={t('board', name)} hidden={isDoc(route) && move !== 'in'}>
-          <Guard at={at} fallback={failed}><Board project={seen ? project : null} seen={seen ?? {}} /></Guard>
+          <Guard retryOn={retryOn} fallback={failed}><Board project={seen ? project : null} seen={seen ?? {}} /></Guard>
         </section>
         {shown && (
           <section ref={doc} className="layer doc" aria-label={t('doc.layer')}>
-            <Guard at={at} fallback={failed}>{project && seen ? <StagePage route={shown} project={project} version={version} seen={seen} onSeen={setSeen} /> : <DocSkeleton />}</Guard>
+            <Guard retryOn={retryOn} fallback={failed}>{project && seen ? <StagePage route={shown} project={project} version={version} seen={seen} onSeen={setSeen} /> : <DocSkeleton />}</Guard>
           </section>
         )}
       </main>

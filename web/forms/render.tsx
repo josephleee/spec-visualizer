@@ -2,7 +2,14 @@ import type { ReactNode } from 'react'
 import type { DocKind, ParsedDoc } from '../../server/types.ts'
 import { formFor } from './index.ts'
 import { Generic, More, outline } from './Outline.tsx'
+import { Title, Value } from '../parts.tsx'
 import type { FormCtx } from './types.ts'
+
+// The document's own title and header fields, as the page header shows them.
+export const DocTitle = ({ doc }: { doc: ParsedDoc }) => (doc.title ? <Title>{doc.title}</Title> : null)
+export const DocMeta = ({ doc }: { doc: ParsedDoc }) => (doc.meta.length === 0 ? null : (
+  <dl className="meta">{doc.meta.map((m, i) => <div key={i}><dt>{m.label}</dt><dd><Value md={m.value} /></dd></div>)}</dl>
+))
 
 // The whole body of a document page: the form for its kind plus whatever the form did not draw,
 // or the document in its own order when it has none of the expected structure. Nothing is dropped.
