@@ -1,0 +1,61 @@
+openapi: 3.1.0
+info:
+  title: Borrowbox reminders
+  version: 0.1.0
+paths:
+  /counter/overdue:
+    get:
+      summary: Overdue loans, oldest first
+      responses:
+        '200':
+          description: The list shown to volunteers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OverdueLoan'
+  /members/{memberId}/reminders:
+    put:
+      summary: Turn reminders on or off for one member
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        '204':
+          description: Saved
+        '404':
+          description: No such member
+components:
+  schemas:
+    OverdueLoan:
+      type: object
+      required: [loanId, memberName, toolName, dueDate, daysLate]
+      properties:
+        loanId:
+          type: string
+          format: uuid
+        memberName:
+          type: string
+        toolName:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        daysLate:
+          type: integer
+          minimum: 1
