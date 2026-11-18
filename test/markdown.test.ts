@@ -43,3 +43,25 @@ test('raw HTML in a document is escaped, never run', () => {
   expect(html).toContain('&lt;script&gt;')
   expect(html).toContain('&lt;iframe')
 })
+
+test('a link title is shown as text after the link, followable or not', () => {
+  expect(block('[a](https://example.com "The Title")')).toContain('<a href="https://example.com" target="_blank" rel="noreferrer">a</a> (The Title)')
+  const unsafe = block('[a](./x.md "Local Title")')
+  expect(unsafe).not.toContain('<a')
+  expect(unsafe).toContain('Local Title')
+  expect(block('[a](https://example.com)')).not.toContain('()')
+})
+
+test('an image title is part of its text form', () => {
+  const html = block('![alt](https://example.com/p.png "Pic Title")')
+  expect(html).not.toContain('<img')
+  expect(html).toContain('alt [https://example.com/p.png &quot;Pic Title&quot;]')
+})
+
+test('the whole info string of a fenced block is shown, not only the language', () => {
+  const html = block('```rust title="src/main.rs" {1,3}\nfn main() {}\n```')
+  expect(html).toContain('rust title=&quot;src/main.rs&quot; {1,3}')
+  expect(html).toContain('fn main() {}')
+  expect(block('```\nplain\n```')).not.toContain('class="lbl"')
+  expect(block('```toml\na = 1\n```')).toContain('<span class="lbl">toml</span>')
+})
