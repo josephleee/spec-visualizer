@@ -28,7 +28,7 @@ jobs:
       - run: npm run build
       - run: npm pack
       - if: matrix.node == 24
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: package
           path: spec-visualizer-*.tgz
