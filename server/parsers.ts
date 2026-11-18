@@ -11,50 +11,65 @@ type Story = Extract<Block, { kind: 'stories' }>['items'][number]
 const STORY = /^(?:User Story\s+\d+|US-?\s*\d+)\s*[-–—:]\s*(.+?)(?:\s*\(Priority:\s*(\w+)\))?$/
 const NARRATIVE = /^\*\*(?:As an?|I want(?: to)?|So that)\*\*/i
 const AC_LABEL = /^Acceptance (?:Criteria|Scenarios)$/i
-const AC_INSIDE = /^\*\*Acceptance (?:Criteria|Scenarios):\*\*$/i // colon inside the bold: not a label for takeLabels
+// A paragraph ending in the criteria label. `**Acceptance Criteria**:` alone is a label and is left to takeLabels.
+const AC_END = /(?:^|\n)\*\*Acceptance (?:Criteria|Scenarios)(?::\*\*|\*\*:)$/i
 const word = (w: string) => `(?:\\*\\*${w}\\*\\*|\\b${w}\\b)`
-// One item holding all three clauses. Case-sensitive, so a lowercase "when" inside a clause does not split it.
-const GWT = new RegExp(`^${word('Given')}\\s*([\\s\\S]*?)\\s*,?\\s*${word('When')}\\s*([\\s\\S]*?)\\s*,?\\s*${word('Then')}\\s*([\\s\\S]*)$`)
+const gwt = (k: (w: string) => string) => new RegExp(`^${k('Given')}\\s*([\\s\\S]*?)\\s*,?\\s*${k('When')}\\s*([\\s\\S]*?)\\s*,?\\s*${k('Then')}\\s*([\\s\\S]*)$`)
+// One item holding all three clauses. Bold keywords are tried first, so a plain "Then" inside a clause does not split it.
+const GWT_BOLD = gwt((w) => `\\*\\*${w}\\*\\*`)
+// Case-sensitive, so a lowercase "when" inside a clause does not split it.
+const GWT = gwt(word)
 // One clause per item: `Given x`, `**When** y`, `And z`.
 const STEP = /^(?:\*\*(Given|When|Then|And|But):?\*\*|(Given|When|Then|And|But)\b):?\s*([\s\S]*)$/i
 const ID_ITEM = /^\*\*([A-Z]+-\d+[a-z]?)\*\*:\s*([\s\S]*)$/
 
 const body = (src: string, item: Node) => slice(src, kids(item))
 
-// Reads acceptance lists into scenarios; items that cannot be placed go to `extra` as written.
+// Reads acceptance lists into scenarios; pieces that cannot be placed go to `extra` as written, in file order.
 function scenarios(src: string, nodes: Node[], out: Story, extra: string[]) {
+  const parts: { text: string; sc: Scenario | null }[] = [] // every piece with the scenario it went into
   let cur: Scenario | null = null
   let last: keyof Scenario | null = null // the clause an And/But item continues
   for (const n of nodes) {
-    if (n.type !== 'list') { extra.push(slice(src, [n])); continue }
+    if (n.type !== 'list') { parts.push({ text: slice(src, [n]), sc: null }); continue }
     for (const item of n.children) {
       const text = body(src, item)
-      const g = GWT.exec(text)
+      const g = GWT_BOLD.exec(text) ?? GWT.exec(text)
       const s = g ? null : STEP.exec(text)
       const key = (s?.[1] ?? s?.[2] ?? '').toLowerCase()
+      let placed = true
       if (g || key === 'given') {
         cur = g ? { given: g[1], when: g[2], then: g[3] } : { given: s![3], when: '', then: '' }
-        out.scenarios.push(cur)
         last = g ? 'then' : 'given'
       } else if (cur && (key === 'when' || key === 'then') && !cur[key]) { cur[key] = s![3]; last = key }
-      else if (cur && last && (key === 'and' || key === 'but')) cur[last] += `, ${key} ${s![3]}`
-      else { extra.push(slice(src, [item])); last = null }
+      // As written and after a blank line: the clause before it may end in a code block.
+      else if (cur && last && (key === 'and' || key === 'but')) cur[last] += '\n\n' + text
+      else { placed = false; last = null }
+      parts.push({ text: slice(src, [item]), sc: placed ? cur : null })
     }
   }
+  // A Given that never got a When or Then is a sentence, not a scenario.
+  const whole = (sc: Scenario | null) => sc !== null && (sc.when !== '' || sc.then !== '')
+  out.scenarios.push(...new Set(parts.flatMap((p) => (whole(p.sc) ? [p.sc!] : []))))
+  extra.push(...parts.filter((p) => !whole(p.sc)).map((p) => p.text))
 }
 
 function story(src: string, sec: Sec, m: RegExpExecArray): Story {
   const out: Story = { title: m[1], priority: m[2] ?? null, narrative: null, why: null, test: null, scenarios: [], rest: '' }
   const para = (n: Node) => (n.type === 'paragraph' ? slice(src, [n]) : '')
+  const head = (n: Node) => para(n).replace(AC_END, '') // a paragraph without its closing criteria label
+  const ac = sec.nodes.findIndex((n, i) => sec.nodes[i + 1]?.type === 'list' && AC_END.test(para(n)) && (head(n) !== '' || para(n).endsWith(':**')))
   const told = sec.nodes.filter((n) => NARRATIVE.test(para(n)))
-  if (told.length) out.narrative = told.map(para).join('\n\n')
-  const ac = sec.nodes.findIndex((n, i) => AC_INSIDE.test(para(n)) && sec.nodes[i + 1]?.type === 'list')
+  if (told.length) out.narrative = told.map(head).join('\n\n')
   const taken = ac < 0 ? told : [...told, sec.nodes[ac], sec.nodes[ac + 1]]
   const { fields, rest } = takeLabels(src, sec.nodes.filter((n) => !taken.includes(n)))
   const extra: string[] = [slice(src, rest)]
   const known = { 'Why this priority': 'why', 'Independent Test': 'test' } as const
   let sawScenarios = ac >= 0
-  if (sawScenarios) scenarios(src, [sec.nodes[ac + 1]], out, extra)
+  if (sawScenarios) {
+    if (!told.includes(sec.nodes[ac])) extra.push(head(sec.nodes[ac]))
+    scenarios(src, [sec.nodes[ac + 1]], out, extra)
+  }
   for (const f of fields) {
     const key = known[f.label as keyof typeof known]
     if (key && out[key] === null) out[key] = f.value

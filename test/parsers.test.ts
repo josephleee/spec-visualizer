@@ -340,19 +340,19 @@ test('spec: US-n stories with a narrative and one clause per list item', () => {
     title: 'Basic Multi-File Concatenation', priority: null, why: null, test: null,
     narrative: '**As a** DevOps engineer\n**I want to** process multiple log files in a single command\n**So that** I can view logs in one stream',
     scenarios: [
-      { given: 'multiple log files (`a.log`, `b.log`)', when: 'I run `hl a.log b.log`', then: 'all logs are displayed, and the order is preserved, but nothing is sorted' },
+      { given: 'multiple log files (`a.log`, `b.log`)', when: 'I run `hl a.log b.log`', then: 'all logs are displayed\n\nAnd the order is preserved\n\nBut nothing is sorted' },
       { given: 'no files', when: 'I run `hl`', then: 'stdin is read' },
     ],
     rest: '',
   })
   expect(b).toEqual({
     title: 'Bold steps', priority: null, why: null, test: null, narrative: null,
-    scenarios: [{ given: 'a file, and it is empty', when: 'I open it', then: 'nothing prints' }],
+    scenarios: [{ given: 'a file\n\n**And** it is empty', when: 'I open it', then: 'nothing prints' }],
     rest: 'Free prose.\n\n- And an orphan\n\n- a plain note\n\n- And after the note\n\n- Then a second result\n\n- Andrew is not a keyword',
   })
   expect(c).toEqual({
     title: 'Template', priority: 'P2', why: null, test: null, narrative: null,
-    scenarios: [{ given: 'a', when: 'b', then: 'c' }, { given: 'd', when: 'e', then: 'f, and g' }],
+    scenarios: [{ given: 'a', when: 'b', then: 'c' }, { given: 'd', when: 'e', then: 'f\n\nAnd g' }],
     rest: '',
   })
 })
@@ -362,4 +362,47 @@ test('spec: a template story has no narrative; text after the criteria list is k
   const [, s] = parseSpec('## S\n\n### US-7: T\n\n**Acceptance Criteria:**\n- Given a\n- Then b\n\nclosing words\n\n**Acceptance Criteria:**\n- Given second block\n') as any[]
   expect(s.items[0].scenarios).toEqual([{ given: 'a', when: '', then: 'b' }])
   expect(s.items[0].rest).toBe('closing words\n\n**Acceptance Criteria:**\n- Given second block')
+})
+
+const crit = (body: string) => (parseSpec(`## S\n\n### US-1: T\n\n${body}`)[1] as any).items[0]
+
+test('spec: a scenario with bold keywords splits only at the bold keywords', () => {
+  const s = crit('**Acceptance Criteria:**\n1. **Given** the Then button, **When** user sees Then label, **Then** ok\n2. **Given** a When b, **When** c, **Then** d\n')
+  expect(s.scenarios).toEqual([
+    { given: 'the Then button', when: 'user sees Then label', then: 'ok' },
+    { given: 'a When b', when: 'c', then: 'd' },
+  ])
+})
+
+test('spec: And/But items join their clause as written, so a clause ending in a code block stays valid', () => {
+  const s = crit('**Acceptance Criteria:**\n- Given a file\n- When I run:\n  ```\n  hl\n  ```\n- And I wait\n- Then ok\n- **But** no error\n')
+  expect(s.scenarios).toHaveLength(1)
+  expect(s.scenarios[0].when).toMatch(/^I run:\n\s*```\n\s*hl\n\s*```\n\nAnd I wait$/)
+  expect(s.scenarios[0].then).toBe('ok\n\n**But** no error')
+})
+
+// Chosen: a clause is filled once. A second Then, and an And after it, stay in rest as written.
+test('spec: a second Then and the And after it go to rest', () => {
+  const s = crit('**Acceptance Criteria:**\n- Given a\n- When b\n- Then c\n- Then d\n- And e\n')
+  expect(s.scenarios).toEqual([{ given: 'a', when: 'b', then: 'c' }])
+  expect(s.rest).toBe('- Then d\n\n- And e')
+})
+
+// Chosen: the criteria label may close the narrative paragraph; the list after it is still read.
+test('spec: a narrative directly followed by the criteria label, with no blank line', () => {
+  for (const label of ['**Acceptance Criteria:**', '**Acceptance Criteria**:']) {
+    const s = crit(`**As a** user\n**I want to** x\n${label}\n- Given a\n- When b\n- Then c\n`)
+    expect(s.narrative).toBe('**As a** user\n**I want to** x')
+    expect(s.scenarios).toEqual([{ given: 'a', when: 'b', then: 'c' }])
+    expect(s.rest).toBe('')
+  }
+  const plain = crit('Some prose.\n**Acceptance Criteria:**\n- Given a\n- Then c\n')
+  expect(plain).toMatchObject({ narrative: null, scenarios: [{ given: 'a', when: '', then: 'c' }], rest: 'Some prose.' })
+})
+
+// Chosen: a Given with neither When nor Then is a sentence, not a scenario; it stays in rest, in file order.
+test('spec: a Given item with no When or Then stays in rest', () => {
+  const s = crit('**Acceptance Criteria:**\n- first note\n- Given names are validated\n- And so are emails\n- Given a\n- Then b\n- last note\n')
+  expect(s.scenarios).toEqual([{ given: 'a', when: '', then: 'b' }])
+  expect(s.rest).toBe('- first note\n\n- Given names are validated\n\n- And so are emails\n\n- last note')
 })
