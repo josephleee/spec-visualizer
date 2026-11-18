@@ -140,3 +140,20 @@ test('security: Host must match this server', async () => {
   })
   expect(noHost).not.toBe(200)
 })
+
+test('a root README change sends a changed event, other root files do not', async () => {
+  await wait(300) // late fs events from the tests above
+  const events = collectSse(`${base}/api/events`)
+  await events.ready
+  fs.writeFileSync(path.join(root, 'notes.txt'), 'x')
+  await wait(400)
+  expect(events.count).toBe(0)
+  for (const [i, name] of ['README.md', 'readme.md', 'Readme.md'].entries()) {
+    fs.rmSync(path.join(root, name), { force: true }) // same file on a case-insensitive disk
+    fs.writeFileSync(path.join(root, name), '# R\n\nAbout.\n')
+    await wait(400)
+    expect(events.count).toBeGreaterThan(i)
+    events.count = i + 1
+  }
+  events.close()
+})

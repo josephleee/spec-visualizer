@@ -39,8 +39,11 @@ export function startServer(opts: { root: string; port: number; webDir: string }
   }
   attach()
   try {
-    // Non-recursive: only picks up `specs` / `.specify` appearing later.
-    const rw = fs.watch(root, (_e, name) => { if (name === 'specs' || name === '.specify') { attach(); notify() } })
+    // Non-recursive: picks up `specs` / `.specify` appearing later, and the README the project summary is read from.
+    const rw = fs.watch(root, (_e, name) => {
+      if (name === 'specs' || name === '.specify') { attach(); notify() }
+      else if (name && /^readme\.md$/i.test(name)) notify()
+    })
     rw.on('error', () => rw.close())
     watchers.push(rw)
   } catch { /* root unwatchable: no late-folder detection */ }
