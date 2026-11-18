@@ -247,7 +247,7 @@ button, select { font-family: var(--sans); }
 .docbar-p { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--ink); transform-origin: 0 50%; transform: scaleX(0); }
 .paper { max-width: 1360px; margin: 24px auto 152px; padding: 0 var(--pad); }
 .pgrid { display: grid; grid-template-columns: 208px minmax(0, 1fr); gap: 20px; align-items: start; }
-.toc-none { flex: 1; min-height: 36px; padding: 12px; }
+.toc-none { flex: 1; min-height: 36px; padding: 12px; font-size: 13px; line-height: 1.35; color: var(--ink-3); }
 .toc-none .skel { width: 144px; max-width: 100%; }
 .toc { position: sticky; top: 64px; max-height: calc(100dvh - 160px); overflow-y: auto; background: var(--sheet); border: 1px solid var(--edge); border-top: 3px solid var(--ink); }
 .toc > b { display: block; padding: 8px 12px; font-size: 12px; color: var(--ink-2); border-bottom: 1px solid var(--edge); background: var(--sheet-2); }
@@ -571,7 +571,6 @@ a.step:hover span, a.step:hover code { color: var(--sheet); background: none; }
   .docbar { flex-wrap: wrap; }
   .pgrid { grid-template-columns: minmax(0, 1fr); }
   .toc { position: static; max-height: none; min-height: 40px; border-top-width: 1px; display: flex; overflow-x: auto; overflow-y: hidden; }
-  .toc-space { min-height: 40px; }
   .toc > b { display: none; }
   .toc ol { display: flex; }
   .toc button { width: auto; white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; }

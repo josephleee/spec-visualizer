@@ -170,10 +170,10 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
       <article className={feature && busy(feature) && stageIndex(feature) === si ? 'paper live' : 'paper'}>
         <div className="tag">{stage && <b>{si + 1} / 6</b>}{stage ? name : !ref ? t('nf.tag') : feature ? t(`n.${feature.stage}`) : t('n.constitution')}<code>{ref ? ref.path : route.kind === 'doc' ? route.path : feature ? `${feature.id} / ${KIND_FILE[kind]}` : KIND_FILE[kind]}</code></div>
         <div className="pgrid">
-          {/* The column is always there, so the page does not jump when the sections arrive; the box only while loading or with sections. */}
-          {!toc.length && !loading ? <div className="toc-space" aria-hidden /> : <nav className="toc" aria-label={t('toc')}>
+          {/* The box is always there, in the same place and frame, so nothing jumps and the column never looks empty. */}
+          {<nav className="toc" aria-label={t('toc')}>
             <b>{t('toc')}</b>
-            {!toc.length && <p className="toc-none"><span className="skel skel-line" /></p>}
+            {!toc.length && <p className="toc-none">{loading ? <span className="skel skel-line" /> : t('toc.none')}</p>}
             <ol>
               {toc.map((head, n) => (
                 <li key={n}>
