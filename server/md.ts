@@ -12,13 +12,58 @@ export const kids = (n: Node): Node[] => ('children' in n ? (n.children as Node[
 const start = (n: Node) => n.position!.start.offset!
 const end = (n: Node) => n.position!.end.offset!
 
+const whole = (src: string): Node[] => processor.parse(src).children
+
+const PIECE = 32 * 1024
+const HEADING = /\n(?=#{1,6}[ \t])/g
+const DEFINITION = /^ {0,3}\[[^\]\n]+\]:/m
+const shift = (ns: Node[], by: number) => {
+  for (const n of ns) { n.position!.start.offset! += by; n.position!.end.offset! += by; shift(kids(n), by) }
+}
+
+// The markdown parser gets slower than linear as a document grows (2 MB took over four seconds), so a long
+// document is parsed in pieces cut at heading lines in column 0. A piece is parsed together with the heading line
+// that follows it: if that line comes out as a heading starting at the cut, every block before it is closed and
+// the cut is sound; if not (an open code fence or HTML block took the line), the piece grows to the next cut.
+// Offsets are shifted back to the whole document; lines and columns are not, nothing here reads them.
+// Reference definitions join distant parts of a document, so one with definitions is parsed whole.
+// shortcut: a fence left open across many cuts is re-parsed once per cut, upgrade if such documents turn up.
+function inPieces(src: string): Node[] {
+  const out: Node[] = []
+  let from = 0
+  while (from < src.length) {
+    let to = from
+    let nodes: Node[]
+    let sound = false
+    do {
+      HEADING.lastIndex = to + PIECE
+      const m = HEADING.exec(src)
+      to = m ? m.index + 1 : src.length
+      const eol = src.indexOf('\n', to)
+      nodes = whole(src.slice(from, to === src.length || eol < 0 ? src.length : eol))
+      if (to === src.length) break
+      const next = nodes.pop()
+      sound = next?.type === 'heading' && start(next) === to - from
+    } while (!sound)
+    shift(nodes, from)
+    out.push(...nodes)
+    from = to
+  }
+  return out
+}
+
+let last: { src: string; nodes: Node[] } | undefined
+
+// Callers only read the nodes: the latest result is kept, since a document is parsed more than once on its way through.
 export function parse(src: string): Node[] {
-  return processor.parse(src).children
+  if (last?.src !== src) last = { src, nodes: src.length <= 2 * PIECE || DEFINITION.test(src) ? whole(src) : inPieces(src) }
+  return last.nodes
 }
 
 // Cuts comment ranges found via the AST, so comments inside code blocks survive.
 export function clean(src: string): string {
-  let out = src.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
+  const out = src.replace(/^﻿/, '').replace(/\r\n?/g, '\n')
+  if (!out.includes('<!--')) return out
   const cuts: [number, number][] = []
   const walk = (ns: Node[]) => {
     for (const n of ns) {
@@ -27,8 +72,10 @@ export function clean(src: string): string {
     }
   }
   walk(parse(out))
-  for (const [s, e] of cuts.sort((a, b) => b[0] - a[0])) out = out.slice(0, s) + out.slice(e)
-  return out
+  const parts: string[] = []
+  let pos = 0
+  for (const [s, e] of cuts.sort((x, y) => x[0] - y[0])) { parts.push(out.slice(pos, s)); pos = e }
+  return parts.join('') + out.slice(pos)
 }
 
 // Nodes may skip siblings (labels and breaks taken out): each run of neighbours is cut whole, runs are joined.
