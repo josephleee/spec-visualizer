@@ -31,8 +31,16 @@ export function clean(src: string): string {
   return out
 }
 
+// Nodes may skip siblings (labels and breaks taken out): each run of neighbours is cut whole, runs are joined.
 export function slice(src: string, nodes: Node[]): string {
-  return nodes.length ? src.slice(start(nodes[0]), end(nodes[nodes.length - 1])).trim() : ''
+  const runs: string[] = []
+  let from = 0
+  for (let i = 1; i <= nodes.length; i++) {
+    if (i < nodes.length && !src.slice(end(nodes[i - 1]), start(nodes[i])).trim()) continue
+    runs.push(src.slice(start(nodes[from]), end(nodes[i - 1])))
+    from = i
+  }
+  return runs.join('\n\n').trim()
 }
 
 // Section heading nodes are not part of `nodes`; the heading text is in `heading`.
@@ -78,11 +86,15 @@ export function takeLabels(src: string, nodes: Node[]): { fields: Field[]; rest:
     if (fields.length) fields[fields.length - 1].value = pending.filter(Boolean).join('\n\n').trim()
     pending = []
   }
+  const rest = nodes.slice(0, first)
+  let open = true // false after a thematic break: what follows is no longer the label's value
   for (const n of nodes.slice(first)) {
+    if (n.type === 'thematicBreak') { open = false; continue }
     const text = n.type === 'paragraph' ? slice(src, [n]) : ''
     const marks = [...text.matchAll(LABEL)]
-    if (!marks.length || !text.startsWith(marks[0][0])) { pending.push(slice(src, [n])); continue }
+    if (!marks.length || !text.startsWith(marks[0][0])) { if (open) pending.push(slice(src, [n])); else rest.push(n); continue }
     flush()
+    open = true
     marks.forEach((m, i) => {
       if (i) flush()
       const from = m.index + m[0].length
@@ -92,7 +104,7 @@ export function takeLabels(src: string, nodes: Node[]): { fields: Field[]; rest:
     })
   }
   flush()
-  return { fields, rest: nodes.slice(0, first) }
+  return { fields, rest }
 }
 
 export function checkItems(nodes: Node[]): CheckItem[] {

@@ -46,3 +46,19 @@ test('takeLabels reads line-start labels inside one paragraph', () => {
 test('checkItems reads an ID with one lowercase letter suffix', () => {
   expect(checkItems(parse('- [ ] T006a [P] Do it\n'))[0]).toEqual({ id: 'T006a', done: false, parallel: true, story: null, text: 'Do it' })
 })
+
+test('takeLabels: a thematic break ends the value; text after it is kept in rest', () => {
+  for (const hr of ['---', '***', '___']) {
+    const src = `lead\n\n**Purpose**: Project initialization\n\n${hr}\n\nafter the break\n\n**Goal**: g\n\n${hr}\n`
+    const { fields, rest } = takeLabels(src, parse(src))
+    expect(fields).toEqual([{ label: 'Purpose', value: 'Project initialization' }, { label: 'Goal', value: 'g' }])
+    expect(slice(src, rest)).toBe('lead\n\nafter the break')
+  }
+})
+
+test('slice cuts each run of neighbouring nodes whole and joins the runs', () => {
+  const src = 'a\nb\n\n- x\n\n- y\n\nmiddle\n\nz\n'
+  const nodes = parse(src)
+  expect(slice(src, nodes)).toBe(src.trim())
+  expect(slice(src, [nodes[0], nodes[1], nodes[3]])).toBe('a\nb\n\n- x\n\n- y\n\nz')
+})

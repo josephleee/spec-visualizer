@@ -283,3 +283,9 @@ test('images in headings and checkbox text keep their markdown source', () => {
   expect(p.title).toBe('Shot ![alt text](x.png)')
   expect(p.items[0].text).toContain('![diagram](flow.png)')
 })
+
+test('phase: a label value does not swallow the thematic break before the next phase', () => {
+  const [p] = parseTasks('## Phase 1\n\n**Purpose**: Project initialization\n\n---\n\ntrailing note\n\n- [ ] T001 a\n\n**Checkpoint**: ready\n\n---\n') as any[]
+  expect(p.fields).toEqual([{ label: 'Purpose', value: 'Project initialization' }, { label: 'Checkpoint', value: 'ready' }])
+  expect(p.rest).toBe('trailing note')
+})
