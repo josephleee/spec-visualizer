@@ -60,10 +60,8 @@ jobs:
       - name: Install the tarball in an empty folder and run it
         run: scripts/smoke.sh "${{ steps.pack.outputs.tarball }}" "${{ steps.meta.outputs.version }}"
 
+      # No token: npm exchanges the job's OIDC identity for a short-lived publish token (trusted publisher set on npmjs.com for this file).
       - name: Publish to npm
-        env:
-          # Empty unless the NPM_TOKEN secret exists. npm tries trusted publishing (OIDC) first and uses the token only as a fallback.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="${{ steps.meta.outputs.version }}"
           if [ "$(npm view "spec-visualizer@$version" version 2> /dev/null)" = "$version" ]; then
