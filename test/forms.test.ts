@@ -1,7 +1,10 @@
+import { Fragment, createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, test } from 'vitest'
 import type { Block, CheckItem, DocKind, Feature, ParsedDoc } from '../server/types.ts'
-import { renderDoc } from '../web/forms/render.tsx'
+import { parseDoc } from '../server/parsers.ts'
+import { DocMeta, DocTitle, renderDoc } from '../web/forms/render.tsx'
+import type { FormCtx } from '../web/forms/types.ts'
 import { translate } from '../web/i18n.ts'
 
 // Every piece of document text carries its own token; a page that drops one fails by name.
@@ -12,11 +15,24 @@ function tokens() {
 }
 const feature: Feature = { id: '001-x', stage: 'implement', docs: [], tasks: { done: 1, total: 4 }, openQuestions: 0 }
 
+// Visible text only: a token that survives just in a tooltip or another attribute does not count as shown.
+const visible = (html: string) => html.replace(/<[^>]*>/g, ' ')
+const t: FormCtx['t'] = (k, ...a) => translate('en', k, ...a)
+const page = (doc: ParsedDoc, kind: DocKind, progress: boolean) => visible(renderToStaticMarkup(createElement(Fragment, null,
+  createElement(DocTitle, { doc }), createElement(DocMeta, { doc }), renderDoc(doc, kind, progress, { feature, t }))))
+
 function check(kind: DocKind, progress: boolean, build: (tok: (w: string) => string) => Block[]) {
   const { tok, made } = tokens()
-  const doc: ParsedDoc = { ref: { path: 'p', kind, hash: 'h' }, title: 't', meta: [], blocks: build(tok) }
-  const html = renderToStaticMarkup(renderDoc(doc, kind, progress, { feature, t: (k, ...a) => translate('en', k, ...a) }))
-  expect(made.filter(s => !html.includes(s))).toEqual([])
+  const doc: ParsedDoc = { ref: { path: 'p', kind, hash: 'h' }, title: tok('Title'), meta: [{ label: tok('MetaLabel'), value: tok('MetaValue') }], blocks: build(tok) }
+  const text = page(doc, kind, progress)
+  expect(made.filter(s => !text.includes(s))).toEqual([])
+}
+
+// Parser and form together: markdown as spec-kit writes it, read by the server's parser, drawn by the page.
+function checkSource(path: string, kind: DocKind, progress: boolean, write: (tok: (w: string) => string) => string) {
+  const { tok, made } = tokens()
+  const text = page(parseDoc({ path, kind, hash: 'h' }, write(tok)), kind, progress)
+  expect(made.filter(s => !text.includes(s))).toEqual([])
 }
 
 const extras = (tok: (w: string) => string): Block[] => [
@@ -84,4 +100,244 @@ test('a document without the expected structure, and kinds without a form: nothi
   check('contract', false, tok => [{ kind: 'code', lang: tok('Lang'), text: tok('Code') }])
   for (const kind of ['constitution', 'spec', 'plan', 'research', 'data-model', 'tasks', 'checklist'] as const)
     check(kind, false, tok => [{ kind: 'raw', heading: tok('H'), depth: 2, markdown: tok('B') }, { kind: 'raw', heading: tok('Only'), depth: 2, markdown: '' }])
+})
+
+const head = (tok: (w: string) => string, what: string) => `# ${what}: ${tok('Title')}\n\n**Feature Branch**: \`${tok('Branch')}\`\n**Status**: ${tok('Status')}\n`
+const tail = (tok: (w: string) => string) => `\n## ${tok('ExtraHead')}\n\n${tok('ExtraText')}\n\n| ${tok('Th')} | B |\n|---|---|\n| ${tok('Td')} | x |\n\n\`\`\`sh ${tok('Info')}\n${tok('Fenced')}\n\`\`\`\n\n## ${tok('BareHead')}\n`
+
+test('constitution.md, parsed and drawn: nothing is dropped', () => checkSource('.specify/memory/constitution.md', 'constitution', false, tok => `# ${tok('Title')} Constitution
+
+${tok('Preamble')}
+
+## Core Principles
+
+### I. ${tok('PrincipleA')}
+
+${tok('BodyA')}
+
+- ${tok('BulletA')}
+
+### II. ${tok('PrincipleB')}
+
+${tok('BodyB')}
+
+## Technology Stack
+
+**Language**: ${tok('Language')}
+**Testing**: ${tok('Testing')}
+
+${tok('StackRest')}
+
+## Governance
+
+${tok('GovText')}
+
+**Version**: ${tok('Version')} | **Ratified**: ${tok('Ratified')} | **Last Amended**: ${tok('Amended')}
+${tail(tok)}`))
+
+test('spec.md in both story styles, parsed and drawn: nothing is dropped', () => checkSource('specs/001-x/spec.md', 'spec', false, tok => `${head(tok, 'Feature Specification')}
+## User Scenarios & Testing
+
+### User Story 1 - ${tok('StoryA')} (Priority: P1)
+
+${tok('StoryText')}
+
+**Why this priority**: ${tok('Why')}
+
+**Independent Test**: ${tok('Test')}
+
+**Acceptance Scenarios**:
+
+1. **Given** ${tok('Given')}, **When** ${tok('When')}, **Then** ${tok('Then')}
+2. **Given** ${tok('Given2')}, **When** ${tok('When2')}, **Then** ${tok('Then2')}
+
+### US-2: ${tok('StoryB')}
+**As a** ${tok('Role')}
+**I want to** ${tok('Want')}
+**So that** ${tok('Benefit')}
+
+**Acceptance Criteria:**
+- Given ${tok('GivenB')}
+- And ${tok('AndGiven')}
+- When ${tok('WhenB')}
+- Then ${tok('ThenB')}
+- But ${tok('ButThen')}
+- ${tok('LooseItem')}
+
+### Edge Cases
+
+- ${tok('Edge')}
+
+## Requirements
+
+### Functional Requirements
+
+- **FR-001**: ${tok('Fr1')}
+- **FR-002**: ${tok('Fr2')} [NEEDS CLARIFICATION: ${tok('Question')}]
+
+${tok('AfterList')}
+
+### Key Entities
+
+- **${tok('Entity')}**: ${tok('EntityText')}
+
+## Success Criteria
+
+### Measurable Outcomes
+
+- **SC-001**: ${tok('Sc1')}
+${tail(tok)}`))
+
+test('plan.md, parsed and drawn: nothing is dropped', () => checkSource('specs/001-x/plan.md', 'plan', false, tok => `${head(tok, 'Implementation Plan')}
+## Summary
+
+${tok('Summary')}
+
+## Technical Context
+
+**Language/Version**: ${tok('Lang')}
+**Storage**: ${tok('Storage')}
+
+${tok('ContextRest')}
+
+## Constitution Check
+
+| Principle | Status |
+|---|---|
+| ${tok('Principle')} | ${tok('Pass')} |
+
+## Project Structure
+
+\`\`\`text
+${tok('Tree')}/
+\`\`\`
+
+## Complexity Tracking
+
+${tok('Complexity')}
+${tail(tok)}`))
+
+test('research.md, parsed and drawn: nothing is dropped', () => checkSource('specs/001-x/research.md', 'research', false, tok => `${head(tok, 'Research')}
+## ${tok('Overview')}
+
+${tok('OverviewText')}
+
+## 1. ${tok('Topic')}
+
+**Question**: ${tok('Question')}
+
+**Decision**: ${tok('Decision')}
+
+**Rationale**:
+- ${tok('Reason')}
+
+**Alternatives Considered**:
+- ${tok('Alternative')}
+
+${tok('Loose')}
+
+## 2. ${tok('TopicB')}
+
+**Decision**: ${tok('DecisionB')}
+
+**Implementation**: ${tok('Implementation')}
+${tail(tok)}`))
+
+test('data-model.md, parsed and drawn: nothing is dropped', () => checkSource('specs/001-x/data-model.md', 'data-model', false, tok => `${head(tok, 'Data Model')}
+## Entities
+
+### 1. ${tok('EntityA')}
+
+${tok('EntityAText')}
+
+| Field | Type |
+|---|---|
+| ${tok('FieldName')} | ${tok('FieldType')} |
+
+### 2. ${tok('EntityB')}
+
+\`\`\`rust
+struct ${tok('Struct')};
+\`\`\`
+
+## Relationships
+
+${tok('Relationships')}
+
+## State Transitions
+
+${tok('States')}
+${tail(tok)}`))
+
+test('quickstart.md, parsed and drawn: nothing is dropped', () => checkSource('specs/001-x/quickstart.md', 'quickstart', false, tok => `${head(tok, 'Quickstart')}
+${tok('Intro')}
+
+## ${tok('StepA')}
+
+1. ${tok('Do')}
+
+### ${tok('SubStep')}
+
+${tok('SubText')}
+
+## ${tok('StepB')}
+
+${tok('StepBText')}
+${tail(tok)}`))
+
+const tasksSource = (tok: (w: string) => string) => `${head(tok, 'Tasks')}
+- [x] T000 ${tok('BeforeAnyPhase')}
+
+## Format
+
+${tok('Format')}
+
+## Phase 1: ${tok('PhaseA')} ✅
+
+**Purpose**: ${tok('Purpose')}
+
+- [x] T001 ${tok('TaskDone')}
+- [x] T002 [P] ${tok('TaskParallel')}
+
+---
+
+## Phase 2: ${tok('PhaseB')}
+
+**Goal**: ${tok('Goal')}
+
+**Independent Test**: ${tok('IndependentTest')}
+
+### ${tok('SubHeading')}
+
+${tok('Note')}
+
+- [ ] T003 [P] [US1] ${tok('TaskOpen')}
+- [x] T004a [US1] ${tok('TaskSuffix')}
+  - ${tok('Nested')}
+
+**Checkpoint**: ${tok('Checkpoint')}
+
+## Dependencies
+
+${tok('Dependencies')}
+${tail(tok)}`
+test('tasks.md at the tasks stage, parsed and drawn: nothing is dropped', () => checkSource('specs/001-x/tasks.md', 'tasks', false, tasksSource))
+test('tasks.md at the implement stage, parsed and drawn: nothing is dropped', () => checkSource('specs/001-x/tasks.md', 'tasks', true, tasksSource))
+
+test('a checklist, parsed and drawn: nothing is dropped', () => checkSource('specs/001-x/checklists/requirements.md', 'checklist', false, tok => `${head(tok, 'Checklist')}
+## ${tok('GroupA')}
+
+- [x] CHK001 ${tok('Checked')}
+- [ ] ${tok('Unchecked')}
+
+${tok('GroupNote')}
+
+## Notes
+
+- ${tok('Notes')}
+${tail(tok)}`))
+
+test('a contract and an unknown document, parsed and drawn: nothing is dropped', () => {
+  checkSource('specs/001-x/contracts/api.yaml', 'contract', false, tok => `openapi: 3.0.0\ninfo: ${tok('Info')}\n`)
+  checkSource('specs/001-x/notes.md', 'other', false, tok => `# ${tok('Title')}\n\n${tok('Intro')}\n${tail(tok)}`)
 })
