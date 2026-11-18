@@ -150,7 +150,7 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
     ? def.kinds.filter(k => k !== 'contract' || sub === 'contract' || feature.docs.some(d => d.kind === 'contract'))
     : []
   const step = (i: number, dir: 'prev' | 'next') => (stages[i]
-    ? <a className={`step ${dir}`} href={stageHref(stages[i], fid)}><span>{t(dir)}</span><b>{i + 1} / {n} {t(`n.${stages[i]}`)}</b>{stageCommand(stages[i], flow) && <code>{stageCommand(stages[i], flow)}</code>}</a>
+    ? <a className={`step ${dir}`} href={stageHref(stages[i], fid)}><span>{t(dir)}</span><b>{i + 1}{` / ${n} `}{t(`n.${stages[i]}`)}</b>{stageCommand(stages[i], flow) && <code>{stageCommand(stages[i], flow)}</code>}</a>
     : <span className={`step off ${dir}`}>{t(dir === 'prev' ? 'first' : 'last')}</span>)
 
   return (
@@ -163,7 +163,8 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
               title={`${i + 1} / ${n} ${t(`n.${s}`)}`} aria-current={i === si ? 'page' : undefined}>{i + 1}<span className="sr">{t(`n.${s}`)}</span></a>
           ))}
         </nav>
-        {stage && <span className="docbar-at"><b>{si + 1} / {n}</b>{name}</span>}
+        {/* Stage counts are written as the number and " / n" in two text nodes, as before other formats: browsers shape them the same way. */}
+        {stage && <span className="docbar-at"><b>{si + 1}{` / ${n}`}</b>{name}</span>}
         {stage && feature && (
           <label className="pick"><span>{t('bar.feature')}</span>
             <select value={choosing ?? feature.id} onChange={e => { const to = project.features.find(x => x.id === e.target.value); if (to) location.hash = featureHref(stage, to, sub) }}>
@@ -180,7 +181,7 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
         <i className="docbar-p" aria-hidden />
       </div>
       <article className={feature && busy(feature) && stageIndex(feature, flow) === si ? 'paper live' : 'paper'}>
-        <div className="tag">{stage && <b>{si + 1} / {n}</b>}{stage ? name : !ref ? t('nf.tag') : feature ? t(`n.${feature.stage}`) : t(`n.${stages[0]}`)}<code>{ref ? ref.path : route.kind === 'doc' ? route.path : feature ? `${feature.id} / ${kindFile(kind, flow)}` : kindFile(kind, flow)}</code></div>
+        <div className="tag">{stage && <b>{si + 1}{` / ${n}`}</b>}{stage ? name : !ref ? t('nf.tag') : feature ? t(`n.${feature.stage}`) : t(`n.${stages[0]}`)}<code>{ref ? ref.path : route.kind === 'doc' ? route.path : feature ? `${feature.id} / ${kindFile(kind, flow)}` : kindFile(kind, flow)}</code></div>
         <div className="pgrid">
           {/* The box is always there, in the same place and frame, so nothing jumps and the column never looks empty. */}
           {<nav className="toc" aria-label={t('toc')}>
@@ -199,7 +200,7 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
           {/* One page, one set of sheets: a new page replaces them in one step instead of reshaping the old ones. */}
           <div className="psheet" ref={sheet} key={`${view.entry} ${view.path}`}>
             <header className="phead">
-              {stage && <div className="phead-no">{si + 1}<span>/ {n}</span></div>}
+              {stage && <div className="phead-no">{si + 1}<span>{`/ ${n}`}</span></div>}
               <div className="phead-t">
                 <h1 tabIndex={-1}>{name}</h1>
                 {!stage && <p className="phead-say">{t('h.kind')} · {kind}</p>}

@@ -355,10 +355,11 @@ tr:last-child td { border-bottom: 0; }
 .empty { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; justify-items: start; padding: 40px 32px; border-top: 3px solid var(--edge-2); }
 .empty h2 { font-size: 28px; letter-spacing: -.01em; text-wrap: balance; }
 .empty p { font-size: 15px; color: var(--ink-2); max-width: 60ch; overflow-wrap: anywhere; }
-.empty-cmds { display: grid; gap: 12px; margin-top: 8px; }
-.empty-cmds > div { display: grid; gap: 4px; justify-items: start; padding: 12px 16px; border: 1px solid var(--edge); }
+.empty-cmds { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 8px; max-width: 100%; }
+.empty-cmds > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; justify-items: start; min-width: 0; padding: 12px 16px; border: 1px solid var(--edge); }
 .empty-cmds .now { border-color: var(--live-ink); background: var(--live-wash); }
 .empty-cmds dt { font-size: 12px; color: var(--ink-2); }
+.empty-cmds dd { min-width: 0; max-width: 100%; }
 .empty-go { font-weight: 600; text-underline-offset: 3px; }
 
 /* requirements: OpenSpec specs and deltas, Kiro requirements and bugfix documents */

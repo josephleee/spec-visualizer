@@ -91,7 +91,7 @@ function Region({ project, stage, i, count, nextLive, seen }: { project: Project
   const name = t(`n.${stage}`)
   return (
     <article className={live ? 'region live' : 'region'} data-i={i}>
-      <div className="tag"><b>{i + 1} / {n}</b><span className="tag-name">{name}</span>{live && <span className="tag-live">{t('live')}</span>}</div>
+      <div className="tag"><b>{i + 1}{` / ${n}`}</b><span className="tag-name">{name}</span>{live && <span className="tag-live">{t('live')}</span>}</div>
       <div className="frame">
         {live && <><i className="hd a" /><i className="hd b" /><i className="hd c" /><i className="hd d" /></>}
         <div className="fh">
@@ -159,7 +159,7 @@ export function Board({ project, seen }: { project: Project | null; seen: Seen }
         <div className="regions" style={n === 6 ? undefined : cssVars({ '--stages': n })}>
           {flow.stages.map(({ key: stage }, i) => project && counts
             ? <Region key={stage} project={project} stage={stage} i={i} count={counts[i]} nextLive={!!counts[i + 1]?.live} seen={seen} />
-            : <article key={stage} className="region skel-card"><div className="tag"><b>{i + 1} / {n}</b><span className="tag-name">{t(`n.${stage}`)}</span></div><div className="frame"><span className="skel skel-head" /><span className="skel skel-line" /><span className="skel skel-line" /></div></article>)}
+            : <article key={stage} className="region skel-card"><div className="tag"><b>{i + 1}{` / ${n}`}</b><span className="tag-name">{t(`n.${stage}`)}</span></div><div className="frame"><span className="skel skel-head" /><span className="skel skel-line" /><span className="skel skel-line" /></div></article>)}
         </div>
       </section>
     </>
