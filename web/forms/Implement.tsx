@@ -1,0 +1,52 @@
+import { CMD, byStory, doneCount, nextUp, phasesOf } from '../guide.ts'
+import { Bar, CmdRow, FieldsSheet, Mark, Rich, Sec, TaskRows, Title } from '../parts.tsx'
+import type { Form } from './types.ts'
+
+// Progress: how much is done, what is left per phase and per story, and what to type next.
+export const implement: Form = (doc, { t, feature }) => {
+  const phases = phasesOf(doc.blocks), all = phases.flatMap(p => p.items)
+  if (!all.length) return null
+  // The server's own count is the figure; the cells are drawn from the document.
+  const total = feature?.tasks?.total ?? all.length, done = feature?.tasks?.done ?? doneCount(all), left = total - done
+  const next = nextUp(phases), stories = byStory(all)
+  return {
+    used: phases,
+    body: (
+      <>
+        <section className="sec prog">
+          <div className="prog-n"><b>{done}</b><span>/ {total}</span><em>{t('i.pct', total ? Math.round(done / total * 100) : 0, left)}</em></div>
+          <div className="cellstrip" role="img" aria-label={t('i.aria', total, done)}>
+            {phases.map((p, i) => <span key={i} className="cg">{p.items.map((x, j) => <Mark key={j} item={x} next={next.has(x)} />)}</span>)}
+          </div>
+          {left > 0
+            ? <div className="nextbox"><span className="lbl">{t('i.next')}</span><CmdRow cmd={CMD.implement} big /><p>{t('i.cont', left)}</p></div>
+            : <div className="nextbox fin"><p>{t('i.fin')}</p></div>}
+        </section>
+        <Sec title={t('i.left')} note={t('i.left.n', phases.filter(p => p.items.some(x => !x.done)).length)}>
+          {phases.map((p, i) => {
+            const open = p.items.filter(x => !x.done), isNext = open.some(x => next.has(x))
+            return (
+              <article key={i} className={isNext ? 'prow open next' : open.length ? 'prow open' : 'prow'}>
+                <h3><Title>{p.title}</Title></h3><Bar done={p.items.length - open.length} total={p.items.length} />
+                <b>{open.length ? t('i.nleft', open.length) : t('t.done')}</b>
+                {open.length > 0 && <TaskRows items={open} next={next} />}
+                {(p.fields.length > 0 || p.rest.trim()) && <details><summary>{t('more.blocks', p.fields.length + (p.rest.trim() ? 1 : 0))}</summary><FieldsSheet items={p.fields} /><Rich md={p.rest} /></details>}
+              </article>
+            )
+          })}
+        </Sec>
+        <Sec title={t('i.bystory')} note={t('i.groups', stories.length)}>
+          <div className="bystory">
+            {stories.map((g, i) => (
+              <div key={i} className={g.items.some(x => next.has(x)) ? 'bs next' : 'bs'}>
+                <span className="us">{g.story ?? t('i.common')}</span><b>{g.done} / {g.items.length}</b>
+                <span className="bs-m" role="img" aria-label={t('i.aria', g.items.length, g.done)}>{g.items.map((x, j) => <Mark key={j} item={x} next={next.has(x)} />)}</span>
+                <em>{g.done < g.items.length ? t('i.nleft', g.items.length - g.done) : t('t.done')}</em>
+              </div>
+            ))}
+          </div>
+        </Sec>
+      </>
+    ),
+  }
+}

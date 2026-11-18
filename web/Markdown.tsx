@@ -10,6 +10,10 @@ const components: Components = {
     : <span>{children}{href ? ` (${href})` : ''}</span>,
   // Never load images: show alt text and the URL instead.
   img: ({ src, alt }) => <span>{alt}{src ? ` [${src}]` : ''}</span>,
+  // A wide table scrolls inside its own box, never the page.
+  table: ({ children }) => <div className="tablewrap" tabIndex={0}><table>{children}</table></div>,
+  // A task-list checkbox is read-only here: draw the tick, not a disabled control.
+  input: ({ checked }) => <span className={checked ? 'tick on' : 'tick'} role="img" aria-label={checked ? '[x]' : '[ ]'} />,
 }
 const inlineComponents: Components = { ...components, p: ({ children }) => <>{children}</> }
 
