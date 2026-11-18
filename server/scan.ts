@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { execFileSync } from 'node:child_process'
+import { memo } from './cache.ts'
 import { checkItems, clean, kids, parse, splitAt, stamp } from './md.ts'
 import type { Node } from './md.ts'
 import type { DocKind, DocRef, Feature, Project, Stage } from './types.ts'
@@ -45,11 +46,18 @@ export function currentBranch(root: string): string | null {
   }
 }
 
+export const hashOf = (buf: Buffer) => crypto.createHash('sha1').update(buf).digest('hex').slice(0, 12)
+
+// What the scan works out from one file's text, kept per path and content hash: files are still read and hashed
+// on every scan, but only a changed one is parsed.
+const kept = memo<unknown>(5000)
+const keep = <T>(root: string, rel: string, hash: string, make: () => T) => kept([root, rel, hash].join('\0'), make) as T
+
 // Reads one document; a read failure becomes DocRef.error so the scan goes on.
 function readDoc(root: string, rel: string, kind: DocKind): { ref: DocRef; text: string } {
   try {
     const buf = fs.readFileSync(path.join(root, rel))
-    const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 12)
+    const hash = hashOf(buf)
     return { ref: { path: rel, kind, hash }, text: buf.toString('utf8') }
   } catch (e) {
     return { ref: { path: rel, kind, hash: '', error: e instanceof Error ? e.message : String(e) }, text: '' }
@@ -76,11 +84,17 @@ function scanFeature(root: string, id: string): Feature {
   }
   docs.sort((a, b) => ORDER.indexOf(a.ref.kind) - ORDER.indexOf(b.ref.kind) || (a.ref.path < b.ref.path ? -1 : 1))
 
-  const text = (rel: string) => clean(docs.find((d) => d.rel === rel)?.text ?? '')
-  const hasTasks = docs.some((d) => d.rel === 'tasks.md')
-  const items = checkItems(parse(text('tasks.md')))
-  const tasks = hasTasks ? { done: items.filter((i) => i.done).length, total: items.length } : null
-  const openQuestions = ['spec.md', 'plan.md'].reduce((n, r) => n + (text(r).match(/NEEDS CLARIFICATION/g)?.length ?? 0), 0)
+  const count = (rel: string) => {
+    const d = docs.find((x) => x.rel === rel)
+    return d && keep(root, d.ref.path, d.ref.hash, () => {
+      const text = clean(d.text)
+      const items = rel === 'tasks.md' ? checkItems(parse(text)) : []
+      return { done: items.filter((i) => i.done).length, total: items.length, questions: text.match(/NEEDS CLARIFICATION/g)?.length ?? 0 }
+    })
+  }
+  const t = count('tasks.md')
+  const tasks = t ? { done: t.done, total: t.total } : null
+  const openQuestions = (count('spec.md')?.questions ?? 0) + (count('plan.md')?.questions ?? 0)
   return { id, stage: stageOf({ tasks, hasPlan: docs.some((d) => d.rel === 'plan.md') }), docs: docs.map((d) => d.ref), tasks, openQuestions }
 }
 
@@ -102,11 +116,14 @@ function readAbout(root: string): string | null {
     try { len = fs.readSync(fd, buf, 0, buf.length, 0) } finally { fs.closeSync(fd) }
     let text = buf.toString('utf8', 0, Math.min(len, CAP)).replace(/\r\n?/g, '\n')
     if (len > CAP) text = text.slice(0, text.lastIndexOf('\n\n') + 1) // a cut file ends mid-block: drop that block
-    for (const n of parse(clean(text))) {
-      const chars = n.type === 'paragraph' ? [...plain(n).replace(/\s+/g, ' ').trim()] : [] // code points, so no split surrogate pair
-      if (chars.length > 300) return [...chars.slice(0, 300).join('').replace(/\s+\S*$/, '')].slice(0, 299).join('') + '…'
-      if (chars.length) return chars.join('')
-    }
+    return keep(root, name, hashOf(buf.subarray(0, len)), () => {
+      for (const n of parse(clean(text))) {
+        const chars = n.type === 'paragraph' ? [...plain(n).replace(/\s+/g, ' ').trim()] : [] // code points, so no split surrogate pair
+        if (chars.length > 300) return [...chars.slice(0, 300).join('').replace(/\s+\S*$/, '')].slice(0, 299).join('') + '…'
+        if (chars.length) return chars.join('')
+      }
+      return null
+    })
   } catch { /* unreadable: no about */ }
   return null
 }
@@ -124,17 +141,21 @@ export function scanProject(root: string, branch: string | null = currentBranch(
   if (isDir(path.join(root, '.specify')) && isDir(path.dirname(cp)) && lst(cp)?.isFile()) {
     const c = readDoc(root, CONSTITUTION, 'constitution')
     constitution = c.ref
-    const src = clean(c.text)
-    const nodes = parse(src)
-    const st = stamp(src, nodes).fields // the same reading as the constitution page
-    const label = (name: string) => st.find((f) => f.label === name)?.value || null
-    constitutionVersion = label('Version')
-    constitutionRatified = label('Ratified')
-    constitutionAmended = label('Last Amended')
-    const core = splitAt(nodes, 2).find((s) => /^Core Principles/i.test(s.heading ?? ''))
-    // Only I/V/X numerals or digits are a numbering prefix: "C. Consistency" and "MIX. Odd" are titles.
-    principles = (core?.nodes ?? []).filter((n) => n.type === 'heading' && n.depth === 3)
-      .map((n) => plain(n).replace(/\s+/g, ' ').trim().replace(/^(?:[IVX]+|\d+)[.)]\s+/, '')).filter(Boolean)
+    const read = keep(root, CONSTITUTION, c.ref.hash, () => {
+      const src = clean(c.text)
+      const nodes = parse(src)
+      const st = stamp(src, nodes).fields // the same reading as the constitution page
+      const label = (name: string) => st.find((f) => f.label === name)?.value || null
+      const core = splitAt(nodes, 2).find((s) => /^Core Principles/i.test(s.heading ?? ''))
+      // Only I/V/X numerals or digits are a numbering prefix: "C. Consistency" and "MIX. Odd" are titles.
+      const titles = (core?.nodes ?? []).filter((n) => n.type === 'heading' && n.depth === 3)
+        .map((n) => plain(n).replace(/\s+/g, ' ').trim().replace(/^(?:[IVX]+|\d+)[.)]\s+/, '')).filter(Boolean)
+      return { version: label('Version'), ratified: label('Ratified'), amended: label('Last Amended'), titles }
+    })
+    constitutionVersion = read.version
+    constitutionRatified = read.ratified
+    constitutionAmended = read.amended
+    principles = [...read.titles]
   }
 
   const specs = path.join(root, 'specs')

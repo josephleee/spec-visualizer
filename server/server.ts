@@ -3,7 +3,8 @@ import http from 'node:http'
 import path from 'node:path'
 import type { AddressInfo } from 'node:net'
 import { parseDoc } from './parsers.ts'
-import { scanProject } from './scan.ts'
+import { hashOf, scanProject } from './scan.ts'
+import { memo } from './cache.ts'
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -11,6 +12,8 @@ const TYPES: Record<string, string> = {
   '.ico': 'image/x-icon', '.woff2': 'font/woff2',
 }
 const JSON_TYPE = 'application/json; charset=utf-8'
+// Parsed documents as the JSON sent, per path and content hash; about 64 MB of text at most.
+const docs = memo<string>(64 * 1024 * 1024, (json) => json.length)
 
 export function startServer(opts: { root: string; port: number; webDir: string }): Promise<{ port: number; close(): Promise<void> }> {
   const { root } = opts
@@ -81,9 +84,10 @@ export function startServer(opts: { root: string; port: number; webDir: string }
         const refs = [...project.features.flatMap((f) => f.docs), ...(project.constitution ? [project.constitution] : [])]
         const ref = refs.find((r) => r.path === url.searchParams.get('path'))
         if (!ref) return notFound(res)
-        let src: string
-        try { src = fs.readFileSync(path.join(root, ref.path), 'utf8') } catch { return notFound(res) }
-        return sendJson(res, 200, parseDoc(ref, src))
+        let buf: Buffer
+        try { buf = fs.readFileSync(path.join(root, ref.path)) } catch { return notFound(res) }
+        const hash = hashOf(buf) // of the bytes parsed now, which may be newer than the scan's
+        return send(res, 200, JSON_TYPE, docs([root, ref.path, hash].join('\0'), () => JSON.stringify(parseDoc({ ...ref, hash }, buf.toString('utf8')))))
       }
       if (url.pathname === '/api/events') {
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', Connection: 'keep-alive' })
