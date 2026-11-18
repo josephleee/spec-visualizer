@@ -8,32 +8,60 @@ export function rawBlock(src: string, sec: Sec): Block {
 
 type Story = Extract<Block, { kind: 'stories' }>['items'][number]
 
-const STORY = /^User Story\s+\d+\s*[-–—:]\s*(.+?)(?:\s*\(Priority:\s*(\w+)\))?$/
-const GWT = /^\*\*Given\*\*\s*([\s\S]*?)\s*,?\s*\*\*When\*\*\s*([\s\S]*?)\s*,?\s*\*\*Then\*\*\s*([\s\S]*)$/
+const STORY = /^(?:User Story\s+\d+|US-?\s*\d+)\s*[-–—:]\s*(.+?)(?:\s*\(Priority:\s*(\w+)\))?$/
+const NARRATIVE = /^\*\*(?:As an?|I want(?: to)?|So that)\*\*/i
+const AC_LABEL = /^Acceptance (?:Criteria|Scenarios)$/i
+const AC_INSIDE = /^\*\*Acceptance (?:Criteria|Scenarios):\*\*$/i // colon inside the bold: not a label for takeLabels
+const word = (w: string) => `(?:\\*\\*${w}\\*\\*|\\b${w}\\b)`
+// One item holding all three clauses. Case-sensitive, so a lowercase "when" inside a clause does not split it.
+const GWT = new RegExp(`^${word('Given')}\\s*([\\s\\S]*?)\\s*,?\\s*${word('When')}\\s*([\\s\\S]*?)\\s*,?\\s*${word('Then')}\\s*([\\s\\S]*)$`)
+// One clause per item: `Given x`, `**When** y`, `And z`.
+const STEP = /^(?:\*\*(Given|When|Then|And|But):?\*\*|(Given|When|Then|And|But)\b):?\s*([\s\S]*)$/i
 const ID_ITEM = /^\*\*([A-Z]+-\d+[a-z]?)\*\*:\s*([\s\S]*)$/
 
 const kids = (n: Node): Node[] => ('children' in n ? (n.children as Node[]) : [])
 const body = (src: string, item: Node) => slice(src, kids(item))
 
+// Reads acceptance lists into scenarios; items that cannot be placed go to `extra` as written.
+function scenarios(src: string, nodes: Node[], out: Story, extra: string[]) {
+  let cur: Scenario | null = null
+  let last: keyof Scenario | null = null // the clause an And/But item continues
+  for (const n of nodes) {
+    if (n.type !== 'list') { extra.push(slice(src, [n])); continue }
+    for (const item of n.children) {
+      const text = body(src, item)
+      const g = GWT.exec(text)
+      const s = g ? null : STEP.exec(text)
+      const key = (s?.[1] ?? s?.[2] ?? '').toLowerCase()
+      if (g || key === 'given') {
+        cur = g ? { given: g[1], when: g[2], then: g[3] } : { given: s![3], when: '', then: '' }
+        out.scenarios.push(cur)
+        last = g ? 'then' : 'given'
+      } else if (cur && (key === 'when' || key === 'then') && !cur[key]) { cur[key] = s![3]; last = key }
+      else if (cur && last && (key === 'and' || key === 'but')) cur[last] += `, ${key} ${s![3]}`
+      else { extra.push(slice(src, [item])); last = null }
+    }
+  }
+}
+
 function story(src: string, sec: Sec, m: RegExpExecArray): Story {
-  const { fields, rest } = takeLabels(src, sec.nodes)
-  const out: Story = { title: m[1], priority: m[2] ?? null, why: null, test: null, scenarios: [], rest: '' }
+  const out: Story = { title: m[1], priority: m[2] ?? null, narrative: null, why: null, test: null, scenarios: [], rest: '' }
+  const para = (n: Node) => (n.type === 'paragraph' ? slice(src, [n]) : '')
+  const told = sec.nodes.filter((n) => NARRATIVE.test(para(n)))
+  if (told.length) out.narrative = told.map(para).join('\n\n')
+  const ac = sec.nodes.findIndex((n, i) => AC_INSIDE.test(para(n)) && sec.nodes[i + 1]?.type === 'list')
+  const taken = ac < 0 ? told : [...told, sec.nodes[ac], sec.nodes[ac + 1]]
+  const { fields, rest } = takeLabels(src, sec.nodes.filter((n) => !taken.includes(n)))
   const extra: string[] = [slice(src, rest)]
   const known = { 'Why this priority': 'why', 'Independent Test': 'test' } as const
-  let sawScenarios = false
+  let sawScenarios = ac >= 0
+  if (sawScenarios) scenarios(src, [sec.nodes[ac + 1]], out, extra)
   for (const f of fields) {
     const key = known[f.label as keyof typeof known]
     if (key && out[key] === null) out[key] = f.value
-    else if (f.label === 'Acceptance Scenarios' && !sawScenarios) {
+    else if (AC_LABEL.test(f.label) && !sawScenarios) {
       sawScenarios = true
-      for (const n of parse(f.value)) {
-        if (n.type !== 'list') { extra.push(slice(f.value, [n])); continue }
-        for (const item of n.children) {
-          const g = GWT.exec(body(f.value, item))
-          if (g) out.scenarios.push({ given: g[1], when: g[2], then: g[3] } satisfies Scenario)
-          else extra.push(slice(f.value, [item]))
-        }
-      }
+      scenarios(f.value, parse(f.value), out, extra)
     } else extra.push(`**${f.label}**: ${f.value}`)
   }
   out.rest = extra.filter(Boolean).join('\n\n')

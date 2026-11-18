@@ -289,3 +289,77 @@ test('phase: a label value does not swallow the thematic break before the next p
   expect(p.fields).toEqual([{ label: 'Purpose', value: 'Project initialization' }, { label: 'Checkpoint', value: 'ready' }])
   expect(p.rest).toBe('trailing note')
 })
+
+const US_SPEC = `## User Stories
+
+### US-1: Basic Multi-File Concatenation
+**As a** DevOps engineer
+**I want to** process multiple log files in a single command
+**So that** I can view logs in one stream
+
+**Acceptance Criteria:**
+- Given multiple log files (\`a.log\`, \`b.log\`)
+- When I run \`hl a.log b.log\`
+- Then all logs are displayed
+- And the order is preserved
+- But nothing is sorted
+- Given no files
+- When I run \`hl\`
+- Then stdin is read
+
+### US2 - Bold steps
+
+Free prose.
+
+**Acceptance Criteria**:
+
+- And an orphan
+- **Given** a file
+- **And** it is empty
+- a plain note
+- And after the note
+- **When** I open it
+- **Then** nothing prints
+- Then a second result
+- Andrew is not a keyword
+
+### User Story 3 - Template (Priority: P2)
+
+**Acceptance Scenarios**:
+
+1. Given a, When b, Then c
+2. **Given** d, **When** e, **Then** f
+3. And g
+`
+
+test('spec: US-n stories with a narrative and one clause per list item', () => {
+  const blocks = parseSpec(US_SPEC)
+  expect(blocks.map((b) => b.kind)).toEqual(['raw', 'stories'])
+  const [a, b, c] = (blocks[1] as any).items
+  expect(a).toEqual({
+    title: 'Basic Multi-File Concatenation', priority: null, why: null, test: null,
+    narrative: '**As a** DevOps engineer\n**I want to** process multiple log files in a single command\n**So that** I can view logs in one stream',
+    scenarios: [
+      { given: 'multiple log files (`a.log`, `b.log`)', when: 'I run `hl a.log b.log`', then: 'all logs are displayed, and the order is preserved, but nothing is sorted' },
+      { given: 'no files', when: 'I run `hl`', then: 'stdin is read' },
+    ],
+    rest: '',
+  })
+  expect(b).toEqual({
+    title: 'Bold steps', priority: null, why: null, test: null, narrative: null,
+    scenarios: [{ given: 'a file, and it is empty', when: 'I open it', then: 'nothing prints' }],
+    rest: 'Free prose.\n\n- And an orphan\n\n- a plain note\n\n- And after the note\n\n- Then a second result\n\n- Andrew is not a keyword',
+  })
+  expect(c).toEqual({
+    title: 'Template', priority: 'P2', why: null, test: null, narrative: null,
+    scenarios: [{ given: 'a', when: 'b', then: 'c' }, { given: 'd', when: 'e', then: 'f, and g' }],
+    rest: '',
+  })
+})
+
+test('spec: a template story has no narrative; text after the criteria list is kept', () => {
+  expect((parseSpec(SPEC).find((b) => b.kind === 'stories') as any).items[0].narrative).toBeNull()
+  const [, s] = parseSpec('## S\n\n### US-7: T\n\n**Acceptance Criteria:**\n- Given a\n- Then b\n\nclosing words\n\n**Acceptance Criteria:**\n- Given second block\n') as any[]
+  expect(s.items[0].scenarios).toEqual([{ given: 'a', when: '', then: 'b' }])
+  expect(s.items[0].rest).toBe('closing words\n\n**Acceptance Criteria:**\n- Given second block')
+})
