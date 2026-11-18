@@ -341,3 +341,26 @@ test('a contract and an unknown document, parsed and drawn: nothing is dropped',
   checkSource('specs/001-x/contracts/api.yaml', 'contract', false, tok => `openapi: 3.0.0\ninfo: ${tok('Info')}\n`)
   checkSource('specs/001-x/notes.md', 'other', false, tok => `# ${tok('Title')}\n\n${tok('Intro')}\n${tail(tok)}`)
 })
+
+// The version line with no heading of its own (the other constitution shape): the three figures are drawn, and no empty title band.
+test('constitution.md without a Governance heading, parsed and drawn: figures shown, nothing dropped, no empty section title', () => {
+  const source = (tok: (w: string) => string, version: string) => `# ${tok('Title')} Constitution
+
+## Core Principles
+
+### I. ${tok('PrincipleA')}
+
+${tok('BodyA')}
+
+**Version**: ${version} | **Ratified**: ${tok('Ratified')} | **Last Amended**: ${tok('Amended')}
+`
+  checkSource('.specify/memory/constitution.md', 'constitution', false, tok => source(tok, tok('Version')))
+  const html = (version: string) => {
+    const doc = parseDoc({ path: '.specify/memory/constitution.md', kind: 'constitution', hash: 'h' }, source(w => w, version))
+    return renderToStaticMarkup(createElement(Fragment, null, renderDoc(doc, 'constitution', false, { feature: null, t })))
+  }
+  expect(html('1.2.0')).not.toMatch(/<h2>\s*<\/h2>/)
+  expect(visible(html('1.2.0'))).toMatch(/1\.2\.0\s+Version\s+Ratified\s+Ratified\s+Amended\s+Last amended/)
+  // A label with no value reads as missing, not as a blank figure.
+  expect(visible(html(''))).toMatch(/not set\s+Version/)
+})

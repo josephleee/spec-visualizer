@@ -1,4 +1,4 @@
-import type { Block, CheckItem, Feature, Project } from '../server/types.ts'
+import type { Block, CheckItem, DocKind, Feature, Project } from '../server/types.ts'
 import { STAGES, stageIndex, type StageKey } from './route.ts'
 
 export const CMD = {
@@ -34,13 +34,13 @@ export function stageCounts(p: Project): StageCount[] {
 }
 
 export type StageGuide =
-  | { kind: 'first' | 'wait'; cmd: string }
+  | { kind: 'constitution' | 'first' | 'wait'; cmd: string }
   | { kind: 'new' | 'move'; cmd: string; n: number; clarify: number }
   | { kind: 'implement'; cmd: string; left: number }
 // What to type for the features standing at a stage (the footer of a board card).
 export function stageGuide(p: Project, stage: StageKey): StageGuide {
   const here = stageCounts(p)[STAGES.indexOf(stage)].here
-  if (stage === 'constitution') return { kind: 'first', cmd: CMD.specify }
+  if (stage === 'constitution') return p.constitution ? { kind: 'first', cmd: CMD.specify } : { kind: 'constitution', cmd: CMD.constitution }
   if (stage === 'done') return { kind: 'new', cmd: CMD.specify, n: here.length, clarify: 0 }
   if (stage === 'implement') return here.length ? { kind: 'implement', cmd: CMD.implement, left: here.reduce((n, f) => n + tasksLeft(f), 0) } : { kind: 'wait', cmd: CMD.implement }
   const cmd = CMD[({ specify: 'plan', plan: 'tasks', tasks: 'implement' } as const)[stage]]
@@ -54,6 +54,30 @@ export function leadFeature(p: Project): Feature | null {
   const open = p.features.filter(f => f.stage !== 'done')
   return open.find(f => f.id === p.currentFeature) ?? open.find(busy) ?? [...open].sort((a, b) => stageIndex(b) - stageIndex(a))[0] ?? null
 }
+
+export type StripGuide =
+  | { kind: 'constitution' | 'first' | 'new'; cmd: string }
+  | { kind: 'feature'; cmd: string; feature: Feature; left: number }
+// What the project strip says to type next: for the lead feature, or else how to start
+// (the constitution when the project has nothing, the first feature, or a new feature when every one is finished).
+export function stripGuide(p: Project): StripGuide {
+  const lead = leadFeature(p)
+  if (lead) { const next = nextCommand(lead); return { kind: 'feature', cmd: next.cmd ?? CMD.specify, feature: lead, left: next.left } }
+  if (p.features.length) return { kind: 'new', cmd: CMD.specify }
+  return p.constitution ? { kind: 'first', cmd: CMD.specify } : { kind: 'constitution', cmd: CMD.constitution }
+}
+
+// The command that writes a kind of document. A checklist is not part of the six-stage flow, so none is named for it.
+export const creatingCommand = (kind: DocKind): string | null => (({
+  constitution: CMD.constitution, spec: CMD.specify, plan: CMD.plan, research: CMD.plan, 'data-model': CMD.plan, quickstart: CMD.plan,
+  contract: CMD.plan, tasks: CMD.tasks, checklist: null, other: null,
+} satisfies Record<DocKind, string | null>)[kind])
+
+// Why a feature has no document for a stage: it is not that far yet, or it is finished and just has no checklist.
+export const missingWhy = (f: Feature, stage: StageKey): 'complete' | 'ahead' => (stage === 'done' && f.stage === 'done' ? 'complete' : 'ahead')
+
+// How many features the principles bind: said on the constitution page only, and only when there are features.
+export const boundFeatures = (p: Project, stage: StageKey | null): number | null => (stage === 'constitution' && p.features.length ? p.features.length : null)
 
 // Whole percent, rounded down so a task left never reads 100%. Multiply first: 29 / 100 * 100 is 28.999… in floating point.
 export const percent = (done: number, total: number) => (total ? Math.floor(done * 100 / total) : 0)

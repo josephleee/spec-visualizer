@@ -1,19 +1,26 @@
 import { Component, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
+import type { ParsedDoc } from '../server/types.ts'
 import { Board } from './Board.tsx'
 import { reducedMotion, slide, zoom } from './camera.ts'
 import { useLang } from './i18n.ts'
 import { useProject } from './live.ts'
-import { STAGES, parseRoute, type Route } from './route.ts'
+import { STAGES, parseRoute, resolveTarget, type Route } from './route.ts'
+import { entryId } from './scroll.ts'
 import { loadSeen, type Seen } from './seen.ts'
-import { DocSkeleton, StagePage } from './StagePage.tsx'
+import { DocSkeleton, StagePage, type DocView } from './StagePage.tsx'
 import { Strip } from './Strip.tsx'
+import { useDoc } from './useDoc.ts'
 import './styles.css'
 
 type DocRoute = Exclude<Route, { kind: 'board' }>
 const isDoc = (r: Route): r is DocRoute => r.kind !== 'board'
 const stageNo = (r: Route) => (r.kind === 'stage' ? STAGES.indexOf(r.stage) : -1)
+
+// What is on screen: an address together with everything it needs, so a page is only ever drawn whole.
+type View = { route: Route; entry: string; path: string | null; doc: ParsedDoc | null | undefined; failed: boolean }
+const isDocView = (v: View | null): v is DocView => !!v && isDoc(v.route)
 
 // A page that throws while drawing shows this instead of a blank screen.
 // It tries again when `retryOn` changes: another address, or new data (the file may have been fixed).
@@ -24,55 +31,71 @@ class Guard extends Component<{ retryOn: string; fallback: ReactNode; children: 
   render() { return this.state.failed ? this.props.fallback : this.props.children }
 }
 
-function useRoute(): { hash: string; route: Route } {
-  const [hash, setHash] = useState(location.hash)
+// The address asked for, and the id of its history entry (which the reading position is kept under).
+function useRoute(): { hash: string; route: Route; entry: string } {
+  const [at, setAt] = useState(() => ({ hash: location.hash, entry: entryId() }))
   useEffect(() => {
-    const f = () => setHash(location.hash)
+    const f = () => setAt({ hash: location.hash, entry: entryId() })
     addEventListener('hashchange', f)
     return () => removeEventListener('hashchange', f)
   }, [])
-  return { hash, route: useMemo(() => parseRoute(hash), [hash]) }
+  return { ...at, route: useMemo(() => parseRoute(at.hash), [at.hash]) }
 }
 
 function App() {
-  const { project, connected, version } = useProject()
+  const { project: fetched, connected, version } = useProject()
   const { t } = useLang()
-  const { hash, route } = useRoute()
+  const { hash, route, entry } = useRoute()
   const [seen, setSeen] = useState<Seen | null>(null)
-  useEffect(() => { if (project && !seen) setSeen(loadSeen(project)) }, [project])
+  useEffect(() => { if (fetched && !seen) setSeen(loadSeen(fetched)) }, [fetched])
+  const project = seen ? fetched : null
+
+  // ---------- what was asked for: the address, and the document it needs ----------
+  const [picked, setPicked] = useState<string | null>(null) // which one, when a feature has several documents of the kind
+  const target = project && isDoc(route) ? resolveTarget(project, route) : null
+  const ref = target ? target.refs.find(d => d.path === picked) ?? target.refs[0] ?? null : null
+  const path = ref && !ref.error ? ref.path : null
+  const { doc, failed } = useDoc(path, version)
+  const ready = !!project && (!path || doc !== undefined)
+
+  // ---------- what is on screen: it changes only when everything asked for has arrived, and then once ----------
+  const [view, setView] = useState<View | null>(null)
+  if (ready && (!view || view.route !== route || view.path !== path || view.doc !== doc || view.failed !== failed)) setView({ route, entry, path, doc, failed })
+  const pending = !!view && !ready
 
   // The camera. 'in': the board stays up while the document grows out of its card.
-  // A document route held here: that document stays up while the camera pulls back to the board.
-  const [last, setLast] = useState(route)
-  const [move, setMove] = useState<'in' | DocRoute | null>(null)
-  if (last !== route) {
-    setLast(route)
-    setMove(reducedMotion() ? null : isDoc(last) && !isDoc(route) ? last : !isDoc(last) && isDoc(route) ? 'in' : null)
+  // A view held here: that document stays up while the camera pulls back to the board.
+  const [last, setLast] = useState<View | null>(null)
+  const [move, setMove] = useState<'in' | DocView | null>(null)
+  if (last !== view) {
+    setLast(view)
+    if (last?.route !== view?.route) setMove(!last || !view || reducedMotion() ? null : isDocView(last) && !isDocView(view) ? last : !isDocView(last) && isDocView(view) ? 'in' : null)
   }
-  const shown = isDoc(route) ? route : move && move !== 'in' ? move : null
-  const cam = useRef<HTMLElement>(null), board = useRef<HTMLElement>(null), doc = useRef<HTMLElement>(null)
+  const docView = isDocView(view) ? view : move && move !== 'in' ? move : null
+  const at = view?.route ?? null
+  const cam = useRef<HTMLElement>(null), board = useRef<HTMLElement>(null), docEl = useRef<HTMLElement>(null)
 
   useLayoutEffect(() => {
     if (!move) return
-    if (!cam.current || !board.current || !doc.current || !shown) { setMove(null); return }
-    const frame = board.current.querySelector(`[data-i="${stageNo(shown)}"] .frame`)
-    return zoom(cam.current, board.current, doc.current, frame, move !== 'in', () => flushSync(() => setMove(null)))
+    if (!cam.current || !board.current || !docEl.current || !docView) { setMove(null); return }
+    const frame = board.current.querySelector(`[data-i="${stageNo(docView.route)}"] .frame`)
+    return zoom(cam.current, board.current, docEl.current, frame, move !== 'in', () => flushSync(() => setMove(null)))
   }, [move])
 
-  const prev = useRef(route)
+  const prev = useRef<Route | null>(null)
   useLayoutEffect(() => {
     const from = prev.current
-    prev.current = route
-    if (from === route) return
-    if (!isDoc(route)) { // back on the board: focus returns to the card that was open, or to the board heading when no card was
+    prev.current = at
+    if (!from || !at || from === at) return // the first page takes no focus
+    if (!isDoc(at)) { // back on the board: focus returns to the card that was open, or to the board heading when no card was
       if (isDoc(from)) board.current?.querySelector<HTMLElement>(from.kind === 'stage' ? `[data-i="${stageNo(from)}"] .stage-link` : 'h1')?.focus({ preventScroll: true })
       return
     }
-    const sameStage = from.kind === 'stage' && route.kind === 'stage' && from.stage === route.stage
-    if (from.kind === 'stage' && route.kind === 'stage' && !sameStage && !reducedMotion() && doc.current) slide(doc.current, Math.sign(stageNo(route) - stageNo(from)))
+    const sameStage = from.kind === 'stage' && at.kind === 'stage' && from.stage === at.stage
+    if (from.kind === 'stage' && at.kind === 'stage' && !sameStage && !reducedMotion() && docEl.current) slide(docEl.current, Math.sign(stageNo(at) - stageNo(from)))
     // Within one stage (another feature from the select, another plan document from its tab) focus stays on the control used.
-    if (!sameStage) doc.current?.querySelector('h1')?.focus({ preventScroll: true })
-  }, [route])
+    if (!sameStage) docEl.current?.querySelector('h1')?.focus({ preventScroll: true })
+  }, [at])
 
   useEffect(() => {
     const f = (e: KeyboardEvent) => { if (e.key === 'Escape' && isDoc(route) && !(e.target instanceof HTMLSelectElement)) location.hash = '#/' }
@@ -82,26 +105,34 @@ function App() {
 
   const name = project?.name ?? 'spec-visualizer'
   useEffect(() => {
-    document.title = route.kind === 'stage' ? `${stageNo(route) + 1} / 6 ${t(`n.${route.stage}`)}${route.feature && route.stage !== 'constitution' ? ` · ${route.feature}` : ''} · ${name}`
-      : route.kind === 'doc' ? `${route.path} · ${name}` : t('title', name)
+    // The title names what is shown: the feature the page resolved to, never an id that is only in the address.
+    const feature = project && at && isDoc(at) ? resolveTarget(project, at).feature?.id : null
+    document.title = at?.kind === 'stage' ? `${stageNo(at) + 1} / 6 ${t(`n.${at.stage}`)}${feature ? ` · ${feature}` : ''} · ${name}`
+      : at?.kind === 'doc' ? `${at.path} · ${name}` : t('title', name)
   })
 
   const retryOn = `${hash} ${version}`
-  const failed = <div className="paper"><section className="sec empty" role="alert"><h2>{t('err.title')}</h2><p>{t('err.say')}</p><a className="empty-go" href="#/">{t('back')} →</a></section></div>
+  const broken = <div className="paper"><section className="sec empty" role="alert"><h2>{t('err.title')}</h2><p>{t('err.say')}</p><a className="empty-go" href="#/">{t('back')} →</a></section></div>
+  // Before the first page is whole there is one skeleton, in the shape of the page that was asked for.
+  const cold = !view
   return (
     <>
-      {!connected && <div role="alert" className="banner">{t('disconnected')}</div>}
-      <Strip project={project} />
-      <main className="cam" ref={cam}>
-        <section ref={board} className="layer board" aria-label={t('board', name)} hidden={isDoc(route) && move !== 'in'}>
-          <Guard retryOn={retryOn} fallback={failed}><Board project={seen ? project : null} seen={seen ?? {}} /></Guard>
+      <Strip project={cold ? null : project} />
+      <main className="cam" ref={cam} aria-busy={cold || pending}>
+        {pending && <div className="loadbar" role="status"><span className="sr">{t('loading')}</span></div>}
+        <section ref={board} className="layer board" aria-label={t('board', name)} hidden={cold ? isDoc(route) : isDocView(view) && move !== 'in'}>
+          <Guard retryOn={retryOn} fallback={broken}><Board project={cold ? null : project} seen={seen ?? {}} /></Guard>
         </section>
-        {shown && (
-          <section ref={doc} className="layer doc" aria-label={t('doc.layer')}>
-            <Guard retryOn={retryOn} fallback={failed}>{project && seen ? <StagePage route={shown} project={project} version={version} seen={seen} onSeen={setSeen} /> : <DocSkeleton />}</Guard>
+        {cold && isDoc(route) && <section className="layer doc" aria-label={t('doc.layer')}><DocSkeleton /></section>}
+        {!cold && docView && project && seen && (
+          <section ref={docEl} className="layer doc" aria-label={t('doc.layer')}>
+            <Guard retryOn={retryOn} fallback={broken}>
+              <StagePage view={docView} asked={route} project={project} seen={seen} onSeen={setSeen} onPick={setPicked} />
+            </Guard>
           </section>
         )}
       </main>
+      {!connected && <div role="alert" className="banner">{t('disconnected')}</div>}
     </>
   )
 }

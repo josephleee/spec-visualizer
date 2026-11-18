@@ -10,7 +10,8 @@ export const constitution: Form = (doc, { t }) => {
   const fields = doc.blocks.filter(isKind('fields'))
   const gov = fields.find(b => fieldOf(b.items, 'Version'))
   const version = gov && fieldOf(gov.items, 'Version'), ratified = gov && fieldOf(gov.items, 'Ratified'), amended = gov && fieldOf(gov.items, 'Last Amended')
-  const fig = (f: Field | undefined, name: string): [ReactNode, string] | null => (f ? [<Value md={f.value} />, name] : null)
+  // A label written without a value is shown as missing, not as a blank figure.
+  const fig = (f: Field | undefined, name: string): [ReactNode, string] | null => (f ? [f.value.trim() ? <Value md={f.value} /> : t('c.none'), name] : null)
   return {
     used: [cards, ...fields],
     body: (
@@ -30,6 +31,8 @@ export const constitution: Form = (doc, { t }) => {
         </Sec>
         {fields.map((b, i) => {
           const items = b.items.filter(f => ![version, ratified, amended].includes(f)) // drawn above as figures
+          // The version line may stand alone, with no heading of its own: then there is no title band to draw, and no sheet if nothing is left.
+          if (!b.heading.trim()) return items.length || b.rest.trim() ? <section key={i} className="sec"><FieldsSheet items={items} /><Rich md={b.rest} /></section> : null
           return <Sec key={i} title={<Title>{b.heading}</Title>} note={t('n.items', items.length)}><FieldsSheet items={items} /><Rich md={b.rest} /></Sec>
         })}
       </>

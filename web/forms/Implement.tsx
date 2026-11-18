@@ -8,7 +8,7 @@ export const implement: Form = (doc, { t, feature }) => {
   if (!all.length) return null
   // The server's own count is the figure; the cells are drawn from the document.
   const total = feature?.tasks?.total ?? all.length, done = feature?.tasks?.done ?? doneCount(all), left = total - done
-  const next = nextUp(phases), stories = byStory(all)
+  const next = nextUp(phases), stories = byStory(all), openPhases = phases.filter(p => p.items.some(x => !x.done)).length
   return {
     used: phases,
     body: (
@@ -23,7 +23,7 @@ export const implement: Form = (doc, { t, feature }) => {
             : <div className="nextbox fin"><p>{t('i.fin')}</p></div>}
           {total > all.length && <p className="prog-note">{t('i.outside', total - all.length, total)}</p>}
         </section>
-        <Sec title={t('i.left')} note={t('i.left.n', phases.filter(p => p.items.some(x => !x.done)).length)}>
+        <Sec title={t('i.left')} note={openPhases ? t('i.left.n', openPhases) : t('i.left.none')}>
           {phases.map((p, i) => {
             const open = p.items.filter(x => !x.done), isNext = open.some(x => next.has(x))
             return (

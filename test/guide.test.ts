@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import type { Block, CheckItem, Feature, Project, Stage } from '../server/types.ts'
-import { busy, byStory, percent, leadFeature, nextCommand, nextUp, projectTotals, specCounts, stageCommand, stageCounts, stageGuide, taskColumns } from '../web/guide.ts'
+import { boundFeatures, busy, byStory, creatingCommand, missingWhy, percent, stripGuide, leadFeature, nextCommand, nextUp, projectTotals, specCounts, stageCommand, stageCounts, stageGuide, taskColumns } from '../web/guide.ts'
 
 const feature = (id: string, stage: Stage, done = 0, total = 0, openQuestions = 0): Feature =>
   ({ id, stage, docs: [], tasks: total ? { done, total } : null, openQuestions })
@@ -38,7 +38,8 @@ test('per stage: who stands here, how many went past, and where work is under wa
 })
 
 test('the card footer says what to type for the features standing there', () => {
-  expect(stageGuide(p, 'constitution')).toEqual({ kind: 'first', cmd: '/speckit.specify' })
+  expect(stageGuide({ ...p, constitution: { path: 'c.md', kind: 'constitution', hash: 'h' } }, 'constitution')).toEqual({ kind: 'first', cmd: '/speckit.specify' })
+  expect(stageGuide(p, 'constitution')).toEqual({ kind: 'constitution', cmd: '/speckit.constitution' }) // no constitution yet: write it first
   expect(stageGuide(p, 'specify')).toEqual({ kind: 'move', cmd: '/speckit.plan', n: 2, clarify: 1 })
   expect(stageGuide(p, 'plan')).toEqual({ kind: 'move', cmd: '/speckit.tasks', n: 1, clarify: 0 })
   expect(stageGuide(p, 'tasks')).toEqual({ kind: 'wait', cmd: '/speckit.implement' })
@@ -95,4 +96,39 @@ test('a spec is counted from its blocks', () => {
   expect(c.requirements.length).toBe(2)
   expect(c.priorities).toEqual([{ priority: 'P1', n: 2 }, { priority: 'P2', n: 1 }])
   expect(specCounts([]).stories).toEqual([])
+})
+
+const constitution = { path: 'c.md', kind: 'constitution' as const, hash: 'h' }
+
+test('the strip says what to type next for the whole project', () => {
+  expect(stripGuide(project([]))).toEqual({ kind: 'constitution', cmd: '/speckit.constitution' })
+  expect(stripGuide({ ...project([]), constitution })).toEqual({ kind: 'first', cmd: '/speckit.specify' })
+  expect(stripGuide(p)).toEqual({ kind: 'feature', cmd: '/speckit.implement', feature: p.features[4], left: 15 })
+  expect(stripGuide(project([feature('a', 'specify', 0, 0, 2)]))).toMatchObject({ kind: 'feature', cmd: '/speckit.clarify', left: 0 })
+  // Everything finished: the same advice as the Done card.
+  const finished = project([feature('a', 'done', 3, 3)])
+  expect(stripGuide(finished)).toEqual({ kind: 'new', cmd: '/speckit.specify' })
+  expect(stripGuide(finished).cmd).toBe(stageGuide(finished, 'done').cmd)
+})
+
+test('each kind of document is created by one command', () => {
+  expect(creatingCommand('constitution')).toBe('/speckit.constitution')
+  expect(creatingCommand('spec')).toBe('/speckit.specify')
+  for (const k of ['plan', 'research', 'data-model', 'quickstart', 'contract'] as const) expect(creatingCommand(k)).toBe('/speckit.plan')
+  expect(creatingCommand('tasks')).toBe('/speckit.tasks') // also on the implement page, which reads the same tasks.md
+  expect(creatingCommand('checklist')).toBeNull()
+  expect(creatingCommand('other')).toBeNull()
+})
+
+test('a missing document is either not reached yet, or a finished feature that simply has no checklist', () => {
+  expect(missingWhy(feature('a', 'done', 3, 3), 'done')).toBe('complete')
+  expect(missingWhy(feature('a', 'implement', 1, 3), 'done')).toBe('ahead')
+  expect(missingWhy(feature('a', 'done', 3, 3), 'plan')).toBe('ahead')
+})
+
+test('the line about features following the principles belongs to the constitution page of a project with features', () => {
+  expect(boundFeatures(p, 'constitution')).toBe(5)
+  expect(boundFeatures(p, 'specify')).toBeNull()
+  expect(boundFeatures(project([]), 'constitution')).toBeNull()
+  expect(boundFeatures(p, null)).toBeNull()
 })

@@ -30,7 +30,7 @@ export function More({ blocks, t }: { blocks: Block[]; t: T }) {
   return (
     <section className="sec more">
       <details>
-        <summary><b>{t('more.blocks', left.length)}</b><span>{left.map(b => headOf(b, t)).join(' · ')}</span></summary>
+        <summary><b>{t('more.blocks', left.length)}</b><span>{left.map((b, i) => <span key={i}>{i > 0 && ' · '}<Title>{headOf(b, t)}</Title></span>)}</span></summary>
         {left.map((b, i) => <div key={i} className="more-b"><h3><Title>{headOf(b, t)}</Title></h3><Generic b={b} /></div>)}
       </details>
     </section>

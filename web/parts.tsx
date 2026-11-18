@@ -37,7 +37,7 @@ export function Copy({ cmd }: { cmd: string }) {
   )
 }
 export const CmdRow = ({ cmd, big }: { cmd: string; big?: boolean }) => (
-  <span className="cmdrow"><code className={big ? 'cmd big' : 'cmd'}>{cmd}</code><Copy cmd={cmd} /></span>
+  <span className="cmdrow"><code className={big ? 'cmd big' : 'cmd'} title={cmd}>{cmd}</code><Copy cmd={cmd} /></span>
 )
 
 export function SeenMark({ docs, seen }: { docs: DocRef[]; seen: Seen }) {
