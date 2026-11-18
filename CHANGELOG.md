@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## [Unreleased]
+
+## [0.1.0] - 2026-11-18
 
 The first version.
 

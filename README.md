@@ -120,3 +120,7 @@ The published package runs `dist/server/cli.js` and contains `dist/server`, `dis
 ## License
 
 [MIT](LICENSE)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build and test, [SECURITY.md](SECURITY.md) for reporting a vulnerability, [RELEASING.md](RELEASING.md) for versioning, and [CHANGELOG.md](CHANGELOG.md) for what changed.

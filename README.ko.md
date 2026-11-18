@@ -120,3 +120,7 @@ npm start -- <path>   # 같은 방법으로 자기 프로젝트를 연다
 ## 라이선스
 
 [MIT](LICENSE)
+
+## 기여
+
+빌드와 테스트 방법은 [CONTRIBUTING.md](CONTRIBUTING.md), 취약점 제보는 [SECURITY.md](SECURITY.md), 버전 규칙은 [RELEASING.md](RELEASING.md), 변경 내역은 [CHANGELOG.md](CHANGELOG.md)에 있다.
