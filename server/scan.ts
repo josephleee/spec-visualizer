@@ -94,9 +94,17 @@ function readAbout(root: string): string | null {
   const name = entries(root).find((e) => e.isFile() && /^readme\.md$/i.test(e.name))?.name
   if (!name) return null
   try {
-    for (const n of parse(clean(fs.readFileSync(path.join(root, name), 'utf8')))) {
-      const text = n.type === 'paragraph' ? plain(n).replace(/\s+/g, ' ').trim() : ''
-      if (text) return text.length <= 300 ? text : text.slice(0, 300).replace(/\s+\S*$/, '').slice(0, 299) + '…'
+    // O_NOFOLLOW: a README swapped for a symlink after the listing is still not followed. 64 KB is enough for a first paragraph.
+    const fd = fs.openSync(path.join(root, name), fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW)
+    const buf = Buffer.alloc(64 * 1024)
+    let len = 0
+    try { len = fs.readSync(fd, buf, 0, buf.length, 0) } finally { fs.closeSync(fd) }
+    let text = buf.toString('utf8', 0, len)
+    if (len === buf.length) text = text.slice(0, text.lastIndexOf('\n\n') + 1) // a cut file ends mid-block: drop that block
+    for (const n of parse(clean(text))) {
+      const chars = n.type === 'paragraph' ? [...plain(n).replace(/\s+/g, ' ').trim()] : [] // code points, so no split surrogate pair
+      if (chars.length > 300) return [...chars.slice(0, 300).join('').replace(/\s+\S*$/, '')].slice(0, 299).join('') + '…'
+      if (chars.length) return chars.join('')
     }
   } catch { /* unreadable: no about */ }
   return null
@@ -117,12 +125,16 @@ export function scanProject(root: string, branch: string | null = currentBranch(
     constitution = c.ref
     const src = clean(c.text)
     const nodes = parse(src)
-    const label = (name: string) => takeLabels(src, nodes).fields.find((f) => f.label === name)?.value ?? null
+    // A value is the label's own line: takeLabels would add every block up to the next label.
+    const fields = takeLabels(src, nodes).fields
+    const label = (name: string) => fields.find((f) => f.label === name)?.value.split('\n')[0].trim() || null
     constitutionVersion = label('Version')
     constitutionRatified = label('Ratified')
     constitutionAmended = label('Last Amended')
     const core = splitAt(nodes, 2).find((s) => /^Core Principles/i.test(s.heading ?? ''))
-    principles = splitAt(core?.nodes ?? [], 3).filter((s) => s.heading !== null).map((s) => s.heading!.replace(/^(?:[IVXLCDM]+|\d+)[.)]\s+/, ''))
+    // Only I/V/X numerals or digits are a numbering prefix: "C. Consistency" and "MIX. Odd" are titles.
+    principles = (core?.nodes ?? []).filter((n) => n.type === 'heading' && n.depth === 3)
+      .map((n) => plain(n).replace(/\s+/g, ' ').trim().replace(/^(?:[IVX]+|\d+)[.)]\s+/, ''))
   }
 
   const specs = path.join(root, 'specs')

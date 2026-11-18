@@ -155,3 +155,26 @@ test('scanProject: README that is a symlink, a directory, unreadable or without 
   const r4 = tmp(); write(r4, 'README.md', 'words'); fs.chmodSync(path.join(r4, 'README.md'), 0)
   if (!root0) expect(scanProject(r4, null).about).toBeNull()
 })
+
+test('scanProject: a constitution label value is its own line only', () => {
+  const root = tmp()
+  write(root, '.specify/memory/constitution.md', '# C\n\n**Version**: 9.9.9\n\n## Core Principles\n\n### I. A\n\ntext\n\n## Governance\n\n**Ratified**: 2025-06-13 | **Last Amended**: 2025-07-16\nfooter line\n\nFooter paragraph.\n')
+  expect(scanProject(root, null)).toMatchObject({ constitutionVersion: '9.9.9', constitutionRatified: '2025-06-13', constitutionAmended: '2025-07-16' })
+})
+
+test('scanProject: principle titles lose only an I/V/X or digit prefix and are plain text', () => {
+  const root = tmp()
+  const titles = ['A. Accuracy', 'C. Consistency', 'D. Docs', 'MIX. Odd', 'IV. **Bold** and `code`', '3) Third', 'XII. Twelfth']
+  write(root, '.specify/memory/constitution.md', '## Core Principles\n\n' + titles.map((t) => `### ${t}\n\nx\n`).join('\n'))
+  expect(scanProject(root, null).principles).toEqual(['A. Accuracy', 'C. Consistency', 'D. Docs', 'MIX. Odd', 'Bold and code', 'Third', 'Twelfth'])
+})
+
+test('scanProject: about is cut by code points and only the first 64 KB of the README is read', () => {
+  const emoji = tmp(); write(emoji, 'README.md', '😀'.repeat(400))
+  const about = scanProject(emoji, null).about!
+  expect([...about]).toHaveLength(300)
+  expect([...about].slice(0, 299).every((c) => c === '😀')).toBe(true) // no half of a pair
+  expect(about.endsWith('…')).toBe(true)
+  const huge = tmp(); write(huge, 'README.md', '![i](a.png)\n\n'.repeat(6000) + 'late prose\n')
+  expect(scanProject(huge, null).about).toBeNull()
+})
