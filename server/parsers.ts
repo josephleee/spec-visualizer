@@ -11,16 +11,18 @@ type Story = Extract<Block, { kind: 'stories' }>['items'][number]
 const STORY = /^(?:User Story\s+\d+|US-?\s*\d+)\s*[-–—:]\s*(.+?)(?:\s*\(Priority:\s*(\w+)\))?$/
 const NARRATIVE = /^\*\*(?:As an?|I want(?: to)?|So that)\*\*/i
 const AC_LABEL = /^Acceptance (?:Criteria|Scenarios)$/i
-// A paragraph ending in the criteria label. `**Acceptance Criteria**:` alone is a label and is left to takeLabels.
+// A paragraph ending in the criteria label.
+const LABEL_START = /^\*\*[^*\n]+\*\*:/
 const AC_END = /(?:^|\n)\*\*Acceptance (?:Criteria|Scenarios)(?::\*\*|\*\*:)$/i
 const word = (w: string) => `(?:\\*\\*${w}\\*\\*|\\b${w}\\b)`
-const gwt = (k: (w: string) => string) => new RegExp(`^${k('Given')}\\s*([\\s\\S]*?)\\s*,?\\s*${k('When')}\\s*([\\s\\S]*?)\\s*,?\\s*${k('Then')}\\s*([\\s\\S]*)$`)
+const SEP = '[:,]?\\s*' // one colon or comma after a keyword is punctuation, not clause text
+const gwt = (k: (w: string) => string) => new RegExp(`^${k('Given')}${SEP}([\\s\\S]*?)\\s*,?\\s*${k('When')}${SEP}([\\s\\S]*?)\\s*,?\\s*${k('Then')}${SEP}([\\s\\S]*)$`)
 // One item holding all three clauses. Bold keywords are tried first, so a plain "Then" inside a clause does not split it.
 const GWT_BOLD = gwt((w) => `\\*\\*${w}\\*\\*`)
 // Case-sensitive, so a lowercase "when" inside a clause does not split it.
 const GWT = gwt(word)
 // One clause per item: `Given x`, `**When** y`, `And z`.
-const STEP = /^(?:\*\*(Given|When|Then|And|But):?\*\*|(Given|When|Then|And|But)\b):?\s*([\s\S]*)$/i
+const STEP = /^(?:\*\*(Given|When|Then|And|But):?\*\*|(Given|When|Then|And|But)\b)[:,]?\s*([\s\S]*)$/i
 const ID_ITEM = /^\*\*([A-Z]+-\d+[a-z]?)\*\*:\s*([\s\S]*)$/
 
 const body = (src: string, item: Node) => slice(src, kids(item))
@@ -58,7 +60,8 @@ function story(src: string, sec: Sec, m: RegExpExecArray): Story {
   const out: Story = { title: m[1], priority: m[2] ?? null, narrative: null, why: null, test: null, scenarios: [], rest: '' }
   const para = (n: Node) => (n.type === 'paragraph' ? slice(src, [n]) : '')
   const head = (n: Node) => para(n).replace(AC_END, '') // a paragraph without its closing criteria label
-  const ac = sec.nodes.findIndex((n, i) => sec.nodes[i + 1]?.type === 'list' && AC_END.test(para(n)) && (head(n) !== '' || para(n).endsWith(':**')))
+  // Not a paragraph takeLabels reads by itself: one that starts with a label and ends in `**Acceptance …**:`.
+  const ac = sec.nodes.findIndex((n, i) => sec.nodes[i + 1]?.type === 'list' && AC_END.test(para(n)) && !(para(n).endsWith('**:') && LABEL_START.test(para(n))))
   const told = sec.nodes.filter((n) => NARRATIVE.test(para(n)))
   if (told.length) out.narrative = told.map(head).join('\n\n')
   const taken = ac < 0 ? told : [...told, sec.nodes[ac], sec.nodes[ac + 1]]
@@ -67,7 +70,12 @@ function story(src: string, sec: Sec, m: RegExpExecArray): Story {
   const known = { 'Why this priority': 'why', 'Independent Test': 'test' } as const
   let sawScenarios = ac >= 0
   if (sawScenarios) {
-    if (!told.includes(sec.nodes[ac])) extra.push(head(sec.nodes[ac]))
+    if (!told.includes(sec.nodes[ac])) { // label lines above a `**Acceptance Criteria:**` line are still labels
+      const text = head(sec.nodes[ac])
+      const h = takeLabels(text, parse(text))
+      extra.push(slice(text, h.rest))
+      fields.unshift(...h.fields)
+    }
     scenarios(src, [sec.nodes[ac + 1]], out, extra)
   }
   for (const f of fields) {

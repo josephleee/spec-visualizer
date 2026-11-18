@@ -406,3 +406,19 @@ test('spec: a Given item with no When or Then stays in rest', () => {
   expect(s.scenarios).toEqual([{ given: 'a', when: '', then: 'b' }])
   expect(s.rest).toBe('- first note\n\n- Given names are validated\n\n- And so are emails\n\n- last note')
 })
+
+test('spec: label lines directly above the criteria label keep their fields', () => {
+  for (const label of ['**Acceptance Scenarios**:', '**Acceptance Criteria:**']) {
+    const s = crit(`**Why this priority**: because\n**Independent Test**: do x\n**Note**: n\n${label}\n1. **Given** a, **When** b, **Then** c\n`)
+    expect(s).toMatchObject({ why: 'because', test: 'do x', narrative: null, scenarios: [{ given: 'a', when: 'b', then: 'c' }], rest: '**Note**: n' })
+  }
+})
+
+test('spec: one colon or comma after a keyword is not part of the clause', () => {
+  const s = crit('**Acceptance Criteria:**\n- **Given**: a, **When**: b, **Then**: c\n- Given: d\n- When, e\n- Then, the page shows f\n- **Given:** g\n- **Then**, h\n')
+  expect(s.scenarios).toEqual([
+    { given: 'a', when: 'b', then: 'c' },
+    { given: 'd', when: 'e', then: 'the page shows f' },
+    { given: 'g', when: '', then: 'h' },
+  ])
+})
