@@ -65,3 +65,9 @@ test('the whole info string of a fenced block is shown, not only the language', 
   expect(block('```\nplain\n```')).not.toContain('class="lbl"')
   expect(block('```toml\na = 1\n```')).toContain('<span class="lbl">toml</span>')
 })
+
+test('a link that cannot be followed does not repeat a target identical to its text', () => {
+  expect(block('[spec.md](spec.md)')).toBe('<p><span>spec.md</span></p>')
+  expect(block('[spec.md](./spec.md)')).toBe('<p><span>spec.md (./spec.md)</span></p>')
+  expect(block('[spec.md](spec.md "T")')).toContain('spec.md (T)')
+})

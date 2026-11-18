@@ -8,7 +8,8 @@ const components: Components = {
   // A title is content too: it follows the link as text.
   a: ({ href, title, children }) => safe(href)
     ? <><a href={href} target="_blank" rel="noreferrer">{children}</a>{title ? ` (${title})` : ''}</>
-    : <span>{children}{href ? ` (${href}${title ? ` "${title}"` : ''})` : title ? ` (${title})` : ''}</span>,
+    // A target identical to the link text would only repeat it.
+    : <span>{children}{href && href !== children ? ` (${href}${title ? ` "${title}"` : ''})` : title ? ` (${title})` : ''}</span>,
   // Never load images: show alt text and the URL instead.
   img: ({ src, alt, title }) => <span>{alt}{src ? ` [${src}${title ? ` "${title}"` : ''}]` : title ? ` [${title}]` : ''}</span>,
   // A fenced block shows its whole info string (language and whatever follows it) above the code.
