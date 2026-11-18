@@ -1,0 +1,87 @@
+name: Release
+
+# Pushing a tag vX.Y.Z publishes that version to npm and creates the GitHub release.
+# Every step can be run again: a version already on npm is not published twice, and an existing release is updated.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub release
+      id-token: write # npm trusted publishing (OIDC) and the provenance statement
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          # Trusted publishing needs Node 22.14 or later and npm 11.5.1 or later.
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Check the tag against package.json
+        id: meta
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+          # A version with a suffix (1.2.0-rc.1) is a pre-release: npm dist-tag "next", GitHub pre-release.
+          case "$version" in
+            *-*) echo "dist_tag=next" >> "$GITHUB_OUTPUT"; echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "dist_tag=latest" >> "$GITHUB_OUTPUT"; echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Read the release notes from CHANGELOG.md
+        run: scripts/release-notes.sh "${{ steps.meta.outputs.version }}" > "$RUNNER_TEMP/notes.md"
+
+      - run: npm ci
+      - run: npm test
+      - run: npx tsc --noEmit
+      - run: npm run build
+
+      - name: Pack
+        id: pack
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP"
+          echo "tarball=$RUNNER_TEMP/spec-visualizer-${{ steps.meta.outputs.version }}.tgz" >> "$GITHUB_OUTPUT"
+
+      - name: Install the tarball in an empty folder and run it
+        run: scripts/smoke.sh "${{ steps.pack.outputs.tarball }}" "${{ steps.meta.outputs.version }}"
+
+      - name: Publish to npm
+        env:
+          # Empty unless the NPM_TOKEN secret exists. npm tries trusted publishing (OIDC) first and uses the token only as a fallback.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          version="${{ steps.meta.outputs.version }}"
+          if [ "$(npm view "spec-visualizer@$version" version 2> /dev/null)" = "$version" ]; then
+            echo "spec-visualizer@$version is already on npm: not publishing again"
+          else
+            # The tarball that was just tested is what gets published.
+            npm publish "${{ steps.pack.outputs.tarball }}" --provenance --access public --tag "${{ steps.meta.outputs.dist_tag }}"
+          fi
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$GITHUB_REF_NAME"
+          tarball="${{ steps.pack.outputs.tarball }}"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release edit "$tag" --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --prerelease=${{ steps.meta.outputs.prerelease }}
+            gh release upload "$tag" "$tarball" --clobber
+          else
+            gh release create "$tag" "$tarball" --verify-tag --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --prerelease=${{ steps.meta.outputs.prerelease }}
+          fi
