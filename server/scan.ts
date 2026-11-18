@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { checkItems, clean, kids, parse, slice, splitAt } from './md.ts'
+import { checkItems, clean, kids, parse, splitAt, stamp } from './md.ts'
 import type { Node } from './md.ts'
 import type { DocKind, DocRef, Feature, Project, Stage } from './types.ts'
 
@@ -126,9 +126,8 @@ export function scanProject(root: string, branch: string | null = currentBranch(
     constitution = c.ref
     const src = clean(c.text)
     const nodes = parse(src)
-    // A value is what stands on the label's own line, up to a `|`; an empty one is null, never the next block.
-    const lines = nodes.filter((n) => n.type === 'paragraph').map((n) => slice(src, [n])).join('\n')
-    const label = (name: string) => new RegExp(`(?:^|\\|)[ \\t]*\\*\\*${name}\\*\\*:[ \\t]*([^|\\n]*)`, 'm').exec(lines)?.[1].trim() || null
+    const st = stamp(src, nodes).fields // the same reading as the constitution page
+    const label = (name: string) => st.find((f) => f.label === name)?.value || null
     constitutionVersion = label('Version')
     constitutionRatified = label('Ratified')
     constitutionAmended = label('Last Amended')

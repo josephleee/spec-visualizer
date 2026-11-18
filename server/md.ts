@@ -107,6 +107,32 @@ export function takeLabels(src: string, nodes: Node[]): { fields: Field[]; rest:
   return { fields, rest }
 }
 
+const STAMP = /(?:^|\|)[ \t]*\*\*(?:Version|Ratified|Last Amended)\*\*:/
+
+// The constitution's `**Version**: x | **Ratified**: y | **Last Amended**: z` line, wherever it stands among `nodes`.
+// A value is what follows its label up to the next `|` or the line end, so it never takes in a neighbour or the next block.
+// The scanner and the parser both read the three values here.
+export function stamp(src: string, nodes: Node[]): { fields: Field[]; rest: string; nodes: Node[] } {
+  const fields: Field[] = []
+  const rest: string[] = [] // what the stamp paragraphs hold besides labels
+  const taken = nodes.filter((n) => n.type === 'paragraph' && slice(src, [n]).split('\n').some((l) => STAMP.test(l)))
+  for (const n of taken) {
+    const keep: string[] = []
+    for (const line of slice(src, [n]).split('\n')) {
+      if (!STAMP.test(line)) { keep.push(line); continue }
+      const loose: string[] = []
+      for (const part of line.split('|')) {
+        const m = /^\s*\*\*([^*]+)\*\*:\s*(.*?)\s*$/.exec(part)
+        if (m) fields.push({ label: m[1].trim(), value: m[2] })
+        else if (part.trim()) loose.push(part.trim())
+      }
+      if (loose.length) keep.push(loose.join(' | '))
+    }
+    rest.push(keep.join('\n'))
+  }
+  return { fields, rest: rest.filter(Boolean).join('\n\n'), nodes: taken }
+}
+
 export function checkItems(nodes: Node[]): CheckItem[] {
   const items: CheckItem[] = []
   const walk = (ns: Node[]) => {

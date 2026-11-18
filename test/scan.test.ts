@@ -200,3 +200,15 @@ test('scanProject: principle titles with no text are left out', () => {
   write(root, '.specify/memory/constitution.md', '## Core Principles\n\n### ![img](a.png)\n\nx\n\n###\n\ny\n\n### I. Real\n\nz\n')
   expect(scanProject(root, null).principles).toEqual(['Real'])
 })
+
+test('scanProject and parseConstitution read the same three values', async () => {
+  const { parseConstitution } = await import('../server/parsers.ts')
+  for (const text of [fs.readFileSync('test/fixtures/demo/.specify/memory/constitution.md', 'utf8'), CONSTITUTION, '## Governance\n\n**Version**: 3 | **Ratified**:\n**Last Amended**: x\ny\n']) {
+    const root = tmp(); write(root, '.specify/memory/constitution.md', text)
+    const p = scanProject(root, null)
+    const items = parseConstitution(text).flatMap((b) => (b.kind === 'fields' ? b.items : []))
+    const value = (label: string) => items.find((i) => i.label === label)?.value || null
+    expect([p.constitutionVersion, p.constitutionRatified, p.constitutionAmended]).toEqual([value('Version'), value('Ratified'), value('Last Amended')])
+    expect(p.constitutionVersion).not.toBeNull()
+  }
+})

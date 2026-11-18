@@ -1,4 +1,4 @@
-import { checkItems, clean, headingText, kids, parse, slice, splitAt, takeLabels } from './md.ts'
+import { checkItems, clean, headingText, kids, parse, slice, splitAt, stamp, takeLabels } from './md.ts'
 import type { Node, Sec } from './md.ts'
 import type { Block, DocRef, Field, ParsedDoc, Scenario } from './types.ts'
 
@@ -206,8 +206,24 @@ function fieldsOf(src: string, sec: Sec): Block[] | null {
 export const parsePlan = (src: string): Block[] =>
   bySection(src, (sec) => (sec.heading === 'Technical Context' ? fieldsOf(src, sec) : null))
 
+// The version line is lifted out of whatever holds it, so a principle keeps only its own text
+// and the three values are separate items whether or not a `## Governance` heading stands above them.
 export const parseConstitution = (src: string): Block[] =>
-  bySection(src, (sec) => (/^Core Principles/i.test(sec.heading!) ? cardsOf(src, sec) : fieldsOf(src, sec)))
+  bySection(src, (sec) => {
+    const st = stamp(src, sec.nodes)
+    const others = sec.nodes.filter((n) => !st.nodes.includes(n))
+    if (/^Core Principles/i.test(sec.heading!)) {
+      const cards = cardsOf(src, { ...sec, nodes: others })
+      if (!st.nodes.length) return cards
+      return [...(cards ?? [rawBlock(src, { ...sec, nodes: others })]), { kind: 'fields', heading: '', items: st.fields, rest: st.rest }]
+    }
+    // Text after the version line is not the value of a label above it.
+    const cut = st.nodes.length ? sec.nodes.indexOf(st.nodes[0]) : sec.nodes.length
+    const t = takeLabels(src, sec.nodes.slice(0, cut))
+    const items = [...t.fields, ...st.fields]
+    const rest = [slice(src, t.rest), st.rest, slice(src, others.filter((n) => sec.nodes.indexOf(n) > cut))]
+    return items.length ? [{ kind: 'fields', heading: sec.heading!, items, rest: rest.filter(Boolean).join('\n\n') }] : null
+  })
 
 export const parseDataModel = (src: string): Block[] =>
   bySection(src, (sec) => (/^entities/i.test(sec.heading!) ? cardsOf(src, sec) : null))

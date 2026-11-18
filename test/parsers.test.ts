@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import fs from 'node:fs'
 import { parseChecklist, parseConstitution, parseDataModel, parseDoc, parsePlan, parseResearch, parseSpec, parseTasks } from '../server/parsers.ts'
 
 const SPEC = `# Feature Specification: Pager
@@ -421,4 +422,26 @@ test('spec: one colon or comma after a keyword is not part of the clause', () =>
     { given: 'd', when: 'e', then: 'the page shows f' },
     { given: 'g', when: '', then: 'h' },
   ])
+})
+
+const STAMP = [{ label: 'Version', value: '1.2.0' }, { label: 'Ratified', value: '2026-01-10' }, { label: 'Last Amended', value: '2026-03-02' }]
+
+test('constitution: a version line under the last principle is lifted into its own fields block', () => {
+  const b = parseConstitution(fs.readFileSync('test/fixtures/demo/.specify/memory/constitution.md', 'utf8'))
+  expect(b.map((x) => x.kind)).toEqual(['cards', 'fields'])
+  expect((b[0] as any).items[1]).toEqual({ title: 'II. Test First', markdown: 'Tests are written before the code they cover.' })
+  expect(b[1]).toEqual({ kind: 'fields', heading: '', items: STAMP, rest: '' })
+})
+
+test('constitution: a version line between principles leaves every card whole', () => {
+  const b = parseConstitution('## Core Principles\n\n### I. A\n\na\n\n**Version**: 1.2.0 | **Ratified**: 2026-01-10 | **Last Amended**: 2026-03-02\nsame paragraph\n\n### II. B\n\nb\n')
+  expect((b[0] as any).items).toEqual([{ title: 'I. A', markdown: 'a' }, { title: 'II. B', markdown: 'b' }])
+  expect(b[1]).toEqual({ kind: 'fields', heading: '', items: STAMP, rest: 'same paragraph' })
+})
+
+test('constitution: in a Governance section the three values are clean items and the rest is kept', () => {
+  const b = parseConstitution('## Governance\n\nRules.\n\n**Owner**: team\n\n**Version**: 1.2.0 | **Ratified**: 2026-01-10 | **Last Amended**: 2026-03-02\nfooter line\n\nFooter paragraph.\n')
+  expect(b).toEqual([{ kind: 'fields', heading: 'Governance', items: [{ label: 'Owner', value: 'team' }, ...STAMP], rest: 'Rules.\n\nfooter line\n\nFooter paragraph.' }])
+  const lines = parseConstitution('## Governance\n\n**Version**: 1.2.0\n**Ratified**:\n**Last Amended**: 2026-03-02 | loose words\n')
+  expect(lines).toEqual([{ kind: 'fields', heading: 'Governance', items: [STAMP[0], { label: 'Ratified', value: '' }, STAMP[2]], rest: 'loose words' }])
 })
