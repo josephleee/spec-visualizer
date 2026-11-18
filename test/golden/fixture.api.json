@@ -1,0 +1,576 @@
+{
+ "project": {
+  "root": "<root>",
+  "name": "demo",
+  "about": "A small demo project that shows every kind of spec-kit document the visualizer reads.",
+  "constitution": {
+   "path": ".specify/memory/constitution.md",
+   "kind": "constitution",
+   "hash": "6de86dc68cce"
+  },
+  "constitutionVersion": "1.2.0",
+  "constitutionRatified": "2026-01-10",
+  "constitutionAmended": "2026-03-02",
+  "principles": [
+   "Library First",
+   "Test First"
+  ],
+  "currentFeature": null,
+  "features": [
+   {
+    "id": "001-login",
+    "stage": "implement",
+    "docs": [
+     {
+      "path": "specs/001-login/spec.md",
+      "kind": "spec",
+      "hash": "185f36a66f91"
+     },
+     {
+      "path": "specs/001-login/plan.md",
+      "kind": "plan",
+      "hash": "69d98357d9e2"
+     },
+     {
+      "path": "specs/001-login/research.md",
+      "kind": "research",
+      "hash": "3bfc8b72bbee"
+     },
+     {
+      "path": "specs/001-login/data-model.md",
+      "kind": "data-model",
+      "hash": "776bd1037a28"
+     },
+     {
+      "path": "specs/001-login/quickstart.md",
+      "kind": "quickstart",
+      "hash": "7c92f68fc9df"
+     },
+     {
+      "path": "specs/001-login/contracts/api.yaml",
+      "kind": "contract",
+      "hash": "942f09741442"
+     },
+     {
+      "path": "specs/001-login/tasks.md",
+      "kind": "tasks",
+      "hash": "a287f3c00934"
+     },
+     {
+      "path": "specs/001-login/checklists/requirements.md",
+      "kind": "checklist",
+      "hash": "6ba196b8741c"
+     },
+     {
+      "path": "specs/001-login/analysis.md",
+      "kind": "other",
+      "hash": "24d746d148d4"
+     }
+    ],
+    "tasks": {
+     "done": 3,
+     "total": 5
+    },
+    "openQuestions": 1
+   },
+   {
+    "id": "002-search",
+    "stage": "specify",
+    "docs": [
+     {
+      "path": "specs/002-search/spec.md",
+      "kind": "spec",
+      "hash": "7a5970c119da"
+     }
+    ],
+    "tasks": null,
+    "openQuestions": 0
+   },
+   {
+    "id": "003-export",
+    "stage": "plan",
+    "docs": [
+     {
+      "path": "specs/003-export/spec.md",
+      "kind": "spec",
+      "hash": "08a6b02965f4"
+     },
+     {
+      "path": "specs/003-export/plan.md",
+      "kind": "plan",
+      "hash": "f5ff62e062a5"
+     }
+    ],
+    "tasks": null,
+    "openQuestions": 0
+   }
+  ]
+ },
+ "docs": {
+  ".specify/memory/constitution.md": {
+   "ref": {
+    "path": ".specify/memory/constitution.md",
+    "kind": "constitution",
+    "hash": "6de86dc68cce"
+   },
+   "title": "Demo Constitution",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "cards",
+     "heading": "Core Principles",
+     "items": [
+      {
+       "title": "I. Library First",
+       "markdown": "Every feature starts as a standalone library."
+      },
+      {
+       "title": "II. Test First",
+       "markdown": "Tests are written before the code they cover."
+      }
+     ]
+    },
+    {
+     "kind": "fields",
+     "heading": "",
+     "items": [
+      {
+       "label": "Version",
+       "value": "1.2.0"
+      },
+      {
+       "label": "Ratified",
+       "value": "2026-01-10"
+      },
+      {
+       "label": "Last Amended",
+       "value": "2026-03-02"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/001-login/spec.md": {
+   "ref": {
+    "path": "specs/001-login/spec.md",
+    "kind": "spec",
+    "hash": "185f36a66f91"
+   },
+   "title": "Feature Specification: Login",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`001-login`"
+    },
+    {
+     "label": "Created",
+     "value": "2026-02-01"
+    },
+    {
+     "label": "Status",
+     "value": "Draft"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "User Scenarios & Testing *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "stories",
+     "items": [
+      {
+       "title": "Sign in with email",
+       "priority": "P1",
+       "narrative": null,
+       "why": "Nothing else works without it.",
+       "test": "Sign in with a valid account and see the dashboard.",
+       "scenarios": [
+        {
+         "given": "a registered user",
+         "when": "they submit valid credentials",
+         "then": "they reach the dashboard"
+        },
+        {
+         "given": "a registered user",
+         "when": "they submit a wrong password",
+         "then": "an error is shown"
+        }
+       ],
+       "rest": "A visitor signs in with email and password."
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Requirements *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST authenticate users by email and password"
+      },
+      {
+       "id": "FR-002",
+       "text": "System MUST lock an account after 5 failed attempts"
+      },
+      {
+       "id": "FR-003",
+       "text": "System MUST support password reset [NEEDS CLARIFICATION: reset link lifetime not specified]"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Rollout Notes",
+     "depth": 2,
+     "markdown": "This section is not in the template. <img src=x onerror=alert(1)>"
+    }
+   ]
+  },
+  "specs/001-login/plan.md": {
+   "ref": {
+    "path": "specs/001-login/plan.md",
+    "kind": "plan",
+    "hash": "69d98357d9e2"
+   },
+   "title": "Implementation Plan: Login",
+   "meta": [
+    {
+     "label": "Branch",
+     "value": "`001-login`"
+    },
+    {
+     "label": "Date",
+     "value": "2026-02-03"
+    },
+    {
+     "label": "Spec",
+     "value": "[spec.md](spec.md)"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Summary",
+     "depth": 2,
+     "markdown": "Email and password login with a signed session cookie."
+    },
+    {
+     "kind": "fields",
+     "heading": "Technical Context",
+     "items": [
+      {
+       "label": "Language/Version",
+       "value": "TypeScript 5"
+      },
+      {
+       "label": "Primary Dependencies",
+       "value": "Express"
+      },
+      {
+       "label": "Testing",
+       "value": "vitest"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Project Structure",
+     "depth": 2,
+     "markdown": "```text\nsrc/\n└── auth/\n```"
+    }
+   ]
+  },
+  "specs/001-login/research.md": {
+   "ref": {
+    "path": "specs/001-login/research.md",
+    "kind": "research",
+    "hash": "3bfc8b72bbee"
+   },
+   "title": "Research: Login",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "decisions",
+     "items": [
+      {
+       "title": "Session storage",
+       "fields": [
+        {
+         "label": "Decision",
+         "value": "Signed cookie"
+        },
+        {
+         "label": "Rationale",
+         "value": "No server-side store to run."
+        },
+        {
+         "label": "Alternatives considered",
+         "value": "Server sessions in Redis; JWT in local storage."
+        }
+       ],
+       "rest": ""
+      }
+     ]
+    }
+   ]
+  },
+  "specs/001-login/data-model.md": {
+   "ref": {
+    "path": "specs/001-login/data-model.md",
+    "kind": "data-model",
+    "hash": "776bd1037a28"
+   },
+   "title": "Data Model: Login",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "cards",
+     "heading": "Entities",
+     "items": [
+      {
+       "title": "User",
+       "markdown": "- id: uuid\n- email: string"
+      },
+      {
+       "title": "Session",
+       "markdown": "- token: string\n- userId: uuid"
+      }
+     ]
+    }
+   ]
+  },
+  "specs/001-login/quickstart.md": {
+   "ref": {
+    "path": "specs/001-login/quickstart.md",
+    "kind": "quickstart",
+    "hash": "7c92f68fc9df"
+   },
+   "title": "Quickstart: Login",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": null,
+     "depth": 0,
+     "markdown": "1. Run `npm install`\n2. Run `npm start`\n3. Open http://localhost:3000/login"
+    }
+   ]
+  },
+  "specs/001-login/contracts/api.yaml": {
+   "ref": {
+    "path": "specs/001-login/contracts/api.yaml",
+    "kind": "contract",
+    "hash": "942f09741442"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo: { title: Login API, version: 1.0.0 }\npaths:\n  /login:\n    post:\n      summary: Sign in\n      responses: { '200': { description: OK } }\n"
+    }
+   ]
+  },
+  "specs/001-login/tasks.md": {
+   "ref": {
+    "path": "specs/001-login/tasks.md",
+    "kind": "tasks",
+    "hash": "a287f3c00934"
+   },
+   "title": "Tasks: Login",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "phase",
+     "title": "Phase 1: Setup",
+     "fields": [],
+     "items": [
+      {
+       "id": "T001",
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Create project structure"
+      },
+      {
+       "id": "T002",
+       "done": true,
+       "parallel": true,
+       "story": null,
+       "text": "Configure linting"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 2: User Story 1 (P1)",
+     "fields": [],
+     "items": [
+      {
+       "id": "T003",
+       "done": true,
+       "parallel": false,
+       "story": "US1",
+       "text": "Add login form in src/auth/form.ts"
+      },
+      {
+       "id": "T004",
+       "done": false,
+       "parallel": false,
+       "story": "US1",
+       "text": "Add session cookie handling in src/auth/session.ts"
+      },
+      {
+       "id": "T005",
+       "done": false,
+       "parallel": true,
+       "story": "US1",
+       "text": "Write login tests in tests/login.test.ts"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/001-login/checklists/requirements.md": {
+   "ref": {
+    "path": "specs/001-login/checklists/requirements.md",
+    "kind": "checklist",
+    "hash": "6ba196b8741c"
+   },
+   "title": "Specification Quality Checklist: Login",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": null,
+     "depth": 0,
+     "markdown": "- [x] No implementation details\n- [x] Requirements are testable\n- [ ] Success criteria are measurable"
+    }
+   ]
+  },
+  "specs/001-login/analysis.md": {
+   "ref": {
+    "path": "specs/001-login/analysis.md",
+    "kind": "other",
+    "hash": "24d746d148d4"
+   },
+   "title": "Analysis: Login",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": null,
+     "depth": 0,
+     "markdown": "A note kept next to the spec. spec-kit does not define this file name, so it shows as an `other` document."
+    },
+    {
+     "kind": "raw",
+     "heading": "Open risks",
+     "depth": 2,
+     "markdown": "- Lockout after 5 failed attempts can be used to lock out a real user on purpose.\n- Reset links need a lifetime before FR-003 can be built."
+    }
+   ]
+  },
+  "specs/002-search/spec.md": {
+   "ref": {
+    "path": "specs/002-search/spec.md",
+    "kind": "spec",
+    "hash": "7a5970c119da"
+   },
+   "title": "Feature Specification: Search",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`002-search`"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Requirements *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST return results within 1 second"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/003-export/spec.md": {
+   "ref": {
+    "path": "specs/003-export/spec.md",
+    "kind": "spec",
+    "hash": "08a6b02965f4"
+   },
+   "title": "Feature Specification: Export",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`003-export`"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Requirements *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST export data as CSV"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/003-export/plan.md": {
+   "ref": {
+    "path": "specs/003-export/plan.md",
+    "kind": "plan",
+    "hash": "f5ff62e062a5"
+   },
+   "title": "Implementation Plan: Export",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Summary",
+     "depth": 2,
+     "markdown": "Stream rows to CSV."
+    }
+   ]
+  }
+ }
+}
