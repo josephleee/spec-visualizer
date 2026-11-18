@@ -34,7 +34,9 @@
   "files": [
     "dist/server",
     "dist/web",
-    "examples/demo"
+    "examples/demo",
+    "examples/demo-openspec",
+    "examples/demo-kiro"
   ],
   "scripts": {
     "start": "node server/cli.ts",
