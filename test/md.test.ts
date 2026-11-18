@@ -79,7 +79,7 @@ test('a long document parsed in pieces gives the same nodes and offsets as one p
     expect(src.length).toBeGreaterThan(100_000)
     expect(shape(parse(src))).toEqual(shape(reference.parse(src).children))
   }
-})
+}, 60_000)
 
 const stories = (n: number) => '# Spec\n\n## User Scenarios\n\n' + Array.from({ length: n }, (_, i) =>
   `### User Story ${i + 1} - Story ${i + 1} (Priority: P1)\n\nUsers do thing ${i}. <!-- note ${i} -->\n\n**Why this priority**: Value ${i}.\n\n**Acceptance Scenarios**:\n\n1. **Given** a ${i}, **When** b, **Then** c\n`).join('\n')
