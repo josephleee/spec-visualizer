@@ -142,10 +142,10 @@ button, select { font-family: var(--sans); }
 .hd.a { left: -4px; top: -5px; } .hd.b { right: -4px; top: -5px; } .hd.c { left: -4px; bottom: -4px; } .hd.d { right: -4px; bottom: -4px; }
 .fh { flex: none; display: grid; gap: 8px; justify-items: start; padding: 12px; background: var(--sheet-2); border-bottom: 1px solid var(--edge); }
 .region.live .fh { background: var(--live-wash); }
-.rh { display: flex; gap: 8px; align-items: flex-start; width: 100%; }
+.rh { display: flex; gap: 8px; align-items: center; width: 100%; }
 .rh-no { font-size: 40px; font-weight: 700; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .rh > div { flex: 1; min-width: 0; }
-.rh strong { display: block; font-size: 16px; line-height: 1.2; }
+.rh strong { display: block; font-size: 18px; line-height: 1.2; }
 .rh p { font-size: 11.5px; line-height: 1.35; color: var(--ink-2); margin-top: 4px; }
 .ic { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; flex: none; }
 .rh .ic { color: var(--ink-3); margin-top: 2px; }

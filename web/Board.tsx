@@ -56,7 +56,7 @@ function Region({ project, stage, i, count, nextLive, seen }: { project: Project
         <div className="fh">
           <div className="rh">
             <span className="rh-no">{i + 1}</span>
-            <div><a className="stage-link" href={stageHref(stage, front?.id)}><strong>{t(`n.${stage}`)}</strong></a><p>{t(`say.${stage}`)}</p></div>
+            <div><a className="stage-link" href={stageHref(stage, front?.id)}><strong>{t(`n.${stage}`)}</strong></a></div>
             <Zoom />
           </div>
           <span className="fh-cmd"><span>{t('cmd.stage')}</span><code className={cmd ? 'cmd' : 'cmd none'}>{cmd ?? t('nocmd')}</code></span>
@@ -113,7 +113,7 @@ export function Board({ project, seen }: { project: Project | null; seen: Seen }
       <section className={intro && project ? 'zone stages intro' : 'zone stages'} aria-busy={!project}>
         <header className="zone-h">
           <h2>{t('zone')}</h2>
-          <p>{project && !project.features.length ? t('zone.empty', CMD.specify) : t('zone.hint')}</p>
+          {project && !project.features.length && <p>{t('zone.empty', CMD.specify)}</p>}
         </header>
         <div className="regions">
           {STAGES.map((stage, i) => project && counts

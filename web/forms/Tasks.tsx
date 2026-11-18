@@ -11,7 +11,7 @@ export const tasks: Form = (doc, { t }) => {
     body: (
       <>
         <Stats items={[[phases.length, t('t.phases')], [all.length, t('t.tasks')], [all.filter(x => x.parallel).length, t('t.par')], [byStory(all).filter(g => g.story).length, t('t.stories')]]} />
-        <Sec title={t('t.struct')} note={t('t.struct.n')}>
+        <Sec title={t('t.struct')}>
           <ul className="legend">
             <li><span className="mk done" />{t('t.done')}</li><li><span className="mk" />{t('t.open')}</li>
             <li><span className="mk">P</span>{t('t.par')}</li><li><span className="us">US1</span>{t('t.story')}</li>

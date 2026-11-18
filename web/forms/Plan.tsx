@@ -14,8 +14,8 @@ export const plan: Form = (doc, { t }) => {
       <>
         {summary && <section className="sec lead"><Rich md={summary.markdown} /></section>}
         {context && <Sec title={t('p.ctx')} note={`${clean(context.heading)} · ${t('n.items', context.items.length)}`}><FieldsSheet items={context.items} /><Rich md={context.rest} /></Sec>}
-        {check && <Sec title={t('p.check')} note={t('p.check.n')}><Rich md={check.markdown} /></Sec>}
-        {structure && <Sec title={t('p.struct')} note={t('p.struct.n')}><div className="trees"><Rich md={structure.markdown} /></div></Sec>}
+        {check && <Sec title={t('p.check')}><Rich md={check.markdown} /></Sec>}
+        {structure && <Sec title={t('p.struct')}><div className="trees"><Rich md={structure.markdown} /></div></Sec>}
       </>
     ),
   }

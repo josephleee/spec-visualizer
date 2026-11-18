@@ -147,7 +147,7 @@ export function StagePage({ route, project, version, seen, onSeen }: {
               {stage && <div className="phead-no">{si + 1}<span>/ 6</span></div>}
               <div className="phead-t">
                 <h1 tabIndex={-1}>{name}</h1>
-                <p className="phead-say">{stage ? t(`say.${stage}`) : `${t('h.kind')} · ${kind}`}</p>
+                {!stage && <p className="phead-say">{t('h.kind')} · {kind}</p>}
                 <p className="phead-doc">{doc?.title ? <Title>{doc.title}</Title> : fid}</p>
               </div>
               <div className="phead-cmd">
