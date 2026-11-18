@@ -128,8 +128,10 @@ export function StagePage({ route, project, version, seen, onSeen }: {
       <article className={feature && busy(feature) && stageIndex(feature) === si ? 'paper live' : 'paper'}>
         <div className="tag">{stage && <b>{si + 1} / 6</b>}{stage ? name : t(`n.${feature?.stage ?? 'constitution'}`)}<code>{ref ? ref.path : `${fid ?? ''} / ${KIND_FILE[kind]}`}</code></div>
         <div className="pgrid">
-          <nav className="toc" aria-label={t('toc')} hidden={!toc.length}>
+          <nav className="toc" aria-label={t('toc')}>
             <b>{t('toc')}</b>
+            {/* The column is always there, so the page does not jump when the sections arrive. */}
+            {!toc.length && <p className="toc-none">{ref && !ref.error && doc === undefined ? <span className="skel skel-line" /> : t('toc.none')}</p>}
             <ol>
               {toc.map((head, n) => (
                 <li key={n}>
