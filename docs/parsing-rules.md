@@ -1,6 +1,6 @@
 # 문서별 파싱 규칙
 
-서버가 spec-kit 문서를 어떻게 읽어 블록으로 만드는지, 그리고 화면이 각 블록을 어떻게 그리는지 적은 문서다. 파서는 `server/md.ts`와 `server/parsers.ts`, 프로젝트 스캔은 `server/scan.ts`, 화면은 `web/forms/`에 있다. 전체 구조는 [설계 문서](design.md)를 본다.
+서버가 spec-kit 문서를 어떻게 읽어 블록으로 만드는지, 그리고 화면이 각 블록을 어떻게 그리는지 적은 문서다. 파서는 `server/md.ts`와 `server/parsers.ts`, 프로젝트 스캔은 `server/scan.ts`, 화면은 `web/forms/`에 있다. OpenSpec과 Kiro 문서는 [OpenSpec](#openspec)과 [Kiro](#kiro) 절에 따로 적었다(`server/openspec.ts`, `server/kiro.ts`, `server/items.ts`). 아래의 공통 원칙과 전처리는 모든 형식에 같다. 전체 구조는 [설계 문서](design.md)를 본다.
 
 ## 공통 원칙
 
@@ -24,8 +24,9 @@
 | `cards` | 제목과 `{ title, markdown }` 카드 목록 |
 | `decisions` | 결정 목록. 결정마다 제목, 이름표 항목, `rest` |
 | `code` | 언어와 원문 글자 |
+| `requirements` | OpenSpec과 Kiro의 요구사항. 제목, 깊이, 델타 종류(`op`: `ADDED`, `MODIFIED`, `REMOVED`, `RENAMED` 또는 없음), 첫 요구사항 앞의 글(`text`), 요구사항 목록, `rest`. 요구사항마다 번호, 제목, 사용자 스토리, 본문(`text`), 기준(`criteria`), `rest`. 기준마다 번호, 이름, 단계(`steps`: `{ key, text }`, `key`는 `GIVEN`, `WHEN`, `THEN`, `AND`, `IF` 등이나 빈 글자) |
 
-`rest`와 이름표의 값은 모두 마크다운이다.
+`rest`와 이름표의 값은 모두 마크다운이다. 체크박스 항목에는 OpenSpec과 Kiro 문서에서만 `optional`(Kiro의 선택 작업)과 `notes`(항목 아래에 딸린 글)가 붙는다.
 
 ## 전처리
 
@@ -77,7 +78,7 @@
 
 ## 파일을 문서 종류로 나누는 규칙
 
-`specs/` 바로 아래 폴더 하나가 기능 하나다. 기능 폴더를 하위 폴더까지 훑되 심볼릭 링크와 점으로 시작하는 이름은 건너뛴다. `.md` 파일과 `contracts/` 아래의 모든 파일만 읽는다.
+이 절과 아래 1~6절은 spec-kit이다. `specs/` 바로 아래 폴더 하나가 기능 하나다. 기능 폴더를 하위 폴더까지 훑되 심볼릭 링크와 점으로 시작하는 이름은 건너뛴다. `.md` 파일과 `contracts/` 아래의 모든 파일만 읽는다.
 
 | 경로 | 종류 | 단계 |
 |---|---|---|
@@ -321,6 +322,92 @@ A member searches the catalog.
 ## 종류를 모르는 `.md`
 
 `##` 구획이 그대로 `raw` 블록이 된다. 화면은 구획마다 한 장씩 원문 순서대로 그린다.
+
+## OpenSpec
+
+### 파일
+
+| 경로 | 종류 | 단계 |
+|---|---|---|
+| `openspec/specs/**/spec.md` (기능 영역 폴더 안) | `capability` | 1 스펙 |
+| `openspec/config.yaml`, `openspec/project.md` | `context` | 1 스펙 |
+| `openspec/changes/<변경>/proposal.md` | `proposal` | 2 제안 |
+| `openspec/changes/<변경>/specs/**/spec.md` | `delta` | 2 제안(탭), 6 보관 |
+| `design.md` | `design` | 3 설계 |
+| `tasks.md` | `tasks` | 4 작업 분해, 5 적용 |
+| 변경 폴더의 그 밖의 `.md` | `other` | 단계 없음 |
+
+`openspec/changes/` 아래 폴더(`archive` 제외)가 변경 하나, `openspec/changes/archive/` 아래 폴더가 보관된 변경 하나다(아이디는 `archive/<날짜>-<이름>`). 점으로 시작하는 폴더와 심볼릭 링크는 건너뛰고, `.md`만 읽는다(`config.yaml`은 예외). 변경은 이름순, 보관된 변경은 최신순이다.
+
+| 조건 | 단계 |
+|---|---|
+| `archive/` 아래에 있음 | 보관 |
+| 체크된 작업이 하나 이상 (모두 체크돼도 보관 전까지) | 적용 |
+| `tasks.md`가 있음 | 작업 분해 |
+| `design.md`가 있음 | 설계 |
+| 그 외 | 제안 |
+
+### spec.md (주 스펙과 델타 스펙)
+
+| 표시 | 블록 |
+|---|---|
+| `## Requirements` 또는 `## ADDED/MODIFIED/REMOVED/RENAMED Requirements` (대소문자 무관) | `requirements`. 델타 구획의 종류가 `op`, 첫 `###` 앞의 글이 `text` |
+| 그 아래 `### Requirement: 이름` | 요구사항 하나. 첫 `####` 앞의 글이 본문 |
+| `#### Scenario: 이름` | 기준 하나. 목록 항목마다 단계 하나. `**WHEN**`, `WHEN:` 등 앞의 키워드(굵게 써도, 대소문자 달라도)가 `key`, 나머지가 `text`. 키워드가 없는 항목과 목록 밖의 글은 `key`가 빈 단계 |
+| `Requirement:`가 아닌 `###`, `Scenario:`가 아닌 `####` | 제목 줄과 함께 그 블록이나 요구사항의 `rest` |
+| `RENAMED` 구획의 `FROM:` / `TO:` 줄 | 그 구획의 `text`. 화면은 `TO:` 줄 수를 이름 변경 수로 센다 |
+| 그 밖의 `##` (`Purpose` 등) | `raw` |
+
+### tasks.md
+
+`##` 구획마다 체크박스가 있으면 `phase` 하나다. `[ ]`, `[x]` 밖에 `[~]`, `[]`, `[ x ]`처럼 한 글자 표시도 작업으로 세고, `x`/`X`만 끝난 것이다(OpenSpec과 같은 규칙). 맨 앞의 `1.1` 같은 번호가 `id`, 중첩된 하위 작업도 모두 센다. 작업 아래의 체크박스가 아닌 글은 그 작업의 `notes`, 구획 안의 그 밖의 글은 `rest`다. 첫 `##` 앞에 쓴 작업 목록도 문서 제목을 이름으로 한 `phase`가 된다. `[Some link](…)` 같은 링크 항목은 작업이 아니다.
+
+### proposal.md, design.md, config.yaml
+
+`proposal.md`는 `##` 구획마다 `raw`다. `design.md`는 `## Decisions`(또는 `Key/Architecture/Design/Technical Decisions`)와 `## Correctness Properties` 아래의 `###`를 `cards`로, 나머지 구획을 `raw`로 만든다. `config.yaml`은 `.md`가 아니므로 `code` 하나다.
+
+## Kiro
+
+### 파일
+
+| 경로 | 종류 | 단계 |
+|---|---|---|
+| `.kiro/steering/**/*.md` | `context` | 1 스티어링. `product.md`, `tech.md`, `structure.md`가 먼저, 나머지는 경로순 |
+| `.kiro/specs/<스펙>/requirements.md`, `bugfix.md` | `requirements` | 2 요구사항 |
+| `design.md` | `design` | 3 설계 |
+| `tasks.md` | `tasks` | 4 작업 분해, 5 구현, 6 완료 |
+| 스펙 폴더의 그 밖의 `.md` (cc-sdd의 `research.md` 등) | `other` | 단계 없음 |
+
+`.kiro/specs/` 아래 폴더 하나가 스펙 하나다. `spec.json`처럼 `.md`가 아닌 파일은 읽지 않는다. 단계는 spec-kit과 같은 규칙에서 `plan.md` 대신 `design.md`를 보고, 작업 수는 선택 작업(`- [ ]*`)을 빼고 센다.
+
+### 스티어링 파일
+
+맨 앞의 YAML 앞머리(`---`로 둘러싼 줄)에서 `이름: 값` 줄은 머리 정보가 되고(값은 코드로 보인다), 그 밖의 줄은 `yaml` `code` 블록으로 남는다. 본문은 일반 문서처럼 `##`마다 `raw`다.
+
+### requirements.md와 bugfix.md
+
+| 표시 | 블록 |
+|---|---|
+| `### Requirement N` 또는 `### Requirement N: 제목` | 요구사항 하나. `N`이 번호, 제목이 없으면 머리 글 전체가 제목 |
+| `**User Story:**` 또는 `**Objective:**`(cc-sdd)로 시작하는 문단 | 사용자 스토리 |
+| `#### Acceptance Criteria` 아래 목록 | 항목마다 기준 하나. 번호는 `<요구사항 번호>.<목록 번호>` |
+| EARS 문장 | `WHEN`/`IF`/`WHILE`/`WHERE`로 시작하면 조건과 응답 두 단계로 나눈다. 응답은 `THEN` 뒤, 또는 `, THE`나 ` THE` 앞에서 시작한다(응답 단계의 `key`는 `THEN`). 키워드는 대문자일 때만 읽는다. 조건이 없는 문장(`THE … SHALL …`)과 그 밖의 문장은 `key`가 빈 단계 하나 |
+| `Requirement N`이 아닌 `###`에 EARS 줄(문단이나 목록 항목, 앞에 `1.1` 같은 번호가 있어도 된다)이 있음 | 그 `###`가 기준 묶음 하나. bugfix의 `### Current Behavior (Defect)` 등 |
+| EARS 줄이 없는 `###`, 그 밖의 `####` | 제목 줄과 함께 `rest` |
+| 그 밖의 `##` (`Introduction`, `Glossary` 등) | `raw` |
+
+### tasks.md
+
+체크박스 표시는 OpenSpec과 같고, `- [ ]*`는 선택 작업, `- [-]`는 진행 중인 작업(끝나지 않은 것으로 센다)이다. 번호가 붙은 최상위 작업(`- [ ] 1.`)이 `phase` 하나이고, 그 아래에 중첩되거나 같은 들여쓰기로 이어 쓴 `1.1` 같은 하위 작업(cc-sdd)이 항목이다. 하위 작업이 있는 작업의 자기 체크박스는 세지 않고, 그 아래 글은 `phase`의 `rest`다. 하위 작업이 없는 최상위 작업은 그 자체가 자기 `phase`의 항목이고, 구획 안의 어떤 작업에도 하위 작업이 없으면 구획 전체가 `phase` 하나다. 번호 뒤의 `(P)`는 병렬 표시다. 작업 아래의 세부 목록과 `_Requirements: …_`는 그 작업의 `notes`다.
+
+### 화면
+
+| 문서 | 그리는 것 |
+|---|---|
+| `requirements` 블록이 있는 문서 (`capability`, `delta`, `requirements`) | 요구사항 수, 시나리오(이름이 있을 때)나 기준 수, 델타 종류별 수. 그다음 모든 블록을 원문 순서대로. 요구사항은 카드로: 번호, 델타 종류, 제목, 사용자 스토리, 본문, 기준마다 번호·이름과 단계 |
+| `design` | 구획 수, 결정 수, Mermaid 도표 수. 그다음 모든 블록을 원문 순서대로 |
+| `proposal`, `context` | 원문의 구획 순서대로 |
+| `tasks` | spec-kit과 같은 작업 분해·진행 화면. 선택 작업은 점선 표시와 꼬리표로 보이고 세지 않는다. 작업의 `notes`는 작업 글 아래에 보인다. OpenSpec에서 작업이 모두 끝나면 다음 명령으로 보관 명령을 보여 준다 |
 
 ## 화면이 블록을 놓치지 않는 방법
 

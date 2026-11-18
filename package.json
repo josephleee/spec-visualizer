@@ -4,6 +4,8 @@
   "description": "A local, read-only dashboard for GitHub spec-kit projects: the six spec-driven stages on one board, and every spec document as a page that fits its kind.",
   "keywords": [
     "spec-kit",
+    "openspec",
+    "kiro",
     "spec-driven-development",
     "sdd",
     "specification",

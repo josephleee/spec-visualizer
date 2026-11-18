@@ -5,6 +5,8 @@ English | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 A local, read-only dashboard for a [GitHub spec-kit](https://github.com/github/spec-kit) project.
 It lays the six spec-driven stages out on one board, shows which feature stands where and what to type next, and turns every spec document into a page that fits its kind, instead of plain rendered markdown.
 
+It also reads [OpenSpec](https://github.com/Fission-AI/OpenSpec) and [Kiro](https://kiro.dev/docs/specs/) projects, on the same board with their own stages and commands: see [Other formats](#other-formats).
+
 ![The board with its six stage cards, then a zoom from one card into that stage's document page](docs/media/board-to-document.gif)
 
 ## Install
@@ -12,11 +14,12 @@ It lays the six spec-driven stages out on one board, shows which feature stands 
 Node.js 20 or later.
 
 ```sh
-npx spec-visualizer            # the spec-kit project in the current folder
-npx spec-visualizer --demo     # a bundled example project, to look around
+npx spec-visualizer                          # the project in the current folder
+npx spec-visualizer --demo                   # a bundled spec-kit example, to look around
+npx spec-visualizer --demo --format openspec # the same, written with OpenSpec (or --format kiro)
 ```
 
-It prints the address (`http://127.0.0.1:4321` by default) and opens it in your browser. The folder must contain `specs/` or `.specify/`.
+It prints the format it found and the address (`http://127.0.0.1:4321` by default), and opens it in your browser. The folder must contain `specs/` or `.specify/` (spec-kit), `openspec/` (OpenSpec), or `.kiro/specs/` or `.kiro/steering/` (Kiro).
 
 ### Claude Code plugin
 
@@ -29,7 +32,7 @@ The plugin starts, opens and stops the same dashboard from a Claude Code session
 
 From a shell, `claude plugin install spec-visualizer --marketplace josephleee/spec-visualizer` does both.
 
-Then run `/spec-visualizer:dashboard` in a spec-kit project (`/spec-visualizer:dashboard stop` to stop it), or ask Claude to show the spec status.
+Then run `/spec-visualizer:dashboard` in a spec-kit, OpenSpec or Kiro project (`/spec-visualizer:dashboard stop` to stop it), or ask Claude to show the spec status.
 
 ## Usage
 
@@ -42,7 +45,8 @@ Without a path it uses the current folder. The page updates by itself when files
 | Option | Default | Meaning |
 |---|---|---|
 | `--port <n>` | `4321` | Port to listen on. Without this option, a taken port moves on to the next free one (up to 4330). With it, a taken port is an error. |
-| `--demo` | | Show the bundled example project (`examples/demo`) instead of a path. |
+| `--format <name>` | found | Read the folder as `spec-kit`, `openspec` or `kiro`. Without it the format is found from the folders; when a folder has several, spec-kit comes first, then OpenSpec, then Kiro, and the output names the others. |
+| `--demo` | | Show a bundled example project instead of a path: `examples/demo` (spec-kit), or with `--format openspec` / `--format kiro` the example in that format. |
 | `--no-open` | | Do not open the browser. It is also not opened when the output is not a terminal. |
 | `--help`, `--version` | | Print the usage or the version. |
 
@@ -73,6 +77,38 @@ Clicking a card or a feature zooms into that stage's document (`#/stage/<stage>/
 
 Any other `.md` in a feature folder is an `other` document: it is linked from the feature's pages and shown section by section (`#/doc/<path>`). Outside `contracts/`, only `.md` files are read.
 
+## Other formats
+
+The format is found when the server starts (or given with `--format`) and the page follows it: the stage names and commands, the word for a unit of work (a *change* in OpenSpec, a *spec* in Kiro) and the document forms. The first stage always holds the documents of the whole project. Everything else above works the same way.
+
+### OpenSpec
+
+| Stage | Command | Reads | Shown as |
+|---|---|---|---|
+| 1 Specs | none | `openspec/specs/**/spec.md`, `openspec/config.yaml`, `openspec/project.md` | Each capability spec as requirements with their named scenarios, steps in order; the project context as written (YAML as code) |
+| 2 Propose | `/openspec-propose` | `proposal.md`, the delta `specs/**/spec.md` | The proposal by section; delta specs as requirements under their ADDED, MODIFIED, REMOVED or RENAMED section, with counts per operation |
+| 3 Design | `/openspec-continue-change` | `design.md` | Its sections in order, decisions as cards, with counts of decisions and diagrams |
+| 4 Tasks | `/openspec-continue-change` | `tasks.md` | Structure: one lane per numbered group, any one-character mark (`[~]`) counted as open |
+| 5 Apply | `/openspec-apply-change` | the same `tasks.md` | Progress; when every task is ticked, the next command is `/openspec-archive-change` |
+| 6 Archive | `/openspec-archive-change` | delta specs of `openspec/changes/archive/<date>-<name>/` | What the archived change merged into the specs |
+
+A change folder under `openspec/changes/` is one unit; an archived one stands at Archive. The commands are OpenSpec 2.x skills as typed in Claude Code (`$openspec-…` in Codex; `/opsx:…` in OpenSpec 1.x). Not read: custom schemas (their extra artifacts show as other documents), stores and worksets, `.openspec.yaml`.
+
+### Kiro
+
+| Stage | Command (Kiro CLI) | Reads | Shown as |
+|---|---|---|---|
+| 1 Steering | none | `.kiro/steering/**/*.md` | Each steering file by section, its front matter (`inclusion`, `fileMatchPattern`) as header fields |
+| 2 Requirements | `/spec new <name>` | `requirements.md`, or `bugfix.md` | Numbered requirements with their user story and EARS criteria split into condition and response; a bugfix's current, expected and unchanged behaviour as three groups |
+| 3 Design | `/spec <name>` | `design.md` | Its sections in order, decisions and correctness properties as cards |
+| 4 Tasks | `/spec <name>` | `tasks.md` | Structure: one lane per numbered top-level task, its sub-tasks as marks, optional tasks (`- [ ]*`) marked and not counted, each task's details with it |
+| 5 Implement | `/spec run <name>` | the same `tasks.md` | Progress |
+| 6 Done | none | the same `tasks.md` | Progress, all required tasks ticked |
+
+A folder under `.kiro/specs/` is one unit. Projects set up with [cc-sdd](https://github.com/gotalab/cc-sdd) use the same folders and are read the same way; its `spec.json` is not read and its own commands are not shown. Global steering in `~/.kiro/steering/` is outside the project and never read.
+
+Where the formats come from and why these two: [docs/formats.md](docs/formats.md). How the adapters work: [docs/design-formats.md](docs/design-formats.md).
+
 ## How it reads your documents
 
 The server reads each document with a markdown parser and turns the parts it recognises (user stories, scenarios, requirement lists, task phases, labelled fields, decisions, entities) into typed blocks; the browser draws those blocks. No AI is involved, so a page always shows what the file says now.
@@ -85,14 +121,14 @@ The exact rules per document type are in [docs/parsing-rules.md](docs/parsing-ru
 
 - **Local only.** The server listens on `127.0.0.1` and answers only requests whose `Host` is `127.0.0.1:<port>` or `localhost:<port>`.
 - **Read-only.** It never writes to the project it shows, and accepts only `GET` requests.
-- **Only what the scan found.** A document is served only if the scan of `specs/` and `.specify/` listed it. Symbolic links are not followed.
+- **Only what the scan found.** A document is served only if the scan of the format's folders (`specs/` and `.specify/`, `openspec/`, or `.kiro/`) listed it. Symbolic links are not followed.
 - **Document content is untrusted.** Raw HTML inside markdown is shown as text, never run. Images are not loaded: their alt text and address are shown instead. Only `http`, `https` and `#` links can be followed.
 
 ## What it does not do
 
 - Edit documents or tick checkboxes
 - Highlight what changed inside an updated document
-- Read other formats (OpenSpec, Kiro and so on)
+- Read formats other than spec-kit, OpenSpec and Kiro (BMad Method, Agent OS, Tessl and so on), or several formats at once
 - Show several projects at once
 - Generate pages with AI
 - Export static HTML, host the dashboard or log users in
@@ -115,7 +151,7 @@ npm start -- <path>   # the same, for a project of your own
 
 `npm run dev` serves the web sources with Vite and passes `/api` on to a server running on port 4321.
 
-The published package runs `dist/server/cli.js` and contains `dist/server`, `dist/web` and `examples/demo`. The Claude Code plugin is in `plugin/`, and `.claude-plugin/marketplace.json` makes this repository its marketplace. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+The published package runs `dist/server/cli.js` and contains `dist/server`, `dist/web` and the three example projects in `examples/`. The Claude Code plugin is in `plugin/`, and `.claude-plugin/marketplace.json` makes this repository its marketplace. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Other formats
+
+- OpenSpec and Kiro projects open on the same board, with their own six stages, commands and word for a unit of work (a change, a spec). The format is found from the folders: `specs/` or `.specify/` (spec-kit), `openspec/` (OpenSpec), `.kiro/specs/` or `.kiro/steering/` (Kiro); spec-kit comes first when a folder has several.
+- `--format <spec-kit|openspec|kiro>` reads a folder as the format named; the first output line names the format found, and a second line names any other format the folder also has.
+- `--demo --format openspec` and `--demo --format kiro` show bundled examples in those formats; `--demo` alone shows the spec-kit example as before.
+- OpenSpec: capability specs and project context on the first stage; proposals, delta specs (ADDED, MODIFIED, REMOVED, RENAMED), designs and tasks of each change; archived changes on the last stage. Requirements are drawn with their named scenarios, steps in order.
+- Kiro: steering files on the first stage (front matter as header fields); requirements with user stories and EARS criteria split into condition and response; bugfix documents as current, expected and unchanged behaviour; tasks by numbered top-level task, with optional tasks shown and not counted. Projects set up with cc-sdd are read the same way.
+- Design documents of both formats show their decisions as cards.
+- spec-kit projects show exactly what they showed before: the server's JSON and every page are compared with the previous version in the tests.
+
 ## [0.1.1-rc.0] - 2026-11-18
 
 - Releases are published from GitHub Actions through npm trusted publishing, without a stored token.
