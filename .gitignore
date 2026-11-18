@@ -1,6 +1,4 @@
 node_modules
 dist
 .superpowers
-*.packed.html
-*.artifact.html
 .hallmark
