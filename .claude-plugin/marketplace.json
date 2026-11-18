@@ -1,0 +1,12 @@
+{
+  "name": "spec-visualizer",
+  "description": "The spec-visualizer plugin: a local, read-only dashboard for spec-kit projects.",
+  "owner": { "name": "josephleee" },
+  "plugins": [
+    {
+      "name": "spec-visualizer",
+      "source": "./plugin",
+      "description": "Start, open and stop the spec-visualizer dashboard for the spec-kit project you are working in."
+    }
+  ]
+}

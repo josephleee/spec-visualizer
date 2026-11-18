@@ -1,0 +1,10 @@
+{
+  "name": "spec-visualizer",
+  "version": "0.1.0",
+  "description": "Start, open and stop the spec-visualizer dashboard for the spec-kit project you are working in.",
+  "author": { "name": "josephleee" },
+  "homepage": "https://github.com/josephleee/spec-visualizer#readme",
+  "repository": "https://github.com/josephleee/spec-visualizer",
+  "license": "MIT",
+  "keywords": ["spec-kit", "spec-driven-development", "dashboard"]
+}
