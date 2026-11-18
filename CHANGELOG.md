@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.1-rc.0] - 2026-11-18
+
 - Releases are published from GitHub Actions through npm trusted publishing, without a stored token.
 
 ## [0.1.0] - 2026-11-18
