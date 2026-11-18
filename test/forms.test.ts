@@ -2,7 +2,10 @@ import { Fragment, createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, test } from 'vitest'
 import type { Block, CheckItem, DocKind, Feature, ParsedDoc } from '../server/types.ts'
-import { parseDoc } from '../server/parsers.ts'
+import { parseDoc, type Reading } from '../server/parsers.ts'
+import { OPENSPEC_PARSERS } from '../server/openspec.ts'
+import { KIRO_PARSERS } from '../server/kiro.ts'
+import { FLOWS, type Flow } from '../web/flows.ts'
 import { DocMeta, DocTitle, renderDoc } from '../web/forms/render.tsx'
 import type { FormCtx } from '../web/forms/types.ts'
 import { translate } from '../web/i18n.ts'
@@ -363,4 +366,194 @@ ${tok('BodyA')}
   expect(visible(html('1.2.0'))).toMatch(/1\.2\.0\s+Version\s+Ratified\s+Ratified\s+Amended\s+Last amended/)
   // A label with no value reads as missing, not as a blank figure.
   expect(visible(html(''))).toMatch(/not set\s+Version/)
+})
+
+// ---------- OpenSpec and Kiro: the new block kind and forms, and their documents parsed with their own readers ----------
+
+const requirementsBlock = (tok: (w: string) => string, op: string | null): Block => ({
+  kind: 'requirements', heading: tok('ReqHead'), depth: 2, op, text: tok('ReqLead'), rest: tok('ReqRest'), items: [
+    { id: tok('ReqId'), title: tok('ReqTitle'), story: tok('Story'), text: tok('Statement'), rest: tok('ItemRest'), criteria: [
+      { id: tok('CritId'), name: tok('ScenarioName'), steps: [{ key: 'GIVEN', text: tok('Given') }, { key: 'WHEN', text: tok('When') }, { key: 'THEN', text: tok('Then') }, { key: '', text: tok('Bare') }] },
+      { id: null, name: null, steps: [{ key: 'IF', text: tok('If') }, { key: 'THEN', text: tok('Response') }] }] },
+    { id: null, title: tok('Removed'), story: null, text: tok('Reason'), rest: '', criteria: [] }],
+})
+const items2 = (tok: (w: string) => string): CheckItem[] => [
+  { id: tok('Id'), done: true, parallel: false, story: null, text: tok('Text'), notes: `- ${tok('Note')}` },
+  { id: tok('IdOpt'), done: false, parallel: true, story: null, text: tok('Optional'), optional: true, notes: tok('OptNote') },
+]
+
+for (const kind of ['capability', 'delta', 'requirements'] as const)
+  test(`${kind}: nothing is dropped`, () => check(kind, false, tok => [requirementsBlock(tok, kind === 'delta' ? 'ADDED' : null), requirementsBlock(tok, 'RENAMED'), ...extras(tok)]))
+test('design: nothing is dropped', () => check('design', false, tok => [cards(tok, tok('Decisions')), ...extras(tok)]))
+for (const kind of ['proposal', 'context'] as const) test(`${kind}: nothing is dropped`, () => check(kind, false, tok => [...extras(tok), requirementsBlock(tok, null)]))
+test('tasks with notes and optional tasks, at both stages: nothing is dropped', () => {
+  for (const progress of [false, true]) check('tasks', progress, tok => [{ kind: 'phase', title: tok('Phase'), fields: [], items: items2(tok), rest: tok('Rest') }, ...extras(tok)])
+})
+test('a document without the expected structure keeps a requirements block whole', () => check('other', false, tok => [requirementsBlock(tok, 'MODIFIED')]))
+
+function checkIn(reading: Reading, flow: Flow, path: string, kind: DocKind, progress: boolean, write: (tok: (w: string) => string) => string) {
+  const { tok, made } = tokens()
+  const doc = parseDoc({ path, kind, hash: 'h' }, write(tok), reading)
+  const text = visible(renderToStaticMarkup(createElement(Fragment, null, createElement(DocTitle, { doc }), createElement(DocMeta, { doc }), renderDoc(doc, kind, progress, { feature, t, flow }))))
+  expect(made.filter(s => !text.includes(s))).toEqual([])
+}
+const OS = { parsers: OPENSPEC_PARSERS }, KIRO = { parsers: KIRO_PARSERS, frontMatter: true }
+
+test('OpenSpec main spec and delta spec, parsed and drawn: nothing is dropped', () => {
+  checkIn(OS, FLOWS.openspec, 'openspec/specs/x/spec.md', 'capability', false, tok => `# ${tok('Title')} Specification
+
+## Purpose
+${tok('Purpose')}
+
+## Requirements
+
+${tok('Lead')}
+
+### Requirement: ${tok('ReqA')}
+The system SHALL ${tok('Statement')}.
+
+#### Scenario: ${tok('ScenA')}
+- **GIVEN** ${tok('Given')}
+- **WHEN** ${tok('When')}
+- **THEN** ${tok('Then')}
+- **AND** ${tok('And')}
+- ${tok('NoKeyword')}
+
+${tok('AfterList')}
+
+#### ${tok('OtherH4')}
+${tok('OtherBody')}
+
+### ${tok('NotARequirement')}
+${tok('NotReqBody')}
+${tail(tok)}`)
+  checkIn(OS, FLOWS.openspec, 'openspec/changes/c/specs/x/spec.md', 'delta', false, tok => `## ADDED Requirements
+
+### Requirement: ${tok('Added')}
+${tok('AddedText')}
+
+#### Scenario: ${tok('S1')}
+- WHEN ${tok('W1')}
+- THEN ${tok('T1')}
+
+## REMOVED Requirements
+
+### Requirement: ${tok('Removed')}
+**Reason**: ${tok('Reason')}
+
+## RENAMED Requirements
+
+- FROM: \`### Requirement: ${tok('From')}\`
+- TO: \`### Requirement: ${tok('To')}\`
+${tail(tok)}`)
+})
+
+const osTasks = (tok: (w: string) => string) => `# ${tok('Title')}
+
+${tok('Preamble')}
+
+## 1. ${tok('GroupA')}
+
+- [x] 1.1 ${tok('Done')}
+- [~] 1.2 ${tok('Marked')}
+  - ${tok('Note')}
+- [ ] 1.3 ${tok('Open')}
+  - [x] 1.3.1 ${tok('Sub')}
+
+${tok('Between')}
+
+## ${tok('NoTasks')}
+
+${tok('Plain')}
+${tail(tok)}`
+test('OpenSpec tasks.md at the tasks and apply stages, parsed and drawn: nothing is dropped', () => {
+  checkIn(OS, FLOWS.openspec, 'openspec/changes/c/tasks.md', 'tasks', false, osTasks)
+  checkIn(OS, FLOWS.openspec, 'openspec/changes/c/tasks.md', 'tasks', true, osTasks)
+})
+
+test('OpenSpec proposal, design and config.yaml, parsed and drawn: nothing is dropped', () => {
+  checkIn(OS, FLOWS.openspec, 'openspec/changes/c/proposal.md', 'proposal', false, tok => `# ${tok('Title')}\n\n## Why\n\n${tok('Why')}\n\n## What Changes\n\n- **BREAKING** ${tok('Change')}\n\n## Capabilities\n\n### New Capabilities\n- \`${tok('Cap')}\`: ${tok('CapText')}\n${tail(tok)}`)
+  checkIn(OS, FLOWS.openspec, 'openspec/changes/c/design.md', 'design', false, tok => `# ${tok('Title')}\n\n## Context\n\n${tok('Context')}\n\n## Decisions\n\n${tok('DecLead')}\n\n### Decision: ${tok('Dec')}\n${tok('DecBody')}\n\n\`\`\`mermaid\n${tok('Diagram')}\n\`\`\`\n${tail(tok)}`)
+  checkIn(OS, FLOWS.openspec, 'openspec/config.yaml', 'context', false, tok => `schema: spec-driven\ncontext: |\n  ${tok('Context')}\n`)
+})
+
+test('Kiro requirements and bugfix documents, parsed and drawn: nothing is dropped', () => {
+  checkIn(KIRO, FLOWS.kiro, '.kiro/specs/s/requirements.md', 'requirements', false, tok => `# ${tok('Title')}
+
+## Introduction
+
+${tok('Intro')}
+
+## Requirements
+
+### Requirement 1: ${tok('ReqA')}
+
+**User Story:** ${tok('Story')}
+
+${tok('Statement')}
+
+**${tok('Label')}**: ${tok('LabelValue')}
+
+#### Acceptance Criteria
+
+${tok('CritLead')}
+
+1. WHEN ${tok('Cond')} THEN the system SHALL ${tok('Resp')}
+2. ${tok('Plain')}
+
+${tok('CritAfter')}
+
+#### ${tok('OtherH4')}
+
+${tok('OtherBody')}
+
+### ${tok('NoEars')}
+
+${tok('NoEarsBody')}
+${tail(tok)}`)
+  checkIn(KIRO, FLOWS.kiro, '.kiro/specs/s/bugfix.md', 'requirements', false, tok => `# ${tok('Title')}
+
+## Bug Analysis
+
+${tok('Lead')}
+
+### Current Behavior (Defect)
+
+${tok('Before')}
+
+1.1 WHEN ${tok('Cond')} THEN the system ${tok('Wrong')}
+
+- WHEN ${tok('ListCond')}, THE system SHALL ${tok('ListResp')}
+- ${tok('NotEars')}
+
+${tok('After')}
+${tail(tok)}`)
+})
+
+const kiroTasks = (tok: (w: string) => string) => `# ${tok('Title')}
+
+## Tasks
+
+${tok('Lead')}
+
+- [x] 1. ${tok('Head')}
+  - ${tok('HeadNote')}
+  - [x] 1.1 ${tok('Sub')}
+    - _Requirements: ${tok('Req')}_
+  - [-] 1.2 ${tok('Doing')}
+  - [ ]* 1.3 ${tok('Optional')}
+- [ ] 2. ${tok('Alone')}
+  - ${tok('AloneNote')}
+- [ ] 3. ${tok('Flat')}
+- [ ] 3.1 (P) ${tok('FlatSub')}
+${tail(tok)}`
+test('Kiro tasks.md at the tasks and implement stages, and a task list with no ##, parsed and drawn: nothing is dropped', () => {
+  checkIn(KIRO, FLOWS.kiro, '.kiro/specs/s/tasks.md', 'tasks', false, kiroTasks)
+  checkIn(KIRO, FLOWS.kiro, '.kiro/specs/s/tasks.md', 'tasks', true, kiroTasks)
+  checkIn(KIRO, FLOWS.kiro, '.kiro/specs/s/tasks.md', 'tasks', true, tok => `# ${tok('Title')}\n\n- [x] 1. ${tok('A')}\n  - ${tok('ANote')}\n- [ ] 2. ${tok('B')}\n`)
+})
+
+test('Kiro steering with front matter and design, parsed and drawn: nothing is dropped', () => {
+  checkIn(KIRO, FLOWS.kiro, '.kiro/steering/x.md', 'context', false, tok => `---\ninclusion: ${tok('Inclusion')}\n${tok('OddLine')}\n---\n\n# ${tok('Title')}\n\n${tok('Intro')}\n${tail(tok)}`)
+  checkIn(KIRO, FLOWS.kiro, '.kiro/specs/s/design.md', 'design', false, tok => `# ${tok('Title')}\n\n## Overview\n\n${tok('Overview')}\n\n## Correctness Properties\n\n### Property 1: ${tok('Prop')}\n\n${tok('PropBody')}\n${tail(tok)}`)
 })

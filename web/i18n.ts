@@ -138,6 +138,7 @@ const LABELS = {
 } satisfies Record<Lang, Record<string, string>>
 
 export type LabelKey = keyof (typeof LABELS)['en']
+export const LABEL_KEYS = Object.keys(LABELS.en) as LabelKey[]
 export type T = (key: LabelKey, ...args: (string | number)[]) => string
 
 // Compile-time check that both languages have exactly the same keys.
