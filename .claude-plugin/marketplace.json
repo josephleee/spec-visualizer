@@ -6,6 +6,7 @@
     {
       "name": "spec-visualizer",
       "source": "./plugin",
+      "version": "0.1.0",
       "description": "Start, open and stop the spec-visualizer dashboard for the spec-kit project you are working in."
     }
   ]
