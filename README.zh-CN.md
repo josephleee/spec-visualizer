@@ -45,7 +45,7 @@ spec-visualizer [path] [options]
 | 选项 | 默认值 | 含义 |
 |---|---|---|
 | `--port <n>` | `4321` | 监听端口。不指定时，端口被占用会顺延到下一个空闲端口（最多到 4330）。指定时，端口被占用会报错。 |
-| `--format <name>` | 自动识别 | 把文件夹当作 `spec-kit`、`openspec` 或 `kiro` 读取。不指定时按文件夹识别格式；同时有多种时依次选 spec-kit、OpenSpec、Kiro，并在输出中列出其余的。 |
+| `--format <name>` | 自动识别 | 把文件夹当作 `spec-kit`、`openspec` 或 `kiro` 读取。不指定时按文件夹识别格式；同时有多种时，若有 spec-kit 自己的文档（`.specify/`，或功能文件夹中的 `spec.md`、`plan.md`）则先选 spec-kit，然后依次是 OpenSpec、Kiro，并在输出中说明选了哪个、为什么，以及如何选择其他格式。 |
 | `--demo` | | 显示内置示例项目，不需要路径：`examples/demo`（spec-kit），配合 `--format openspec` 或 `--format kiro` 时显示该格式的示例。 |
 | `--no-open` | | 不打开浏览器。输出不是终端时也不会打开。 |
 | `--help`、`--version` | | 打印用法或版本。 |
@@ -85,7 +85,7 @@ spec-visualizer [path] [options]
 
 | 阶段 | 命令 | 读取 | 显示为 |
 |---|---|---|---|
-| 1 Specs | 无 | `openspec/specs/**/spec.md`、`openspec/config.yaml`、`openspec/project.md` | 每个能力的规范显示为需求及其命名场景，步骤按书写顺序；项目上下文按原文显示（YAML 显示为代码） |
+| 1 Specs | 无 | `openspec/specs/**/spec.md`、`openspec/config.yaml`、`openspec/project.md`，以及变更文件夹之外 `openspec/` 中的其他 `.md` | 每个能力的规范显示为需求及其命名场景，步骤按书写顺序；项目上下文按原文显示（YAML 显示为代码） |
 | 2 Propose | `/openspec-propose` | `proposal.md`、增量 `specs/**/spec.md` | 提案按章节显示；增量规范按 ADDED、MODIFIED、REMOVED、RENAMED 分组显示需求，并按类型计数 |
 | 3 Design | `/openspec-continue-change` | `design.md` | 章节按顺序显示，决策显示为卡片，并统计决策和图表数量 |
 | 4 Tasks | `/openspec-continue-change` | `tasks.md` | 结构：每个编号分组一行，单字符标记（`[~]`）算作未完成 |
@@ -98,10 +98,10 @@ spec-visualizer [path] [options]
 
 | 阶段 | 命令（Kiro CLI） | 读取 | 显示为 |
 |---|---|---|---|
-| 1 Steering | 无 | `.kiro/steering/**/*.md` | 每个 steering 文件按章节显示，front matter（`inclusion`、`fileMatchPattern`）显示为头部字段 |
+| 1 Steering | 无 | `.kiro/steering/**/*.md`、根目录的 `AGENTS.md`、直接放在 `.kiro/specs/` 中的 `.md` | 每个 steering 文件按章节显示，front matter（`inclusion`、`fileMatchPattern`）显示为头部字段 |
 | 2 Requirements | `/spec new <name>` | `requirements.md` 或 `bugfix.md` | 编号的需求及其用户故事，EARS 验收标准拆分为条件和响应；bugfix 的当前、期望、保持不变的行为显示为三组 |
 | 3 Design | `/spec <name>` | `design.md` | 章节按顺序显示，决策和正确性属性显示为卡片 |
-| 4 Tasks | `/spec <name>` | `tasks.md` | 结构：每个编号的顶层任务一行，子任务显示为标记，可选任务（`- [ ]*`）只标出不计数，任务的细节随任务显示 |
+| 4 Tasks | `/spec <name>` | `tasks.md` | 结构：每个编号的顶层任务一行，子任务显示为标记，可选任务（`- [ ]*`、`- [ ]\*`）只标出不计数（子任务全是可选的任务计入自身），任务的细节随任务显示 |
 | 5 Implement | `/spec run <name>` | 同一个 `tasks.md` | 进度 |
 | 6 Done | 无 | 同一个 `tasks.md` | 进度，所有必需任务已勾选 |
 

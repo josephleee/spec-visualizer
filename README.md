@@ -45,7 +45,7 @@ Without a path it uses the current folder. The page updates by itself when files
 | Option | Default | Meaning |
 |---|---|---|
 | `--port <n>` | `4321` | Port to listen on. Without this option, a taken port moves on to the next free one (up to 4330). With it, a taken port is an error. |
-| `--format <name>` | found | Read the folder as `spec-kit`, `openspec` or `kiro`. Without it the format is found from the folders; when a folder has several, spec-kit comes first, then OpenSpec, then Kiro, and the output names the others. |
+| `--format <name>` | found | Read the folder as `spec-kit`, `openspec` or `kiro`. Without it the format is found from the folders. When a folder has several, spec-kit comes first if it has documents of its own (`.specify/`, or `spec.md` or `plan.md` in a feature folder), then OpenSpec, then Kiro; the output says which it chose, why, and how to choose another. |
 | `--demo` | | Show a bundled example project instead of a path: `examples/demo` (spec-kit), or with `--format openspec` / `--format kiro` the example in that format. |
 | `--no-open` | | Do not open the browser. It is also not opened when the output is not a terminal. |
 | `--help`, `--version` | | Print the usage or the version. |
@@ -85,7 +85,7 @@ The format is found when the server starts (or given with `--format`) and the pa
 
 | Stage | Command | Reads | Shown as |
 |---|---|---|---|
-| 1 Specs | none | `openspec/specs/**/spec.md`, `openspec/config.yaml`, `openspec/project.md` | Each capability spec as requirements with their named scenarios, steps in order; the project context as written (YAML as code) |
+| 1 Specs | none | `openspec/specs/**/spec.md`, `openspec/config.yaml`, `openspec/project.md`, any other `.md` under `openspec/` outside change folders | Each capability spec as requirements with their named scenarios, steps in order; the project context and other documents as written (YAML as code) |
 | 2 Propose | `/openspec-propose` | `proposal.md`, the delta `specs/**/spec.md` | The proposal by section; delta specs as requirements under their ADDED, MODIFIED, REMOVED or RENAMED section, with counts per operation |
 | 3 Design | `/openspec-continue-change` | `design.md` | Its sections in order, decisions as cards, with counts of decisions and diagrams |
 | 4 Tasks | `/openspec-continue-change` | `tasks.md` | Structure: one lane per numbered group, any one-character mark (`[~]`) counted as open |
@@ -98,10 +98,10 @@ A change folder under `openspec/changes/` is one unit; an archived one stands at
 
 | Stage | Command (Kiro CLI) | Reads | Shown as |
 |---|---|---|---|
-| 1 Steering | none | `.kiro/steering/**/*.md` | Each steering file by section, its front matter (`inclusion`, `fileMatchPattern`) as header fields |
+| 1 Steering | none | `.kiro/steering/**/*.md`, the root `AGENTS.md`, any `.md` written straight into `.kiro/specs/` | Each steering file by section, its front matter (`inclusion`, `fileMatchPattern`) as header fields |
 | 2 Requirements | `/spec new <name>` | `requirements.md`, or `bugfix.md` | Numbered requirements with their user story and EARS criteria split into condition and response; a bugfix's current, expected and unchanged behaviour as three groups |
 | 3 Design | `/spec <name>` | `design.md` | Its sections in order, decisions and correctness properties as cards |
-| 4 Tasks | `/spec <name>` | `tasks.md` | Structure: one lane per numbered top-level task, its sub-tasks as marks, optional tasks (`- [ ]*`) marked and not counted, each task's details with it |
+| 4 Tasks | `/spec <name>` | `tasks.md` | Structure: one lane per numbered top-level task, its sub-tasks as marks, optional tasks (`- [ ]*`, also escaped as `- [ ]\*`) marked and not counted (a task whose sub-tasks are all optional counts itself), each task's details with it |
 | 5 Implement | `/spec run <name>` | the same `tasks.md` | Progress |
 | 6 Done | none | the same `tasks.md` | Progress, all required tasks ticked |
 

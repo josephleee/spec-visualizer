@@ -25,10 +25,13 @@ The format is decided once, when the server starts, and does not change while it
 | Kiro | a `.kiro/specs/` or `.kiro/steering/` directory |
 
 - **One match**: that format.
-- **Several**: spec-kit first, then OpenSpec, then Kiro. The CLI prints the formats it did not choose and the `--format` option that picks one. *Reason*: a folder that opened as spec-kit before this change must open the same way after it. *Cost if wrong*: an OpenSpec or Kiro project that also has an unrelated `specs/` folder opens as spec-kit until the user passes `--format`.
+- **Several**: spec-kit first **when it has documents of its own**: a `.specify/` folder, or a folder in `specs/` holding `spec.md` or `plan.md` (spec-kit writes one of them first; `tasks.md` alone is also OpenSpec's and Kiro's). Then OpenSpec, then Kiro. A `specs/` folder without spec-kit documents (Gherkin files, loose notes, another tool's layout) gives way to the other format and stays a `--format` choice. The CLI prints a second line saying which format it chose and why, and names every other match with its `--format` flag.
+  - *Reason*: every real spec-kit folder opens as before. In a sample of 144 OpenSpec and Kiro repositories, 7 also had `specs/`: 5 held no spec-kit documents and now open in their own format; the 2 with spec-kit documents (a migration and a genuinely mixed project) still open as spec-kit.
+  - *Cost if wrong*: a spec-kit project whose features have neither `spec.md` nor `plan.md` and that also has an `openspec/` or `.kiro/` folder opens in the other format until `--format spec-kit`.
 - **None**: the CLI stops with the message it printed before (`Not a spec-kit project: no specs/ or .specify/ folder in …`) and a second line naming the OpenSpec and Kiro folders it also looked for.
 - **`--format <spec-kit|openspec|kiro>`** overrides detection. The folder must still match that format's rule; otherwise the CLI stops with `Not a <format> project: …`.
-- Symlinked folders never match, as before (detection uses `lstat`).
+- Symlinked folders never match, as before (detection uses `lstat`). A format folder that exists as a symbolic link is named as one in the CLI's error.
+- **Symbolic links are never followed, at any folder of a path, at any time.** Every scan checks each folder component again (a folder may be swapped for a link while the server runs, as a branch switch can do), every document is read with its folders checked and `O_NOFOLLOW` on the file, and `/api/doc` reads the same way.
 
 ## Server: the adapter
 
@@ -60,7 +63,7 @@ The format is decided once, when the server starts, and does not change while it
 |---|---|---|---|
 | Unit | `specs/<feature>/` | `openspec/changes/<change>/`, and `openspec/changes/archive/<date>-<change>/` as `archive/<date>-<change>` | `.kiro/specs/<spec>/` |
 | Order | number prefix, current branch first | active by name, then archived newest first; current branch first | number prefix, then name; current branch first |
-| Stage 1 (project) | constitution | **specs**: `openspec/specs/**/spec.md`, then `config.yaml`, `project.md` | **steering**: `.kiro/steering/**/*.md`, `product.md`, `tech.md`, `structure.md` first |
+| Stage 1 (project) | constitution | **specs**: `openspec/specs/**/spec.md`, then `config.yaml`, `project.md`, then every other `.md` under `openspec/` outside change folders and `schemas/` | **steering**: `.kiro/steering/**/*.md` (`product.md`, `tech.md`, `structure.md` first), the root `AGENTS.md`, then any `.md` written straight into `.kiro/specs/` |
 | Stage 2 | specify | **propose**: `proposal.md`, delta `specs/**/spec.md` | **requirements**: `requirements.md` or `bugfix.md` |
 | Stage 3 | plan | **design**: `design.md` | **design**: `design.md` |
 | Stage 4 | tasks | **tasks**: `tasks.md` (structure) | **tasks**: `tasks.md` (structure) |
@@ -77,13 +80,13 @@ New kinds are added only where an existing one would draw the document wrongly. 
 | Kind | Documents | Parser | Blocks |
 |---|---|---|---|
 | `tasks` (existing) | OpenSpec `tasks.md` | `##` groups as phases, items with any one-character mark (`[~]` is open), numbers like `1.1` as ids, text nested under an item kept with it | `phase` |
-| `tasks` (existing) | Kiro `tasks.md` | phases from the numbered top-level tasks (`- [ ] 1.`), their sub-tasks (`1.1`, nested or flat as cc-sdd writes them) as items, `[ ]*` optional, `[-]` open, detail bullets kept with their task | `phase` |
+| `tasks` (existing) | Kiro `tasks.md` | phases from the numbered top-level tasks (`- [ ] 1.`), their sub-tasks (`1.1`, nested under that task or flat as cc-sdd writes them) as items, `[ ]*` and the escaped `[ ]\*` optional, `[-]` open, detail bullets kept with their task; a parent whose sub-tasks are all optional counts itself | `phase` |
 | `capability` (new) | OpenSpec main spec | `### Requirement:` blocks with `#### Scenario:` steps | `requirements`, `raw` |
 | `delta` (new) | OpenSpec delta spec | the same, with the `ADDED` / `MODIFIED` / `REMOVED` / `RENAMED` section as the block's operation | `requirements`, `raw` |
 | `requirements` (new) | Kiro `requirements.md`, `bugfix.md` | `### Requirement N: title`, `**User Story:**` (or cc-sdd's `**Objective:**`), `#### Acceptance Criteria` items split into EARS condition and response; bugfix `### … Behavior` groups of `1.1 WHEN … THEN …` items | `requirements`, `raw` |
 | `proposal` (new) | OpenSpec `proposal.md` | sections | `raw` |
 | `design` (new) | OpenSpec and Kiro `design.md` | sections; the `###` of a decisions or correctness-properties section as cards | `cards`, `raw` |
-| `context` (new) | OpenSpec `config.yaml`, `project.md`; Kiro steering | sections; a non-markdown file is shown as code | `raw`, `code` |
+| `context` (new) | OpenSpec `config.yaml`, `project.md`; Kiro steering, root `AGENTS.md` | sections; a non-markdown file is shown as code | `raw`, `code` |
 | `other` (existing) | any other `.md` in a unit folder | sections | `raw` |
 
 **One new block kind, `requirements`.** spec-kit's `stories` block is a user story with a priority, a narrative and Given / When / Then fixed in three cells. OpenSpec requirements have a SHALL statement and *named* scenarios whose steps run in order (`GIVEN`, `WHEN`, `THEN`, `AND` …), and Kiro criteria are numbered EARS sentences (`WHEN … THEN … SHALL …`, `IF …`, `WHILE …`, `WHERE …`, or a bare `THE … SHALL …`). Forcing either into `stories` would invent priorities and drop step order or numbering. The block:
@@ -127,27 +130,29 @@ The next command for one unit carries its name where the tool takes one: `/opens
 ## CLI
 
 - `--format <spec-kit|openspec|kiro>`: see [Detection](#detection). Shown in `--help` and the READMEs.
-- The first line names the format: `spec-kit project: 7 features, 24 documents` (as before), `OpenSpec project: 7 changes, 31 documents`, `Kiro project: 6 specs, 20 documents`.
+- The first line names the format: `spec-kit project: 7 features, 24 documents` (as before), `OpenSpec project: 7 changes, 27 documents`, `Kiro project: 6 specs, 19 documents`. When the folder holds more than one format, a second line says which one was chosen and why.
 - `--demo` shows `examples/demo` as before; `--demo --format openspec` shows `examples/demo-openspec`, `--demo --format kiro` shows `examples/demo-kiro`. Both are original projects about the same made-up tool library, Borrowbox, with units at every stage. They are added to the npm package.
 
 ## Decisions taken for the owner
 
 | Decision | Why | Cost if wrong |
 |---|---|---|
-| spec-kit wins when a folder matches several formats | no folder changes what it shows | a mixed folder needs `--format` |
+| spec-kit wins when a folder matches several formats and has spec-kit documents (`.specify/`, or `spec.md` / `plan.md` in a feature folder) | every real spec-kit folder opens as before, and an unrelated `specs/` no longer hides OpenSpec or Kiro content | a spec-kit project with neither document beside another format's folder needs `--format spec-kit` |
 | The format is fixed at start | one format per server keeps routes, labels and the skeleton stable | a format folder added later needs a restart |
 | OpenSpec commands use the 2.x skill names, Claude Code spelling | 2.x is the current release and Claude Code is the main host; the 1.x `/opsx:*` names are in formats.md | a 1.x user or a Codex user (`$openspec-…`) translates the command |
 | `/openspec-continue-change` for missing design or tasks | it is the command that creates the next artifact | it needs OpenSpec's expanded profile; core-profile users run `/openspec-propose` again or write the file |
 | OpenSpec's sixth stage shows the archived change's delta specs | archiving is the merge of those deltas into the main specs | someone may expect the archived proposal; it is one tab away |
 | Kiro commands are the CLI's | the IDE has buttons, not commands | IDE users ignore the commands |
-| Kiro optional tasks do not count | Kiro's own run-all skips them | a team that treats them as required sees "done" early |
+| Kiro optional tasks do not count, but a required parent whose sub-tasks are all optional does | Kiro's own run-all skips optional tasks; the parent is then the work itself | a team that treats optional tasks as required sees "done" early; a parent with some required sub-tasks is not counted itself, so it can stay unticked while its spec shows Done |
 | cc-sdd projects are read as Kiro projects, with Kiro's commands | same folders and document shapes | cc-sdd users see `/spec …` instead of `/kiro-…` |
 | One word swap for the unit noun | the labels stay one table in two languages; all three Korean nouns take the same particles | a label added later that reads badly after the swap; the test catches leftover "feature" words, not style |
 | `config.yaml` is shown as code | YAML is not markdown; the tool does not parse YAML | its `context:` text is not drawn as prose |
 | The tagline stays as it was | renaming the product or its tagline is the owner's call; the READMEs add one sentence and a section about the other formats, and `--help` lists them | someone reading only the first line or the npm description still thinks it is spec-kit only |
 | Kiro's sixth stage shows the tasks as progress, like the fifth | Kiro has no checklist or other document for a finished spec | the Done page repeats the Implement page for a finished spec |
 | Proposals, steering files and project context are drawn by section, without a form of their own | they are prose with no fixed structure to count or lay out | they look like the generic page |
-| The OpenSpec project stage offers every capability spec in the chooser | the same chooser spec-kit uses for several checklists | a project with dozens of capabilities gets a long row of buttons |
+| The project stage offers every shared document in the chooser, as a select past twelve | the same chooser spec-kit uses for several checklists | a long select is less scannable than buttons |
+| Every other `.md` in the format's folders is a project document | the never-drop rule: an unknown `.md` is shown as an `other` document | a project's planning notes under `openspec/` crowd the first stage's chooser |
+| `/openspec-continue-change` stays the command for a missing design or tasks | OpenSpec's core profile has no skill that creates a missing artifact: `update` defers to `continue` or to the `openspec instructions` CLI | core-profile users must enable the expanded profile or use the CLI |
 | An archived change is named without its date on the board | the date prefix took the room of the name on narrow cards; the archive card lists newest first and the full id is the tooltip and the select entry | two archived changes with the same name look alike on the card |
 
 ## How spec-kit is kept the same
@@ -158,7 +163,9 @@ The next command for one unit carries its name where the tool takes one: `/opens
 ## Out of scope
 
 - BMad Method, Agent OS, Tessl and other formats (see formats.md for why).
-- OpenSpec custom schemas (artifacts other than proposal, specs, design, tasks are `other` documents), stores, worksets and initiatives; `.openspec.yaml` metadata.
+- OpenSpec custom schemas (artifacts other than proposal, specs, design, tasks are `other` documents), stores, worksets and initiatives (their markdown under `openspec/` is shown as other project documents, nothing more); `.openspec.yaml` metadata; schema templates under `openspec/schemas/`.
+- OpenSpec task lines without a space after the dash (`-[ ] task`): OpenSpec counts them, markdown does not read them as a list, and neither does this tool.
+- Kiro's `.kiro/settings/` (templates) and AGENTS.md files below the root.
 - cc-sdd's `spec.json` approvals and its commands.
 - Merging delta specs into a preview of the main specs, or showing what an archive changed.
 - Several formats in one view, or switching format without a restart.

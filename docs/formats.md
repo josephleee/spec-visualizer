@@ -24,7 +24,7 @@ Documented in [design.md](design.md) and [parsing-rules.md](parsing-rules.md) (K
 
 ## OpenSpec
 
-Sources: [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) at `f085c85` (2026-11-17, package version 2.1.0): `docs/concepts.md`, `docs/writing-specs.md`, `docs/commands.md`, `docs-lab/help/upgrade-to-2.md`, `docs-lab/reference/supported-tools.md`, `schemas/spec-driven/schema.yaml` and `templates/`, `src/core/parsers/requirement-blocks.ts`, `src/utils/task-progress.ts`, `src/core/list.ts`, and the repository's own `openspec/` folder (OpenSpec is written with OpenSpec: 40 specs, 4 active changes and 108 archived ones).
+Sources: [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) at `f085c85` (2026-11-17, package version 2.1.0): `docs/concepts.md`, `docs/writing-specs.md`, `docs/commands.md`, `docs-lab/help/upgrade-to-2.md`, `docs-lab/reference/supported-tools.md`, `schemas/spec-driven/schema.yaml` and `templates/`, `src/core/parsers/requirement-blocks.ts`, `src/utils/task-progress.ts`, `src/core/list.ts`, and the repository's own `openspec/` folder (OpenSpec is written with OpenSpec: 44 specs, 4 active changes and 108 archived ones).
 
 ### Layout
 

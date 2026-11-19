@@ -79,7 +79,9 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 | OpenSpec | `openspec/` | 스펙: `openspec/specs/**/spec.md`, `config.yaml`, `project.md` | 변경 (`openspec/changes/<이름>/`, 보관된 것은 `archive/<날짜>-<이름>`) | 스펙, 제안, 설계, 작업 분해, 적용, 보관 |
 | Kiro | `.kiro/specs/` 또는 `.kiro/steering/` | 스티어링: `.kiro/steering/**/*.md` | 스펙 (`.kiro/specs/<이름>/`) | 스티어링, 요구사항, 설계, 작업 분해, 구현, 완료 |
 
-- 폴더가 여러 형식에 맞으면 spec-kit, OpenSpec, Kiro 순으로 고른다. 전에 spec-kit으로 열리던 폴더는 그대로 spec-kit으로 열린다. CLI는 고르지 않은 형식과 `--format` 옵션을 알려 준다.
+- 폴더가 여러 형식에 맞으면, spec-kit 문서(`.specify/` 폴더, 또는 `specs/` 아래 기능 폴더의 `spec.md`나 `plan.md`)가 있을 때 spec-kit을 먼저 고르고, 그다음 OpenSpec, Kiro 순이다. spec-kit 문서가 없는 `specs/` 폴더(Gherkin 파일, 메모, 다른 도구의 구조)는 다른 형식에 자리를 내준다. `specs/`만 있는 폴더는 전처럼 spec-kit으로 열린다. CLI는 무엇을 왜 골랐는지와 다른 형식을 고르는 `--format` 옵션을 알려 준다.
+- 어느 형식도 심볼릭 링크를 따라가지 않는다. 스캔할 때마다 경로의 폴더를 하나씩 다시 확인하고(서버가 도는 동안 폴더가 링크로 바뀌어도), 문서는 위 폴더를 확인한 뒤 `O_NOFOLLOW`로 연다. `/api/doc`도 같다.
+- OpenSpec과 Kiro 폴더 안의 모르는 `.md`도 `other` 프로젝트 문서로 첫 단계에서 연다.
 - 서버 쪽은 형식마다 어댑터 하나다(`server/formats.ts`). 어댑터는 알아보는 규칙, 감시할 폴더, 스캔, 문서 종류별 파서를 준다. spec-kit 어댑터는 원래의 `scanProject`와 파서 표를 그대로 쓴다.
 - `Project`에는 `format`(OpenSpec, Kiro일 때만)과 `shared`(헌법 밖의 프로젝트 문서)가 붙는다. spec-kit에서는 둘 다 없으므로 JSON이 그대로다.
 - 화면 쪽은 형식마다 흐름 하나다(`web/flows.ts`). 단계 목록과 문서 종류, 명령, 작업 단위를 부르는 말을 담는다. spec-kit 흐름은 원래 화면이 가정하던 값 그대로다.

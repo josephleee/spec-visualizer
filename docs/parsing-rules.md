@@ -337,7 +337,7 @@ A member searches the catalog.
 | `tasks.md` | `tasks` | 4 작업 분해, 5 적용 |
 | 변경 폴더의 그 밖의 `.md` | `other` | 단계 없음 |
 
-`openspec/changes/` 아래 폴더(`archive` 제외)가 변경 하나, `openspec/changes/archive/` 아래 폴더가 보관된 변경 하나다(아이디는 `archive/<날짜>-<이름>`). 점으로 시작하는 폴더와 심볼릭 링크는 건너뛰고, `.md`만 읽는다(`config.yaml`은 예외). 변경은 이름순, 보관된 변경은 최신순이다.
+`openspec/changes/` 아래 폴더(`archive` 제외)가 변경 하나, `openspec/changes/archive/` 아래 폴더가 보관된 변경 하나다(아이디는 `archive/<날짜>-<이름>`). 변경 폴더 밖에 있는 `openspec/`의 그 밖의 `.md`(기능 영역의 `design.md`, 변경 목록 옆 메모, 프로젝트의 다른 폴더)는 `other` 프로젝트 문서다. `openspec/schemas/`의 템플릿은 문서가 아니므로 읽지 않는다. 점으로 시작하는 폴더와 심볼릭 링크는 건너뛰고, `.md`만 읽는다(`config.yaml`은 예외). 변경은 이름순, 보관된 변경은 최신순이다.
 
 | 조건 | 단계 |
 |---|---|
@@ -378,7 +378,7 @@ A member searches the catalog.
 | `tasks.md` | `tasks` | 4 작업 분해, 5 구현, 6 완료 |
 | 스펙 폴더의 그 밖의 `.md` (cc-sdd의 `research.md` 등) | `other` | 단계 없음 |
 
-`.kiro/specs/` 아래 폴더 하나가 스펙 하나다. `spec.json`처럼 `.md`가 아닌 파일은 읽지 않는다. 단계는 spec-kit과 같은 규칙에서 `plan.md` 대신 `design.md`를 보고, 작업 수는 선택 작업(`- [ ]*`)을 빼고 센다.
+`.kiro/specs/` 아래 폴더 하나가 스펙 하나다. `spec.json`처럼 `.md`가 아닌 파일은 읽지 않는다. `.kiro/specs/`에 바로 둔 `.md`는 `other` 프로젝트 문서, 루트의 `AGENTS.md`는 스티어링(`context`)이다. 단계는 spec-kit과 같은 규칙에서 `plan.md` 대신 `design.md`를 보고, 작업 수는 선택 작업(`- [ ]*`)을 빼고 센다.
 
 ### 스티어링 파일
 
@@ -388,17 +388,17 @@ A member searches the catalog.
 
 | 표시 | 블록 |
 |---|---|
-| `### Requirement N` 또는 `### Requirement N: 제목` | 요구사항 하나. `N`이 번호, 제목이 없으면 머리 글 전체가 제목 |
-| `**User Story:**` 또는 `**Objective:**`(cc-sdd)로 시작하는 문단 | 사용자 스토리 |
+| `### Requirement N` 또는 `### Requirement N: 제목` (전각 쌍점 `：`도), 또는 `## Requirement N: 제목` | 요구사항 하나. `N`이 번호, 제목이 없으면 머리 글 전체가 제목. 수용 기준 제목은 요구사항보다 한 단계 아래(`####` 또는 `###`)에서 찾는다 |
+| `**User Story:**`, `**User Story：**`, `**User Story.**` 또는 `**Objective:**`(cc-sdd)로 시작하는 문단 | 사용자 스토리 |
 | `#### Acceptance Criteria` 아래 목록 | 항목마다 기준 하나. 번호는 `<요구사항 번호>.<목록 번호>` |
-| EARS 문장 | `WHEN`/`IF`/`WHILE`/`WHERE`로 시작하면 조건과 응답 두 단계로 나눈다. 응답은 `THEN` 뒤, 또는 `, THE`나 ` THE` 앞에서 시작한다(응답 단계의 `key`는 `THEN`). 키워드는 대문자일 때만 읽는다. 조건이 없는 문장(`THE … SHALL …`)과 그 밖의 문장은 `key`가 빈 단계 하나 |
+| EARS 문장 | `WHEN`/`IF`/`WHILE`/`WHERE`로 시작하면 조건과 응답 두 단계로 나눈다. 응답은 `THEN` 뒤, 또는 `, THE`(전각 쉼표 `，`도)나 ` THE` 앞에서 시작한다(응답 단계의 `key`는 `THEN`). 키워드는 대문자일 때만 읽는다. 조건이 없는 문장(`THE … SHALL …`)도 기준이고, 그 밖의 문장과 함께 `key`가 빈 단계 하나다 |
 | `Requirement N`이 아닌 `###`에 EARS 줄(문단이나 목록 항목, 앞에 `1.1` 같은 번호가 있어도 된다)이 있음 | 그 `###`가 기준 묶음 하나. bugfix의 `### Current Behavior (Defect)` 등 |
 | EARS 줄이 없는 `###`, 그 밖의 `####` | 제목 줄과 함께 `rest` |
 | 그 밖의 `##` (`Introduction`, `Glossary` 등) | `raw` |
 
 ### tasks.md
 
-체크박스 표시는 OpenSpec과 같고, `- [ ]*`는 선택 작업, `- [-]`는 진행 중인 작업(끝나지 않은 것으로 센다)이다. 번호가 붙은 최상위 작업(`- [ ] 1.`)이 `phase` 하나이고, 그 아래에 중첩되거나 같은 들여쓰기로 이어 쓴 `1.1` 같은 하위 작업(cc-sdd)이 항목이다. 하위 작업이 있는 작업의 자기 체크박스는 세지 않고, 그 아래 글은 `phase`의 `rest`다. 하위 작업이 없는 최상위 작업은 그 자체가 자기 `phase`의 항목이고, 구획 안의 어떤 작업에도 하위 작업이 없으면 구획 전체가 `phase` 하나다. 번호 뒤의 `(P)`는 병렬 표시다. 작업 아래의 세부 목록과 `_Requirements: …_`는 그 작업의 `notes`다.
+체크박스 표시는 OpenSpec과 같고, `- [ ]*`(포매터가 바꾼 `- [ ]\*`도)는 선택 작업, `- [-]`는 진행 중인 작업(끝나지 않은 것으로 센다)이다. 번호가 붙은 최상위 작업(`- [ ] 1.`)이 `phase` 하나이고, 그 작업 아래에 중첩되거나 같은 들여쓰기로 이어 쓴 `1.1` 같은 하위 작업(cc-sdd)이 항목이다. 소속은 그 묶음의 첫 작업과 비교해 정하므로, 일반 목록 항목 아래 중첩된 작업이 앞에 있어도 제목으로 삼켜지지 않는다. 하위 작업이 있는 작업의 자기 체크박스는 세지 않고, 그 아래 글은 `phase`의 `rest`다. 다만 하위 작업이 모두 선택 작업이면 그 작업 자신이 항목으로 세어진다. 하위 작업이 없는 최상위 작업은 그 자체가 자기 `phase`의 항목이고, 구획 안의 어떤 작업에도 하위 작업이 없으면 구획 전체가 `phase` 하나다. 번호 뒤의 `(P)`는 병렬 표시다. 작업 아래의 세부 목록과 `_Requirements: …_`는 그 작업의 `notes`다.
 
 ### 화면
 

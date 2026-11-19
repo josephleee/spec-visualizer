@@ -45,7 +45,7 @@ spec-visualizer [path] [options]
 | 옵션 | 기본값 | 뜻 |
 |---|---|---|
 | `--port <n>` | `4321` | 들을 포트. 이 옵션이 없으면 포트가 사용 중일 때 다음 빈 포트로 넘어간다(4330까지). 이 옵션을 주면 사용 중인 포트는 오류다. |
-| `--format <이름>` | 찾은 형식 | 폴더를 `spec-kit`, `openspec`, `kiro` 가운데 하나로 읽는다. 없으면 폴더로 형식을 찾는다. 여러 형식이 함께 있으면 spec-kit, OpenSpec, Kiro 순으로 고르고 나머지를 출력에 적는다. |
+| `--format <이름>` | 찾은 형식 | 폴더를 `spec-kit`, `openspec`, `kiro` 가운데 하나로 읽는다. 없으면 폴더로 형식을 찾는다. 여러 형식이 함께 있으면, spec-kit 문서(`.specify/`, 또는 기능 폴더의 `spec.md`나 `plan.md`)가 있을 때 spec-kit을 먼저, 그다음 OpenSpec, Kiro 순으로 고르고, 무엇을 왜 골랐는지와 다른 형식을 고르는 방법을 출력에 적는다. |
 | `--demo` | | 경로 대신 함께 들어 있는 예제 프로젝트를 보여 준다. `examples/demo`(spec-kit), `--format openspec`이나 `--format kiro`와 함께 쓰면 그 형식의 예제. |
 | `--no-open` | | 브라우저를 열지 않는다. 출력이 터미널이 아닐 때도 열지 않는다. |
 | `--help`, `--version` | | 사용법이나 버전을 출력한다. |
@@ -85,7 +85,7 @@ spec-visualizer [path] [options]
 
 | 단계 | 명령 | 읽는 문서 | 보여 주는 모습 |
 |---|---|---|---|
-| 1 스펙 | 없음 | `openspec/specs/**/spec.md`, `openspec/config.yaml`, `openspec/project.md` | 기능 영역마다 요구사항과 이름 붙은 시나리오, 단계는 적힌 순서대로. 프로젝트 맥락은 원문대로(YAML은 코드로) |
+| 1 스펙 | 없음 | `openspec/specs/**/spec.md`, `openspec/config.yaml`, `openspec/project.md`, 변경 폴더 밖 `openspec/`의 그 밖의 `.md` | 기능 영역마다 요구사항과 이름 붙은 시나리오, 단계는 적힌 순서대로. 프로젝트 맥락은 원문대로(YAML은 코드로) |
 | 2 제안 | `/openspec-propose` | `proposal.md`, 델타 `specs/**/spec.md` | 제안서는 구획별로. 델타 스펙은 ADDED, MODIFIED, REMOVED, RENAMED 구획별 요구사항과 종류별 개수 |
 | 3 설계 | `/openspec-continue-change` | `design.md` | 구획을 순서대로, 결정은 카드로, 결정과 도표 수 |
 | 4 작업 분해 | `/openspec-continue-change` | `tasks.md` | 구조. 번호 묶음마다 한 줄, 한 글자 표시(`[~]`)는 남은 작업으로 센다 |
@@ -98,10 +98,10 @@ spec-visualizer [path] [options]
 
 | 단계 | 명령 (Kiro CLI) | 읽는 문서 | 보여 주는 모습 |
 |---|---|---|---|
-| 1 스티어링 | 없음 | `.kiro/steering/**/*.md` | 스티어링 파일마다 구획별로, 앞머리(`inclusion`, `fileMatchPattern`)는 머리 정보로 |
+| 1 스티어링 | 없음 | `.kiro/steering/**/*.md`, 루트의 `AGENTS.md`, `.kiro/specs/`에 바로 둔 `.md` | 스티어링 파일마다 구획별로, 앞머리(`inclusion`, `fileMatchPattern`)는 머리 정보로 |
 | 2 요구사항 | `/spec new <name>` | `requirements.md` 또는 `bugfix.md` | 번호 붙은 요구사항과 사용자 스토리, EARS 수용 기준을 조건과 응답으로 나눠서. 버그 수정은 현재·기대·유지할 동작 세 묶음 |
 | 3 설계 | `/spec <name>` | `design.md` | 구획을 순서대로, 결정과 정확성 속성은 카드로 |
-| 4 작업 분해 | `/spec <name>` | `tasks.md` | 구조. 번호 붙은 최상위 작업마다 한 줄, 하위 작업은 표시로, 선택 작업(`- [ ]*`)은 표시만 하고 세지 않음, 작업의 세부 내용은 작업과 함께 |
+| 4 작업 분해 | `/spec <name>` | `tasks.md` | 구조. 번호 붙은 최상위 작업마다 한 줄, 하위 작업은 표시로, 선택 작업(`- [ ]*`, `- [ ]\*`)은 표시만 하고 세지 않음(하위 작업이 모두 선택인 작업은 자기를 센다), 작업의 세부 내용은 작업과 함께 |
 | 5 구현 | `/spec run <name>` | 같은 `tasks.md` | 진행 |
 | 6 완료 | 없음 | 같은 `tasks.md` | 진행. 필수 작업이 모두 끝남 |
 
