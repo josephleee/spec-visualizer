@@ -144,6 +144,16 @@ The next command for one unit carries its name where the tool takes one: `/opens
 | cc-sdd projects are read as Kiro projects, with Kiro's commands | same folders and document shapes | cc-sdd users see `/spec …` instead of `/kiro-…` |
 | One word swap for the unit noun | the labels stay one table in two languages; all three Korean nouns take the same particles | a label added later that reads badly after the swap; the test catches leftover "feature" words, not style |
 | `config.yaml` is shown as code | YAML is not markdown; the tool does not parse YAML | its `context:` text is not drawn as prose |
+| The tagline stays as it was | renaming the product or its tagline is the owner's call; the READMEs add one sentence and a section about the other formats, and `--help` lists them | someone reading only the first line or the npm description still thinks it is spec-kit only |
+| Kiro's sixth stage shows the tasks as progress, like the fifth | Kiro has no checklist or other document for a finished spec | the Done page repeats the Implement page for a finished spec |
+| Proposals, steering files and project context are drawn by section, without a form of their own | they are prose with no fixed structure to count or lay out | they look like the generic page |
+| The OpenSpec project stage offers every capability spec in the chooser | the same chooser spec-kit uses for several checklists | a project with dozens of capabilities gets a long row of buttons |
+| An archived change is named without its date on the board | the date prefix took the room of the name on narrow cards; the archive card lists newest first and the full id is the tooltip and the select entry | two archived changes with the same name look alike on the card |
+
+## How spec-kit is kept the same
+
+- `test/speckit-golden.test.ts` compares the JSON of `/api/project` and every `/api/doc`, and the HTML of the strip, the board and every page in English and Korean, for `examples/demo` and `test/fixtures/demo`, with files recorded before this change (`test/golden/`).
+- Screenshots of the spec-kit pages, taken in headless Chrome at 1280 and 390 wide in both languages, were compared byte for byte with the same pages served by `main`; they are identical. This is a manual check, not part of the test suite: it caught a sub-pixel difference the HTML comparison cannot see (the stage count rendered as three text nodes instead of two), which is fixed.
 
 ## Out of scope
 
