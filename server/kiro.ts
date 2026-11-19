@@ -61,13 +61,16 @@ export function scanKiro(root: string, branch: string | null = currentBranch(roo
 
 // ---------- requirements.md and bugfix.md ----------
 
-const REQ = /^Requirement\s+(\d+[a-z]?(?:\.\d+)*)\s*(?:[:.\-–—]\s*(.*))?$/i
-const STORY = /^\*\*(?:User Story|Objective)(?::\*\*|\*\*:)\s*/i
+// Chinese and Japanese projects write the full-width colon and comma (：，).
+const REQ = /^Requirement\s+(\d+[a-z]?(?:\.\d+)*)\s*(?:[:：.\-–—]\s*(.*))?$/i
+const STORY = /^\*\*(?:User Story|Objective)\s*(?:[:：.]\s*\*\*|\*\*\s*[:：.])\s*/i
 const CRITERIA = /^Acceptance Criteria$/i
 const EARS = /^(?:\*\*)?(WHEN|IF|WHILE|WHERE)(?:\*\*)?\s+/
 const ID = /^(\d+(?:\.\d+)+|\d+)\.?\s+(?=\S)/
-const THEN = /,?\s*(?:\*\*)?\bTHEN\b(?:\*\*)?\s*/
-const THE = /(?:,\s*|\s+)(?=(?:\*\*)?THE\s)/
+const THEN = /[,，]?\s*(?:\*\*)?\bTHEN\b(?:\*\*)?\s*/
+const THE = /(?:[,，]\s*|\s+)(?=(?:\*\*)?THE\s)/
+// EARS without a condition: `THE <system> SHALL <response>`, still a criterion.
+const UBIQUITOUS = /^(?:\*\*)?THE\s[\s\S]*\bSHALL\b/
 
 // An EARS sentence as its condition and its response: `WHEN x THEN the system SHALL y`, `WHEN x, THE Parser SHALL y`,
 // `IF …`, `WHILE …`, `WHERE …`. A sentence with no condition (`THE system SHALL y`) or none of these forms is one plain step.
@@ -86,7 +89,7 @@ function criterion(text: string, id: string | null): Criterion {
   const own = ID.exec(text)
   return { id: own ? own[1] : id, name: null, steps: ears(own ? text.slice(own[0].length) : text) }
 }
-const isEars = (text: string) => EARS.test(text.replace(ID, ''))
+const isEars = (text: string) => { const t = text.replace(ID, ''); return EARS.test(t) || UBIQUITOUS.test(t) }
 
 // Criteria in `nodes`: every list item (numbered from the list's start, under the requirement's number), or, when
 // `all` is false, only EARS paragraphs and items. What is not a criterion goes to `before` (above the first) or `after`.
@@ -106,14 +109,15 @@ function criteriaIn(src: string, nodes: Node[], req: string | null, all: boolean
   return { criteria, before: before.join('\n\n'), after: after.join('\n\n') }
 }
 
-function requirement(src: string, id: string | null, title: string, nodes: Node[]): Requirement {
-  const subs = splitAt(nodes, 4)
+// `depth`: the heading level of its sub-sections (#### under a ### requirement, ### under a ## one).
+function requirement(src: string, id: string | null, title: string, nodes: Node[], depth = 4): Requirement {
+  const subs = splitAt(nodes, depth)
   const lead = subs[0]?.heading === null ? subs[0].nodes : []
   const storyNode = lead.find((n) => n.type === 'paragraph' && STORY.test(slice(src, [n])))
   const story = storyNode ? slice(src, [storyNode]).replace(STORY, '') : null
   const own = lead.filter((n) => n !== storyNode)
   const ac = subs.filter((s) => s.heading !== null && CRITERIA.test(s.heading))
-  const others = subs.filter((s) => s.heading !== null && !CRITERIA.test(s.heading)).map((s) => `#### ${s.heading}${s.nodes.length ? `\n\n${slice(src, s.nodes)}` : ''}`)
+  const others = subs.filter((s) => s.heading !== null && !CRITERIA.test(s.heading)).map((s) => `${'#'.repeat(depth)} ${s.heading}${s.nodes.length ? `\n\n${slice(src, s.nodes)}` : ''}`)
   // Criteria under `#### Acceptance Criteria`; without that heading, EARS lines written straight under the requirement.
   if (!ac.length) {
     const c = criteriaIn(src, own, id, false)
@@ -130,7 +134,7 @@ export const parseKiroRequirements: Parser = (src: string): Block[] =>
   splitAt(parse(src), 2).filter((s) => s.heading !== null).flatMap((sec): Block[] => {
     const raw: Block = { kind: 'raw', heading: sec.heading, depth: 2, markdown: slice(src, sec.nodes) }
     const top = REQ.exec(sec.heading!)
-    if (top) return [{ kind: 'requirements', heading: '', depth: 2, op: null, text: '', items: [requirement(src, top[1], top[2]?.trim() || sec.heading!, sec.nodes)], rest: '' }]
+    if (top) return [{ kind: 'requirements', heading: '', depth: 2, op: null, text: '', items: [requirement(src, top[1], top[2]?.trim() || sec.heading!, sec.nodes, 3)], rest: '' }]
     const subs = splitAt(sec.nodes, 3)
     const items: Requirement[] = []
     const rest: string[] = []

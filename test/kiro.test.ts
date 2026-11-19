@@ -253,3 +253,77 @@ test('a required task whose sub-tasks are all optional counts itself, so the spe
   write(root, '.kiro/specs/modal/tasks.md', '- [x] 7. Store\n- [ ] 8. Build the modal\n  - [ ]* 8.1 Snapshot test\n')
   expect(scanKiro(root, null).features[0]).toMatchObject({ stage: 'implement', tasks: { done: 1, total: 2 } })
 })
+
+// ---------- review fix: I3 ----------
+
+test('requirements with full-width colons and commas, and criteria that only say THE … SHALL, keep their numbers and order', () => {
+  const [b] = reqs(read('requirements', `# Requirements Document
+
+## Requirements
+
+### Requirement 1：借出工具
+
+**User Story：** 作为会员，我想借一把电钻，以便周末修好书架。
+
+#### Acceptance Criteria
+
+1. THE 系统 SHALL 记录每一次借出
+2. IF 会员被冻结，THEN THE 系统 SHALL 拒绝借出
+3. WHEN 工具归还，THE 系统 SHALL 关闭这次借出
+
+### Requirement 2：归还期限
+
+**User Story：** 作为管理员，我想看到到期日。
+
+#### Acceptance Criteria
+
+1. THE 系统 SHALL 在借出时写下到期日
+2. THE 系统 SHALL 在列表中显示到期日
+
+### Requirement 3：提醒
+
+#### Acceptance Criteria
+
+1. WHEN 到期前两天，THE 系统 SHALL 发送提醒
+`).blocks)
+  expect(b.items.map((r) => [r.id, r.title, r.criteria.map((c) => c.id)])).toEqual([
+    ['1', '借出工具', ['1.1', '1.2', '1.3']], ['2', '归还期限', ['2.1', '2.2']], ['3', '提醒', ['3.1']]])
+  expect(b.items[0].story).toBe('作为会员，我想借一把电钻，以便周末修好书架。')
+  expect(b.items[0].criteria[1].steps).toEqual([{ key: 'IF', text: '会员被冻结' }, { key: 'THEN', text: 'THE 系统 SHALL 拒绝借出' }])
+  expect(b.items[0].criteria[2].steps).toEqual([{ key: 'WHEN', text: '工具归还' }, { key: 'THEN', text: 'THE 系统 SHALL 关闭这次借出' }])
+  expect(b.rest).toBe('')
+})
+
+test('## Requirement N with ### Acceptance Criteria, a User Story with a full stop, and numbered criteria paragraphs', () => {
+  const doc = read('requirements', `# Requirements
+
+## Glossary
+
+- **Gate**: a check that fails the build.
+
+## Requirement 1: Suites run on every change
+
+**User Story.** As a reviewer, I want both suites run before I read a pull request, so that a green check means something.
+
+### Acceptance Criteria
+
+1.1. WHEN a pull request is opened THEN both gates SHALL run.
+
+1.2. THE two gates SHALL run at the same time.
+
+1.3. IF a gate fails THEN the workflow SHALL report a failed check.
+
+## Requirement 2: Reproducible setup
+
+**User Story.** As a contributor, I want one install command.
+
+### Acceptance Criteria
+
+2.1. THE repository SHALL provide one test manifest.
+`)
+  const items = reqs(doc.blocks).flatMap((b) => b.items)
+  expect(items.map((r) => [r.id, r.title, r.criteria.map((c) => c.id), r.text, r.rest])).toEqual([
+    ['1', 'Suites run on every change', ['1.1', '1.2', '1.3'], '', ''], ['2', 'Reproducible setup', ['2.1'], '', '']])
+  expect(items[0].story).toBe('As a reviewer, I want both suites run before I read a pull request, so that a green check means something.')
+  expect(items[0].criteria.map((c) => c.steps.map((s) => s.key))).toEqual([['WHEN', 'THEN'], [''], ['IF', 'THEN']])
+})
