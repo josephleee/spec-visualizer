@@ -9,8 +9,9 @@ export type Parser = ((src: string, pre: Node[]) => Block[]) & { preamble?: true
 const raw = (src: string, sec: Sec): Block => ({ kind: 'raw', heading: sec.heading, depth: sec.depth, markdown: slice(src, sec.nodes) })
 
 // A task line: GFM's `[ ]` / `[x]`, and the marks GFM does not read: any one character (`[~]`, `[-]`, OpenSpec counts
-// them as open), padding (`[ x ]`), an empty box, and Kiro's optional `[ ]*`. Only x / X is done.
-const MARK = /^\[\s*([^\]\s]?)\s*\](\*?)(?![([])(?:[ \t]+|$)/
+// them as open), padding (`[ x ]`), an empty box, and Kiro's optional `[ ]*`, also as `[ ]\*` once a formatter escaped
+// it. Only x / X is done.
+const MARK = /^\[\s*([^\]\s]?)\s*\](\\?\*?)(?![([])(?:[ \t]+|$)/
 const NUMBER = /^(\d+[a-z]?(?:\.\d+[a-z]?)*)\.?(?=\s|$)\s*/
 const PARALLEL = /^\((P)\)\s*|\[P\]\s*/
 
@@ -35,7 +36,7 @@ export function tasksIn(src: string, nodes: Node[]): { tasks: Task[]; rest: Node
     const line = first?.type === 'paragraph' ? slice(src, [first]) : ''
     if (n.checked != null) return { done: n.checked, optional: false, text: line }
     const m = MARK.exec(line)
-    return m ? { done: /x/i.test(m[1]), optional: m[2] === '*', text: line.slice(m[0].length) } : null
+    return m ? { done: /x/i.test(m[1]), optional: m[2].endsWith('*'), text: line.slice(m[0].length) } : null
   }
   function list(n: Node & { type: 'list' }, depth: number, notes: string[] | null) {
     for (const i of n.children) {
@@ -98,11 +99,12 @@ export const parseNumberedTasks: Parser = Object.assign((src: string, pre: Node[
   sectionsWith(src, pre).flatMap((sec): Block[] => {
     const { tasks, rest } = tasksIn(src, sec.nodes)
     if (!tasks.length) return [raw(src, sec)]
-    const top = Math.min(...tasks.map((t) => t.depth))
     const groups: { head: Task; members: Task[] }[] = []
     for (const t of tasks) {
       const g = groups[groups.length - 1]
-      const under = g && (t.depth > top || (!!g.head.item.id && !!t.item.id?.startsWith(g.head.item.id + '.')))
+      // Nested under the group's own first task, or numbered under it (cc-sdd writes 1.1 flat under 1.). Compared with
+      // the head itself, not the shallowest task of the section, so tasks nested under a plain bullet are not swallowed.
+      const under = g && (t.depth > g.head.depth || (!!g.head.item.id && !!t.item.id?.startsWith(g.head.item.id + '.')))
       if (under) g.members.push(t)
       else groups.push({ head: t, members: [] })
     }
@@ -113,6 +115,8 @@ export const parseNumberedTasks: Parser = Object.assign((src: string, pre: Node[
       const h = g.head.item
       const title = `${h.id ? `${h.id}. ` : ''}${h.text}`
       if (!g.members.length) return { kind: 'phase', title, fields: [], items: [h], rest: '' }
+      // A parent whose sub-tasks are all optional is the work itself: it counts, and they are shown after it.
+      if (!h.optional && g.members.every((m) => m.item.optional)) return { kind: 'phase', title, fields: [], items: [h, ...g.members.map((m) => m.item)], rest: '' }
       // The parent's notes (its detail bullets) stay with its phase; its own tick is shown by the tick of every member.
       return { kind: 'phase', title, fields: [], items: g.members.map((m) => m.item), rest: h.notes ?? '' }
     })

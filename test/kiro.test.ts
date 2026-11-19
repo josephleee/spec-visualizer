@@ -227,3 +227,29 @@ test('isKiro: .kiro/specs or .kiro/steering, never through a symlink', () => {
   fs.symlinkSync(path.join(root, '.kiro'), path.join(linked, '.kiro'))
   expect(isKiro(linked)).toBe(false)
 })
+
+// ---------- review fixes: I1, I2 ----------
+
+test('a task list nested under a plain bullet before the top-level tasks: every box is counted, none becomes a title', () => {
+  const doc = read('tasks', '# Tasks\n\n## Phase 1\n\n### Build\n\n- **Done when**:\n  - [ ] first check still open\n  - [x] second check\n\n### Ship\n\n- [x] shipped\n', '.kiro/specs/x/tasks.md')
+  const ps = phases(doc.blocks)
+  expect(ps.flatMap((p) => p.items.map((i) => [i.text, i.done]))).toEqual([['first check still open', false], ['second check', true], ['shipped', true]])
+  const root = tmp()
+  write(root, '.kiro/specs/hidden-open/tasks.md', '## Phase 1\n\n- **Done when**:\n  - [ ] first check still open\n  - [x] second check\n- [x] top-level done\n')
+  expect(scanKiro(root, null).features[0]).toMatchObject({ stage: 'implement', tasks: { done: 2, total: 3 } })
+})
+
+test('the optional mark escaped by a formatter (`- [ ]\\*`) is an optional task, in place', () => {
+  const ps = phases(read('tasks', '# Tasks\n\n- [ ] 1. Build\n  - [x] 1.1 Code\n  - [ ]\\* 1.2 Property test\n  - [x]\\* 1.3 Unit test\n  - [ ] 1.4 Docs\n', '.kiro/specs/x/tasks.md').blocks)
+  expect(ps[0].items.map((i) => [i.id, i.done, !!i.optional])).toEqual([['1.1', true, false], ['1.2', false, true], ['1.3', true, true], ['1.4', false, false]])
+  expect(ps[0].rest).toBe('')
+})
+
+test('a required task whose sub-tasks are all optional counts itself, so the spec is not done while it is open', () => {
+  const ps = phases(read('tasks', '# Tasks\n\n- [x] 7. Store\n- [ ] 8. Build the modal\n  - [ ]* 8.1 Snapshot test\n  - [ ]\\* 8.2 Property test\n', '.kiro/specs/x/tasks.md').blocks)
+  expect(ps.map((p) => [p.title, p.items.map((i) => [i.id, !!i.optional])])).toEqual([
+    ['7. Store', [['7', false]]], ['8. Build the modal', [['8', false], ['8.1', true], ['8.2', true]]]])
+  const root = tmp()
+  write(root, '.kiro/specs/modal/tasks.md', '- [x] 7. Store\n- [ ] 8. Build the modal\n  - [ ]* 8.1 Snapshot test\n')
+  expect(scanKiro(root, null).features[0]).toMatchObject({ stage: 'implement', tasks: { done: 1, total: 2 } })
+})
