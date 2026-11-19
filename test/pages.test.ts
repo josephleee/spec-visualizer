@@ -83,3 +83,16 @@ test('a short project-stage list keeps the old markup', () => {
   const p = { ...project('openspec', []), shared: [{ path: 'openspec/specs/a/spec.md', kind: 'capability' as const, hash: 'h' }] }
   expect(renderToStaticMarkup(createElement(Board, { project: p, seen: {} }))).toContain('class="pr"')
 })
+
+// ---------- re-review: N3 ----------
+
+test('a Kiro spec past a stage without its document is not told the document is optional; OpenSpec\'s design.md is', () => {
+  const kiro = project('kiro', [unit('capture', 'design', ['design'])])
+  const text = page(kiro, '#/stage/requirements/capture')
+  expect(text).toContain('went past the Requirements stage without requirements.md')
+  expect(text).not.toMatch(/optional/i)
+  const os = project('openspec', [unit('no-design', 'apply', ['proposal', 'delta', 'tasks'], 1, 3)])
+  expect(page(os, '#/stage/design/no-design')).toMatch(/optional/)
+  const os2 = project('openspec', [unit('no-proposal', 'design', ['design'])])
+  expect(page(os2, '#/stage/propose/no-proposal')).not.toMatch(/optional/i) // proposal.md is not optional in OpenSpec
+})

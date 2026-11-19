@@ -46,7 +46,11 @@ function Missing({ stage, feature, kind, flow }: { stage: StageKey; feature: Fea
   // A finished feature without a checklist is not behind: it is complete, and there is nothing to type for it.
   const why = missingWhy(feature, stage, flow)
   if (why === 'complete') return <State title={t(flow.labels.complete[0])}><p>{t(flow.labels.complete[1], feature.id)}</p></State>
-  if (why === 'skipped') return <State title={t('e.skipped.title')}><p>{t('e.skipped', feature.id, t(`n.${stage}`), kindFile(kind, flow))}</p></State>
+  // Called optional only where the format says so (OpenSpec's design.md); otherwise just what happened.
+  if (why === 'skipped') {
+    const optional = flow.optional.includes(kind)
+    return <State title={t(optional ? 'e.skipped.title' : 'e.past.title')}><p>{t(optional ? 'e.skipped' : 'e.past', feature.id, t(`n.${stage}`), kindFile(kind, flow))}</p></State>
+  }
   const next = nextCommand(feature, flow).cmd, make = creatingCommand(kind, flow, feature)
   return (
     <State title={t('e.title')}>

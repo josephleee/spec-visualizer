@@ -96,6 +96,7 @@ function criterion(text: string, id: string | null): Criterion {
   const own = ID.exec(text)
   return { id: own ? own[1] : id, name: null, steps: ears(own ? text.slice(own[0].length) : text) }
 }
+const NUMBERED = /^\d+(?:\.\d+)+\.?\s+\S/
 const isEars = (text: string) => { const t = text.replace(ID, ''); return EARS.test(t) || UBIQUITOUS.test(t) }
 
 // Criteria in `nodes`: every list item (numbered from the list's start, under the requirement's number), or, when
@@ -104,7 +105,10 @@ function criteriaIn(src: string, nodes: Node[], req: string | null, all: boolean
   const criteria: Criterion[] = [], before: string[] = [], after: string[] = []
   const left = (text: string) => (criteria.length ? after : before).push(text)
   for (const n of nodes) {
-    if (n.type === 'paragraph' && isEars(slice(src, [n]))) { criteria.push(criterion(slice(src, [n]), null)); continue }
+    // Under an Acceptance Criteria heading a paragraph numbered like a criterion (`3.1. …`, which is not a markdown list
+    // marker) is one, EARS-shaped or not, as list items there already are.
+    const para = n.type === 'paragraph' ? slice(src, [n]) : ''
+    if (para && (isEars(para) || (all && NUMBERED.test(para)))) { criteria.push(criterion(para, null)); continue }
     if (n.type !== 'list') { left(slice(src, [n])); continue }
     n.children.forEach((item, i) => {
       const text = slice(src, kids(item))

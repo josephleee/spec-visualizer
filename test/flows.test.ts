@@ -140,3 +140,9 @@ test('a first open records the shared documents as seen too', () => {
   expect(seen['openspec/config.yaml']).toBe('h')
   expect(seen['openspec/specs/loans/spec.md']).toBe('h')
 })
+
+test('no Korean label puts a topic particle straight after a value: a noun stands between, so the particle fits any id', () => {
+  for (const key of LABEL_KEYS) expect(translate('ko', key, '{a}', '{b}', '{c}'), key).not.toMatch(/\{[abc]\} [은는]/)
+  expect(translateFor('change', 'ko', 'e.complete.os', 'add-x')).toBe('add-x 변경은 보관되었다. 바꾼 스펙이 없고, 더 입력할 명령도 없다.')
+  expect(translateFor('spec', 'ko', 'e.past', 'capture', '요구사항', 'requirements.md')).toBe('capture 스펙은 requirements.md 없이 요구사항 단계를 지나갔다.')
+})

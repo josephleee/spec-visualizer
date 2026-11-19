@@ -346,3 +346,24 @@ test('steering front matter whose opening line has trailing spaces is still fron
   expect(doc.meta.map((f) => f.label)).toEqual(['inclusion', 'title'])
   expect(doc.blocks).toEqual([{ kind: 'raw', heading: 'Rules', depth: 2, markdown: 'x' }])
 })
+
+// ---------- re-review: N2 ----------
+
+test('numbered criterion paragraphs under Acceptance Criteria count even when they are not EARS sentences', () => {
+  const [b] = reqs(read('requirements', `# Requirements
+
+## Requirement 3: List the files
+
+### Acceptance Criteria
+
+3.1. ListFiles SHALL return every file under the prefix.
+
+3.2. WHEN the prefix is empty THEN ListFiles SHALL return the root.
+
+3.3. \`CONTRIBUTING.md\` SHALL document the adapter contract.
+
+A closing note that is not a criterion.
+`).blocks)
+  expect(b.items[0].criteria.map((c) => [c.id, c.steps.map((s) => s.key)])).toEqual([['3.1', ['']], ['3.2', ['WHEN', 'THEN']], ['3.3', ['']]])
+  expect(b.items[0].rest).toBe('A closing note that is not a criterion.')
+})

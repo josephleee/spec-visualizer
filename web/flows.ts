@@ -25,6 +25,7 @@ export type Flow = {
   // items, none: the project-stage list; empty: a project with no units; noShared: no project documents;
   // zoneEmpty: the empty board's line; complete: a finished unit with no document for the last stage (title, text).
   labels: { items: LabelKey; none: LabelKey; empty: LabelKey; noShared: LabelKey; zoneEmpty: LabelKey; complete: [LabelKey, LabelKey] }
+  optional: DocKind[]                       // documents the format itself marks optional (a unit may go on without them)
   next(f: Feature): { cmd: string | null; left: number }
   making(kind: DocKind, f: Feature | null): string | null
   guide(p: Project, stage: StageKey, here: Feature[]): StageGuide
@@ -49,7 +50,7 @@ const SPEC_KIT: Flow = {
     { key: 'implement', kinds: ['tasks'], cmd: CMD.implement, progress: true },
     { key: 'done', kinds: ['checklist'], cmd: null },
   ],
-  unit: 'feature', start: CMD.specify, setup: CMD.constitution, clarify: CMD.clarify, files: {},
+  unit: 'feature', start: CMD.specify, setup: CMD.constitution, clarify: CMD.clarify, files: {}, optional: [],
   labels: { items: 'principles', none: 'pr.none', empty: 'e.project.say', noShared: 'e.constitution', zoneEmpty: 'zone.empty', complete: ['e.complete.title', 'e.complete'] },
   next(f) {
     switch (f.stage) {
@@ -101,7 +102,7 @@ const OPENSPEC: Flow = {
     { key: 'apply', kinds: ['tasks'], cmd: OS.apply, progress: true },
     { key: 'archive', kinds: ['delta'], cmd: OS.archive },
   ],
-  unit: 'change', start: OS.propose, setup: null, clarify: null,
+  unit: 'change', start: OS.propose, setup: null, clarify: null, optional: ['design'], // OpenSpec: "You can skip design"
   files: { capability: 'specs/*/spec.md', delta: 'specs/*/spec.md', context: 'config.yaml, project.md' },
   labels: { items: 'pr.caps', none: 'pr.caps.none', empty: 'e.project.os', noShared: 'e.shared.os', zoneEmpty: 'zone.empty.os', complete: ['e.complete.os.title', 'e.complete.os'] },
   next(f) {
@@ -140,7 +141,7 @@ const KIRO: Flow = {
     { key: 'implement', kinds: ['tasks'], cmd: KIRO_CMD.run, progress: true },
     { key: 'done', kinds: ['tasks'], cmd: null, progress: true },
   ],
-  unit: 'spec', start: KIRO_CMD.new, setup: null, clarify: null,
+  unit: 'spec', start: KIRO_CMD.new, setup: null, clarify: null, optional: [], // every Kiro spec writes requirements and design
   files: { context: 'steering/*.md' },
   labels: { items: 'pr.steer', none: 'pr.steer.none', empty: 'e.project.kiro', noShared: 'e.shared.kiro', zoneEmpty: 'zone.empty.kiro', complete: ['e.complete.kiro.title', 'e.complete.kiro'] },
   next(f) {
