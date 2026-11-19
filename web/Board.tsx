@@ -81,7 +81,9 @@ function Region({ project, stage, i, count, nextLive, seen }: { project: Project
   // Per kind: the documents that could be read, and how many could not.
   const stack = def.kinds.map(kind => {
     const docs = first ? projectDocs(project, [kind]) : project.features.flatMap(f => f.docs.filter(d => d.kind === kind))
-    return { kind, file: kindFile(kind, flow), n: docs.filter(d => !d.error).length, bad: docs.filter(d => d.error).length }
+    // One file of the kind is named as itself (OpenSpec's config.yaml alone is not 'config.yaml, project.md').
+    const names = [...new Set(docs.map(d => d.path.split('/').pop()!))]
+    return { kind, file: first && names.length === 1 ? names[0] : kindFile(kind, flow), n: docs.filter(d => !d.error).length, bad: docs.filter(d => d.error).length }
   }).filter(s => s.kind !== 'other' || s.n + s.bad > 0) // the project stage's loose documents: a row only when there are some
   // What the project stage lists: the principles (spec-kit), the capabilities (OpenSpec) or the steering files (Kiro).
   const shared = projectDocs(project, def.kinds.slice(0, 1)).filter(d => d.kind !== 'constitution')
@@ -97,7 +99,8 @@ function Region({ project, stage, i, count, nextLive, seen }: { project: Project
         <div className="fh">
           <div className="rh">
             <span className="rh-no">{i + 1}</span>
-            <a className="stage-link" href={stageHref(stage, front?.id)} title={name}><strong>{name}</strong></a>
+            {/* A long stage name of another format (Requirements) gets a smaller size to fit its card; spec-kit's names fit. */}
+            <a className="stage-link" href={stageHref(stage, front?.id)} title={name}><strong className={flow.id !== 'spec-kit' && name.length > 11 ? 'long' : undefined}>{name}</strong></a>
             <Zoom />
           </div>
           <span className="fh-cmd"><span>{t('cmd.stage')}</span><code className={cmd ? 'cmd' : 'cmd off'} title={cmd ?? undefined}>{cmd ?? t('nocmd')}</code></span>
@@ -113,7 +116,7 @@ function Region({ project, stage, i, count, nextLive, seen }: { project: Project
               {project.constitution?.error ? <span className="seen err">{t('err.read')}</span> : project.constitution && <SeenMark docs={[project.constitution]} seen={seen} />}
               {shared.some(d => d.error) ? <span className="seen err">{t('err.read')}</span> : <SeenMark docs={shared} seen={seen} />}</div>
             {items.length
-              ? <Scroller><ol className="pr">{items.map((p, n) => <li key={n} title={p}>{p}</li>)}</ol></Scroller>
+              ? <Scroller><ol className={items.length >= 10 ? 'pr wide' : 'pr'}>{items.map((p, n) => <li key={n} title={p}>{p}</li>)}</ol></Scroller>
               : <p className="none">{project.constitution ? t('n.count', 0) : t(flow.labels.none)}</p>}
           </div>
         ) : (

@@ -77,7 +77,7 @@ test('a document opens on the stage where its unit stands when that stage shows 
 })
 
 test('file names follow the format', () => {
-  expect(kindFile('context', FLOWS.openspec)).toBe('config.yaml')
+  expect(kindFile('context', FLOWS.openspec)).toBe('config.yaml, project.md')
   expect(kindFile('context', FLOWS.kiro)).toBe('steering/*.md')
   expect(kindFile('delta', FLOWS.openspec)).toBe('specs/*/spec.md')
   expect(kindFile('tasks', FLOWS.kiro)).toBe('tasks.md')

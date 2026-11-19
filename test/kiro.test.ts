@@ -340,3 +340,9 @@ test('a loose markdown file in .kiro/specs and the root AGENTS.md are project do
   const { resolveTarget } = await import('../web/route.ts')
   expect(resolveTarget(p, { kind: 'stage', stage: 'steering', feature: null, sub: null }).refs).toHaveLength(3)
 })
+
+test('steering front matter whose opening line has trailing spaces is still front matter', () => {
+  const doc = read('context', '--- \ninclusion: always\ntitle: API\n---\n\n## Rules\n\nx\n', '.kiro/steering/api.md')
+  expect(doc.meta.map((f) => f.label)).toEqual(['inclusion', 'title'])
+  expect(doc.blocks).toEqual([{ kind: 'raw', heading: 'Rules', depth: 2, markdown: 'x' }])
+})

@@ -66,3 +66,20 @@ test('progress outside spec-kit has no per-story section when no task names a st
   expect(html(FLOWS.kiro)).not.toContain('Progress per story')
   expect(html()).toContain('Progress per story') // spec-kit as before
 })
+
+test('the first stage of a project with many capabilities offers them in one select, and its list numbers stay apart', () => {
+  const shared = Array.from({ length: 14 }, (_, i) => ({ path: `openspec/specs/cap-${String(i).padStart(2, '0')}/spec.md`, kind: 'capability' as const, hash: 'h' }))
+  const p = { ...project('openspec', []), shared: [...shared, { path: 'openspec/config.yaml', kind: 'context' as const, hash: 'h' }] }
+  const html = renderToStaticMarkup(createElement(StagePage, { view: { route: parseRoute('#/stage/specs') as never, entry: 'e', path: shared[0].path, doc: null, failed: false }, asked: parseRoute('#/stage/specs'), project: p, seen: {}, onSeen: () => {}, onPick: () => {} }))
+  expect(html).toContain('<select')
+  expect(html.match(/<option /g)).toHaveLength(15)
+  expect(html).not.toContain('aria-pressed')
+  const board = renderToStaticMarkup(createElement(Board, { project: p, seen: {} }))
+  expect(board).toContain('class="pr wide"')
+  expect(visible(board)).toMatch(/config\.yaml ×1/) // one context file is named as itself
+})
+
+test('a short project-stage list keeps the old markup', () => {
+  const p = { ...project('openspec', []), shared: [{ path: 'openspec/specs/a/spec.md', kind: 'capability' as const, hash: 'h' }] }
+  expect(renderToStaticMarkup(createElement(Board, { project: p, seen: {} }))).toContain('class="pr"')
+})

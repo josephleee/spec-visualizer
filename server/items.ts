@@ -155,7 +155,7 @@ export const parseDesign: Parser = (src: string): Block[] =>
 // YAML front matter (`---` … `---` on the first lines): `key: value` lines become header fields; anything else in it
 // is kept as a yaml code block. The document is read on without it.
 export function frontMatter(src: string): { body: string; fields: Field[]; leftover: Block | null } {
-  const m = /^---\n([\s\S]*?)\n---[ \t]*(?:\n|$)/.exec(src)
+  const m = /^---[ \t]*\n([\s\S]*?)\n---[ \t]*(?:\n|$)/.exec(src) // an opener with trailing spaces is still one
   if (!m) return { body: src, fields: [], leftover: null }
   const fields: Field[] = []
   const left: string[] = []

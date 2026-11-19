@@ -102,7 +102,7 @@ const OPENSPEC: Flow = {
     { key: 'archive', kinds: ['delta'], cmd: OS.archive },
   ],
   unit: 'change', start: OS.propose, setup: null, clarify: null,
-  files: { capability: 'specs/*/spec.md', delta: 'specs/*/spec.md', context: 'config.yaml' },
+  files: { capability: 'specs/*/spec.md', delta: 'specs/*/spec.md', context: 'config.yaml, project.md' },
   labels: { items: 'pr.caps', none: 'pr.caps.none', empty: 'e.project.os', noShared: 'e.shared.os', zoneEmpty: 'zone.empty.os', complete: ['e.complete.os.title', 'e.complete.os'] },
   next(f) {
     switch (f.stage) {

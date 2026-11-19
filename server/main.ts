@@ -26,8 +26,8 @@ Options:
   --demo           Show the bundled example project instead of a path
                    (with --format openspec or kiro: the example in that format)
   --no-open        Do not open the browser
-  --help       Show this help
-  --version    Show the version`
+  --help           Show this help
+  --version        Show the version`
 
 const an = (name: string) => (/^[aeiou]/i.test(name) ? 'an' : 'a')
 

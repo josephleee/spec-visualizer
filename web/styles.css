@@ -160,6 +160,7 @@ button, select { font-family: var(--sans); }
 .rh { display: flex; gap: 8px; align-items: center; width: 100%; min-width: 0; }
 .rh-no { font-size: 40px; font-weight: 700; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .rh strong { display: block; font-size: 18px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rh strong.long { font-size: 14px; }
 .ic { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; flex: none; }
 .rh .ic { color: var(--ink-3); margin-top: 2px; }
 .region:hover .rh .ic { color: var(--ink); }
@@ -207,6 +208,7 @@ button, select { font-family: var(--sans); }
 .pr { counter-reset: p; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .pr li { counter-increment: p; font-size: 11.5px; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid var(--sheet-2); }
 .pr li::before { content: counter(p); display: inline-block; width: 14px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pr.wide li::before { width: 2.5ch; margin-right: 4px; } /* 10 items or more: two-digit numbers do not run into the names */
 .stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .stack li { display: flex; align-items: center; gap: 6px; min-width: 0; font: 11.5px/1.3 var(--mono); }
 .stack b { flex: none; margin-left: auto; font-weight: 600; }

@@ -11,6 +11,7 @@ import { docHref, featureHref, kindFile, linkFeature, resolveTarget, stageHref, 
 import { saveScroll, savedScroll } from './scroll.ts'
 import { markSeen, type Seen } from './seen.ts'
 
+const MAX_BUTTONS = 12
 const fileOf = (d: DocRef) => d.path.split('/').slice(['checklist', 'contract', 'delta', 'capability'].includes(d.kind) ? -2 : -1).join('/')
 
 // The page before its first document has arrived: the same bar, index column, header sheet and sheets as the real one.
@@ -246,11 +247,21 @@ export function StagePage({ view, asked, project, seen, onSeen, onPick }: {
                 </nav>
               </section>
             )}
-            {refs.length > 1 && (
+            {refs.length > 1 && refs.length <= MAX_BUTTONS && (
               <section className="sec tabsec">
                 <div className="tabs" role="group" aria-label={t('choose')} onClickCapture={viaTabs('.tabs button[aria-pressed="true"]')}>
                   {refs.map(d => <button key={d.path} type="button" aria-pressed={d === ref} onClick={() => onPick(d.path)}><b>{fileOf(d)}</b><span>{kindFile(d.kind, flow)}{d !== ref && <SeenMark docs={[d]} seen={seen} />}</span></button>)}
                 </div>
+              </section>
+            )}
+            {/* Past a dozen documents (an OpenSpec project's capabilities), buttons would push the page down: one select instead. */}
+            {refs.length > MAX_BUTTONS && ref && (
+              <section className="sec tabsec">
+                <label className="pick"><span>{t('choose')}</span>
+                  <select value={ref.path} onChange={e => onPick(e.target.value)}>
+                    {refs.map(d => <option key={d.path} value={d.path}>{fileOf(d)} · {kindFile(d.kind, flow)}</option>)}
+                  </select>
+                </label>
               </section>
             )}
             {body}
