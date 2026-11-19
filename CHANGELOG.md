@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Other formats
+
+- OpenSpec and Kiro projects open on the same board, with their own six stages, commands and word for a unit of work (a change, a spec). The format is found from the folders: `specs/` or `.specify/` (spec-kit), `openspec/` (OpenSpec), `.kiro/specs/` or `.kiro/steering/` (Kiro); spec-kit comes first when a folder has several.
+- `--format <spec-kit|openspec|kiro>` reads a folder as the format named; the first output line names the format found. When a folder holds several formats, spec-kit comes first only if it has documents of its own (`.specify/`, or `spec.md` or `plan.md` in a feature folder), and a second line says which format was chosen, why, and how to choose another.
+- `--demo --format openspec` and `--demo --format kiro` show bundled examples in those formats; `--demo` alone shows the spec-kit example as before.
+- OpenSpec: capability specs and project context on the first stage; proposals, delta specs (ADDED, MODIFIED, REMOVED, RENAMED), designs and tasks of each change; archived changes on the last stage. Requirements are drawn with their named scenarios, steps in order.
+- Kiro: steering files on the first stage (front matter as header fields); requirements with user stories and EARS criteria split into condition and response; bugfix documents as current, expected and unchanged behaviour; tasks by numbered top-level task, with optional tasks shown and not counted. Projects set up with cc-sdd are read the same way.
+- Design documents of both formats show their decisions as cards.
+- Every other markdown file in the OpenSpec and Kiro folders is shown as a project document on the first stage.
+- No format follows a symbolic link at any folder of a path, even one swapped in while the server runs.
+- spec-kit projects show what they showed before (the server's JSON and every page are compared with the previous version in the tests), with two intended exceptions: a stage page that offers more than 12 documents of one kind (contracts, checklists) lists them in a select, and a constitution with 10 or more principles keeps the board's two-digit numbers apart from the names.
+
 ## [0.1.1-rc.0] - 2026-11-18
 
 - Releases are published from GitHub Actions through npm trusted publishing, without a stored token.

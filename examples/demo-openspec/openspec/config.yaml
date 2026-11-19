@@ -1,0 +1,15 @@
+schema: spec-driven
+
+context: |
+  Borrowbox runs on one small server at the library, with a web page for the
+  counter and a phone page for members. Volunteers staff the counter, so every
+  screen must work for someone who has never seen it before.
+
+  Tech stack: TypeScript, Node.js, SQLite, server-rendered HTML.
+
+rules:
+  specs:
+    - Write requirements as what a member or a volunteer sees, not how it is built
+    - Every requirement about money names the rounding rule
+  tasks:
+    - Each task group ends with the check that proves it works

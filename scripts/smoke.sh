@@ -23,4 +23,19 @@ for _ in 1 2 3 4 5 6 7 8 9 10; do
 done
 curl -fsS "http://127.0.0.1:$port/" | grep -qi '<!doctype html'
 curl -fsS "http://127.0.0.1:$port/api/project" | grep -q '"001-member-signup"'
-echo "smoke ok: spec-visualizer $got served the demo on port $port"
+kill "$pid" 2> /dev/null || true
+
+# The OpenSpec and Kiro examples, on the next ports.
+first="$port"
+for pair in "openspec:add-due-reminders" "kiro:tool-search"; do
+  format="${pair%%:*}" unit="${pair#*:}" port=$((port + 1))
+  "$bin" --demo --format "$format" --no-open --port "$port" &
+  pid=$!
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    curl -fsS "http://127.0.0.1:$port/" > /dev/null 2>&1 && break
+    sleep 1
+  done
+  curl -fsS "http://127.0.0.1:$port/api/project" | grep -q "\"$unit\""
+  kill "$pid" 2> /dev/null || true
+done
+echo "smoke ok: spec-visualizer $got served the three demos on ports $first to $port"

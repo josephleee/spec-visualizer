@@ -1,6 +1,7 @@
 import { checkItems, clean, headingText, kids, parse, slice, splitAt, stamp, takeLabels } from './md.ts'
 import type { Node, Sec } from './md.ts'
 import type { Block, DocRef, Field, ParsedDoc, Scenario } from './types.ts'
+import { frontMatter, type Parser } from './items.ts'
 
 export function rawBlock(src: string, sec: Sec): Block {
   return { kind: 'raw', heading: sec.heading, depth: sec.depth, markdown: slice(src, sec.nodes) }
@@ -259,24 +260,31 @@ export function parseResearch(src: string): Block[] {
   return out
 }
 
-const PARSERS: Partial<Record<DocRef['kind'], (src: string) => Block[]>> = {
+export const PARSERS: Partial<Record<DocRef['kind'], Parser>> = {
   spec: parseSpec, plan: parsePlan, tasks: parseTasks, checklist: parseChecklist,
   constitution: parseConstitution, research: parseResearch, 'data-model': parseDataModel,
 }
 
-export function parseDoc(ref: DocRef, src: string): ParsedDoc {
-  if (ref.kind === 'contract' && !ref.path.endsWith('.md')) {
+// How a format reads its documents: the parser per kind (spec-kit's when not given) and whether YAML front matter is lifted.
+export type Reading = { parsers?: Partial<Record<DocRef['kind'], Parser>>; frontMatter?: boolean }
+
+export function parseDoc(ref: DocRef, src: string, reading: Reading = {}): ParsedDoc {
+  if (!ref.path.endsWith('.md')) { // spec-kit contracts and OpenSpec's config.yaml: shown as written
     return { ref, title: null, meta: [], blocks: [{ kind: 'code', lang: ref.path.split('.').pop() ?? '', text: src }] }
   }
-  const text = clean(src)
+  const front = reading.frontMatter ? frontMatter(clean(src)) : null
+  const text = front ? front.body : clean(src)
   const nodes = parse(text)
   const h1 = nodes.find((n) => n.type === 'heading' && n.depth === 1)
   const pre = splitAt(nodes, 2).find((s) => s.heading === null)?.nodes.filter((n) => n !== h1) ?? []
-  const { fields: meta, rest } = takeLabels(text, pre)
-  const blocks: Block[] = []
-  if (slice(text, rest)) blocks.push(rawBlock(text, { heading: null, depth: 0, nodes: rest }))
+  const { fields, rest } = takeLabels(text, pre)
+  const meta = front ? [...front.fields, ...fields] : fields
+  const parser: Parser = (reading.parsers ?? PARSERS)[ref.kind] ?? ((t: string) => bySection(t, () => null))
+  const blocks: Block[] = front?.leftover ? [front.leftover] : []
+  // A parser that reads the preamble itself (a task list written before any ##) gets it; otherwise it is kept here.
+  if (!parser.preamble && slice(text, rest)) blocks.push(rawBlock(text, { heading: null, depth: 0, nodes: rest }))
   try {
-    blocks.push(...(PARSERS[ref.kind] ?? ((t) => bySection(t, () => null)))(text))
+    blocks.push(...parser(text, rest))
   } catch {
     blocks.length = 0
     blocks.push({ kind: 'raw', heading: null, depth: 0, markdown: text })

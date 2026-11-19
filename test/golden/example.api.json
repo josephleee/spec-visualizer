@@ -1,0 +1,2837 @@
+{
+ "project": {
+  "root": "<root>",
+  "name": "demo",
+  "about": "Borrowbox is the lending desk of a neighbourhood tool library: members sign up, find a drill or a ladder in the catalog, borrow it at the counter and bring it back on time.",
+  "constitution": {
+   "path": ".specify/memory/constitution.md",
+   "kind": "constitution",
+   "hash": "d9b2926f4339"
+  },
+  "constitutionVersion": "1.1.0",
+  "constitutionRatified": "2026-02-09",
+  "constitutionAmended": "2026-06-15",
+  "principles": [
+   "The Counter Comes First",
+   "A Loan Is Never Lost",
+   "Works When the Wi-Fi Does Not",
+   "Ask for Less",
+   "Tests Before Shelves",
+   "Plain Words"
+  ],
+  "currentFeature": null,
+  "features": [
+   {
+    "id": "001-member-signup",
+    "stage": "done",
+    "docs": [
+     {
+      "path": "specs/001-member-signup/spec.md",
+      "kind": "spec",
+      "hash": "87221f5ac84e"
+     },
+     {
+      "path": "specs/001-member-signup/plan.md",
+      "kind": "plan",
+      "hash": "e9f192f972bb"
+     },
+     {
+      "path": "specs/001-member-signup/tasks.md",
+      "kind": "tasks",
+      "hash": "1d09d1ecc666"
+     },
+     {
+      "path": "specs/001-member-signup/checklists/release.md",
+      "kind": "checklist",
+      "hash": "5573e8ce6786"
+     },
+     {
+      "path": "specs/001-member-signup/checklists/requirements.md",
+      "kind": "checklist",
+      "hash": "1123da0586b1"
+     }
+    ],
+    "tasks": {
+     "done": 13,
+     "total": 13
+    },
+    "openQuestions": 0
+   },
+   {
+    "id": "002-tool-catalog",
+    "stage": "implement",
+    "docs": [
+     {
+      "path": "specs/002-tool-catalog/spec.md",
+      "kind": "spec",
+      "hash": "df98f89bf5fb"
+     },
+     {
+      "path": "specs/002-tool-catalog/plan.md",
+      "kind": "plan",
+      "hash": "a83cb17e1806"
+     },
+     {
+      "path": "specs/002-tool-catalog/research.md",
+      "kind": "research",
+      "hash": "3a13955af843"
+     },
+     {
+      "path": "specs/002-tool-catalog/data-model.md",
+      "kind": "data-model",
+      "hash": "c16a6378cbc4"
+     },
+     {
+      "path": "specs/002-tool-catalog/tasks.md",
+      "kind": "tasks",
+      "hash": "c2877c6418d4"
+     }
+    ],
+    "tasks": {
+     "done": 11,
+     "total": 21
+    },
+    "openQuestions": 0
+   },
+   {
+    "id": "003-loan-checkout",
+    "stage": "tasks",
+    "docs": [
+     {
+      "path": "specs/003-loan-checkout/spec.md",
+      "kind": "spec",
+      "hash": "1c234ad90fe0"
+     },
+     {
+      "path": "specs/003-loan-checkout/plan.md",
+      "kind": "plan",
+      "hash": "39596e066835"
+     },
+     {
+      "path": "specs/003-loan-checkout/tasks.md",
+      "kind": "tasks",
+      "hash": "517c3d86ab0a"
+     },
+     {
+      "path": "specs/003-loan-checkout/handover.md",
+      "kind": "other",
+      "hash": "a31f5c0765cc"
+     }
+    ],
+    "tasks": {
+     "done": 0,
+     "total": 15
+    },
+    "openQuestions": 0
+   },
+   {
+    "id": "004-due-reminders",
+    "stage": "plan",
+    "docs": [
+     {
+      "path": "specs/004-due-reminders/spec.md",
+      "kind": "spec",
+      "hash": "4830e8a5aff0"
+     },
+     {
+      "path": "specs/004-due-reminders/plan.md",
+      "kind": "plan",
+      "hash": "cea0b75cd927"
+     },
+     {
+      "path": "specs/004-due-reminders/research.md",
+      "kind": "research",
+      "hash": "0dc228fb9e74"
+     },
+     {
+      "path": "specs/004-due-reminders/data-model.md",
+      "kind": "data-model",
+      "hash": "cbc5abfe8c3d"
+     },
+     {
+      "path": "specs/004-due-reminders/quickstart.md",
+      "kind": "quickstart",
+      "hash": "d1a0f65394ab"
+     },
+     {
+      "path": "specs/004-due-reminders/contracts/reminders.openapi.yaml",
+      "kind": "contract",
+      "hash": "433461653eea"
+     }
+    ],
+    "tasks": null,
+    "openQuestions": 0
+   },
+   {
+    "id": "005-waitlist",
+    "stage": "specify",
+    "docs": [
+     {
+      "path": "specs/005-waitlist/spec.md",
+      "kind": "spec",
+      "hash": "11acfeeb8919"
+     }
+    ],
+    "tasks": null,
+    "openQuestions": 0
+   },
+   {
+    "id": "006-damage-reports",
+    "stage": "specify",
+    "docs": [
+     {
+      "path": "specs/006-damage-reports/spec.md",
+      "kind": "spec",
+      "hash": "b9b6859a1eef"
+     }
+    ],
+    "tasks": null,
+    "openQuestions": 3
+   },
+   {
+    "id": "007-opening-hours",
+    "stage": "specify",
+    "docs": [
+     {
+      "path": "specs/007-opening-hours/spec.md",
+      "kind": "spec",
+      "hash": "f53f0fbd94d9"
+     }
+    ],
+    "tasks": null,
+    "openQuestions": 0
+   }
+  ]
+ },
+ "docs": {
+  ".specify/memory/constitution.md": {
+   "ref": {
+    "path": ".specify/memory/constitution.md",
+    "kind": "constitution",
+    "hash": "d9b2926f4339"
+   },
+   "title": "Borrowbox Constitution",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "cards",
+     "heading": "Core Principles",
+     "items": [
+      {
+       "title": "I. The Counter Comes First",
+       "markdown": "Every feature must work for a volunteer standing at the counter with a queue in front of them. A lending step that takes more than three taps, or needs a manual to explain, is not finished."
+      },
+      {
+       "title": "II. A Loan Is Never Lost",
+       "markdown": "The record of who holds which tool is the one thing the library cannot rebuild from memory. Every change to a loan is written before it is confirmed on screen, and no feature may delete loan history."
+      },
+      {
+       "title": "III. Works When the Wi-Fi Does Not",
+       "markdown": "The library sits in a basement. Checkout and return must work offline on the counter tablet and sync later without asking the volunteer to resolve anything."
+      },
+      {
+       "title": "IV. Ask for Less",
+       "markdown": "Members give a name and one way to reach them. A feature that wants more personal data must say in its spec what it is for and when it is deleted."
+      },
+      {
+       "title": "V. Tests Before Shelves",
+       "markdown": "A user story is built only after a failing test describes it. Tests run against a real database, not a mock of one."
+      },
+      {
+       "title": "VI. Plain Words",
+       "markdown": "Screens, messages and specs use the words volunteers use: tool, loan, member, due date. No internal identifiers on screen, no jargon in reminders."
+      }
+     ]
+    },
+    {
+     "kind": "fields",
+     "heading": "Technical Standards",
+     "items": [
+      {
+       "label": "Stack",
+       "value": "TypeScript on the server and in the counter app, PostgreSQL for storage"
+      },
+      {
+       "label": "Hosting",
+       "value": "One small server paid for by the library association"
+      },
+      {
+       "label": "Accessibility",
+       "value": "WCAG 2.2 AA for every screen a member sees"
+      },
+      {
+       "label": "Languages",
+       "value": "English and Dutch from the first release"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "fields",
+     "heading": "Governance",
+     "items": [
+      {
+       "label": "Version",
+       "value": "1.1.0"
+      },
+      {
+       "label": "Ratified",
+       "value": "2026-02-09"
+      },
+      {
+       "label": "Last Amended",
+       "value": "2026-06-15"
+      }
+     ],
+     "rest": "A change to this constitution needs a written proposal and the agreement of two maintainers. Every plan carries a Constitution Check, and a plan that breaks a principle must say why in its Complexity Tracking table."
+    }
+   ]
+  },
+  "specs/001-member-signup/spec.md": {
+   "ref": {
+    "path": "specs/001-member-signup/spec.md",
+    "kind": "spec",
+    "hash": "87221f5ac84e"
+   },
+   "title": "Feature Specification: Member Signup",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`001-member-signup`"
+    },
+    {
+     "label": "Created",
+     "value": "2026-02-16"
+    },
+    {
+     "label": "Status",
+     "value": "Complete"
+    },
+    {
+     "label": "Input",
+     "value": "User description: \"People should be able to become members at the counter in a minute, without filling in a paper form.\""
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "User Scenarios & Testing *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "stories",
+     "items": [
+      {
+       "title": "Sign up at the counter",
+       "priority": "P1",
+       "narrative": null,
+       "why": "Nobody can borrow anything before they are a member.",
+       "test": "Register a person with a name and a phone number, then find them in the member list.",
+       "scenarios": [
+        {
+         "given": "a person who is not a member",
+         "when": "the volunteer enters their name and phone number",
+         "then": "a member card number is shown and the member appears in the list"
+        },
+        {
+         "given": "a phone number that already belongs to a member",
+         "when": "the volunteer submits the form",
+         "then": "the existing member is shown instead of a second record"
+        },
+        {
+         "given": "the tablet is offline",
+         "when": "the volunteer registers a member",
+         "then": "the member is saved on the tablet and synced when the connection returns"
+        }
+       ],
+       "rest": "A volunteer registers a new member while the person is standing at the counter."
+      },
+      {
+       "title": "Accept the house rules",
+       "priority": "P2",
+       "narrative": null,
+       "why": "The association needs proof that the rules were accepted, but signup works without it for a first loan.",
+       "test": "Sign up a member, accept the rules, and see the date of acceptance on their profile.",
+       "scenarios": [
+        {
+         "given": "a member who has not accepted the rules",
+         "when": "they tick the box and confirm",
+         "then": "the date is stored on their profile"
+        },
+        {
+         "given": "the rules text has changed since a member accepted it",
+         "when": "that member next borrows a tool",
+         "then": "they are asked to accept the new text"
+        }
+       ],
+       "rest": "The new member reads the borrowing rules on the tablet and accepts them."
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Edge Cases",
+     "depth": 3,
+     "markdown": "- Two volunteers register the same person on two tablets while both are offline.\n- A member has no phone and gives an email address instead."
+    },
+    {
+     "kind": "raw",
+     "heading": "Requirements *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST create a member from a name and one contact detail (phone or email)"
+      },
+      {
+       "id": "FR-002",
+       "text": "System MUST refuse a second member with the same contact detail and show the existing one"
+      },
+      {
+       "id": "FR-003",
+       "text": "System MUST give every member a card number that fits on a printed label"
+      },
+      {
+       "id": "FR-004",
+       "text": "System MUST record the date and the version of the house rules a member accepted"
+      },
+      {
+       "id": "FR-005",
+       "text": "System MUST let a volunteer register a member while offline"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Key Entities",
+     "depth": 3,
+     "markdown": "- **Member**: a person who may borrow; name, contact detail, card number, join date\n- **Rules Acceptance**: which version of the house rules a member accepted, and when"
+    },
+    {
+     "kind": "raw",
+     "heading": "Success Criteria *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Measurable Outcomes",
+     "depth": 3,
+     "items": [
+      {
+       "id": "SC-001",
+       "text": "A volunteer registers a new member in under 60 seconds"
+      },
+      {
+       "id": "SC-002",
+       "text": "No duplicate members after a month of use on two tablets"
+      },
+      {
+       "id": "SC-003",
+       "text": "95% of new members accept the house rules on their first visit"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/001-member-signup/plan.md": {
+   "ref": {
+    "path": "specs/001-member-signup/plan.md",
+    "kind": "plan",
+    "hash": "e9f192f972bb"
+   },
+   "title": "Implementation Plan: Member Signup",
+   "meta": [
+    {
+     "label": "Branch",
+     "value": "`001-member-signup`"
+    },
+    {
+     "label": "Date",
+     "value": "2026-02-18"
+    },
+    {
+     "label": "Spec",
+     "value": "[spec.md](spec.md)"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Summary",
+     "depth": 2,
+     "markdown": "A signup form in the counter app that writes members to a local store first and syncs them to the server, with the contact detail as the key that prevents duplicates."
+    },
+    {
+     "kind": "fields",
+     "heading": "Technical Context",
+     "items": [
+      {
+       "label": "Language/Version",
+       "value": "TypeScript 5.9"
+      },
+      {
+       "label": "Primary Dependencies",
+       "value": "Fastify, React, Dexie (IndexedDB)"
+      },
+      {
+       "label": "Storage",
+       "value": "PostgreSQL 17 on the server, IndexedDB on the tablet"
+      },
+      {
+       "label": "Testing",
+       "value": "Vitest, Playwright for the counter flow"
+      },
+      {
+       "label": "Target Platform",
+       "value": "Android tablet (Chrome), Linux server"
+      },
+      {
+       "label": "Performance Goals",
+       "value": "Form submit to confirmation under 300 ms, offline included"
+      },
+      {
+       "label": "Constraints",
+       "value": "Must work with no connection for a whole opening day"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Constitution Check",
+     "depth": 2,
+     "markdown": "| Principle | Status | Note |\n|---|---|---|\n| I. The Counter Comes First | Pass | Two fields and one button |\n| III. Works When the Wi-Fi Does Not | Pass | Local write first, sync later |\n| IV. Ask for Less | Pass | Name and one contact detail only |\n| V. Tests Before Shelves | Pass | Duplicate and offline cases have tests first |"
+    },
+    {
+     "kind": "raw",
+     "heading": "Project Structure",
+     "depth": 2,
+     "markdown": "```text\nserver/\n├── members/\n│   ├── routes.ts\n│   └── store.ts\n└── sync/\napp/\n├── signup/\n│   ├── SignupForm.tsx\n│   └── RulesStep.tsx\n└── offline/\ntests/\n├── members.test.ts\n└── signup.spec.ts\n```"
+    }
+   ]
+  },
+  "specs/001-member-signup/tasks.md": {
+   "ref": {
+    "path": "specs/001-member-signup/tasks.md",
+    "kind": "tasks",
+    "hash": "1d09d1ecc666"
+   },
+   "title": "Tasks: Member Signup",
+   "meta": [
+    {
+     "label": "Input",
+     "value": "Design documents from `/specs/001-member-signup/`"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "phase",
+     "title": "Phase 1: Setup",
+     "fields": [
+      {
+       "label": "Purpose",
+       "value": "The members module and its table."
+      }
+     ],
+     "items": [
+      {
+       "id": "T001",
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Create the `members` table migration in server/db/migrations/001_members.sql"
+      },
+      {
+       "id": "T002",
+       "done": true,
+       "parallel": true,
+       "story": null,
+       "text": "Add the members module skeleton in server/members/"
+      },
+      {
+       "id": "T003",
+       "done": true,
+       "parallel": true,
+       "story": null,
+       "text": "Add the signup route to the counter app in app/signup/"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 2: User Story 1 - Sign up at the counter (P1)",
+     "fields": [
+      {
+       "label": "Goal",
+       "value": "A volunteer registers a member in under a minute, online or offline."
+      },
+      {
+       "label": "Independent Test",
+       "value": "Register a person, then find them in the member list."
+      }
+     ],
+     "items": [
+      {
+       "id": "T004",
+       "done": true,
+       "parallel": true,
+       "story": "US1",
+       "text": "Test: duplicate contact detail returns the existing member in tests/members.test.ts"
+      },
+      {
+       "id": "T005",
+       "done": true,
+       "parallel": true,
+       "story": "US1",
+       "text": "Test: offline signup syncs once in tests/signup.spec.ts"
+      },
+      {
+       "id": "T006",
+       "done": true,
+       "parallel": false,
+       "story": "US1",
+       "text": "Implement member creation in server/members/store.ts"
+      },
+      {
+       "id": "T007",
+       "done": true,
+       "parallel": false,
+       "story": "US1",
+       "text": "Build the signup form in app/signup/SignupForm.tsx"
+      },
+      {
+       "id": "T008",
+       "done": true,
+       "parallel": false,
+       "story": "US1",
+       "text": "Queue offline signups in app/offline/queue.ts"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 3: User Story 2 - Accept the house rules (P2)",
+     "fields": [
+      {
+       "label": "Goal",
+       "value": "The date and version of the accepted rules are on every profile."
+      }
+     ],
+     "items": [
+      {
+       "id": "T009",
+       "done": true,
+       "parallel": true,
+       "story": "US2",
+       "text": "Test: a changed rules text asks again in tests/members.test.ts"
+      },
+      {
+       "id": "T010",
+       "done": true,
+       "parallel": false,
+       "story": "US2",
+       "text": "Store rules acceptance in server/members/store.ts"
+      },
+      {
+       "id": "T011",
+       "done": true,
+       "parallel": false,
+       "story": "US2",
+       "text": "Build the rules step in app/signup/RulesStep.tsx"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 4: Polish",
+     "fields": [],
+     "items": [
+      {
+       "id": "T012",
+       "done": true,
+       "parallel": true,
+       "story": null,
+       "text": "Dutch translations for the signup screens"
+      },
+      {
+       "id": "T013",
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Print the card number label from the confirmation screen"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/001-member-signup/checklists/release.md": {
+   "ref": {
+    "path": "specs/001-member-signup/checklists/release.md",
+    "kind": "checklist",
+    "hash": "5573e8ce6786"
+   },
+   "title": "Release Checklist: Member Signup",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "phase",
+     "title": "Before the first opening day",
+     "fields": [],
+     "items": [
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Both counter tablets have the new app version"
+      },
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "A volunteer registered a test member offline and saw it sync"
+      },
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Card labels print on the counter label printer"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "After the first week",
+     "fields": [],
+     "items": [
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "No duplicate members in the weekly report"
+      },
+      {
+       "id": null,
+       "done": false,
+       "parallel": false,
+       "story": null,
+       "text": "Ask three volunteers how long a signup took them"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/001-member-signup/checklists/requirements.md": {
+   "ref": {
+    "path": "specs/001-member-signup/checklists/requirements.md",
+    "kind": "checklist",
+    "hash": "1123da0586b1"
+   },
+   "title": "Specification Quality Checklist: Member Signup",
+   "meta": [
+    {
+     "label": "Purpose",
+     "value": "Check the spec before planning"
+    },
+    {
+     "label": "Created",
+     "value": "2026-02-16"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "phase",
+     "title": "Content Quality",
+     "fields": [],
+     "items": [
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "No implementation details (languages, frameworks, APIs)"
+      },
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Focused on what members and volunteers need"
+      },
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "All mandatory sections completed"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Requirement Completeness",
+     "fields": [],
+     "items": [
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "No [NEEDS CLARIFICATION] markers remain"
+      },
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Requirements are testable and unambiguous"
+      },
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Success criteria are measurable"
+      },
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Edge cases are identified"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Feature Readiness",
+     "fields": [],
+     "items": [
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Every functional requirement has acceptance criteria"
+      },
+      {
+       "id": null,
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "User scenarios cover the primary flows"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/002-tool-catalog/spec.md": {
+   "ref": {
+    "path": "specs/002-tool-catalog/spec.md",
+    "kind": "spec",
+    "hash": "df98f89bf5fb"
+   },
+   "title": "Feature Specification: Tool Catalog",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`002-tool-catalog`"
+    },
+    {
+     "label": "Created",
+     "value": "2026-03-02"
+    },
+    {
+     "label": "Status",
+     "value": "In Progress"
+    },
+    {
+     "label": "Input",
+     "value": "User description: \"Members ask what we have and whether it is in. Volunteers answer from memory. Put the tools in a catalog.\""
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "User Scenarios & Testing *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "stories",
+     "items": [
+      {
+       "title": "Find a tool",
+       "priority": "P1",
+       "narrative": null,
+       "why": "\"Do you have a tile cutter?\" is the most asked question at the counter.",
+       "test": "Search for \"tile\" and see the tile cutter with its shelf location and whether it is in.",
+       "scenarios": [
+        {
+         "given": "a catalog with a tile cutter",
+         "when": "a member searches for \"tile\"",
+         "then": "the tile cutter is listed with its photo and shelf location"
+        },
+        {
+         "given": "a tool that is on loan",
+         "when": "it appears in results",
+         "then": "it is marked \"out\" with the date it is due back"
+        },
+        {
+         "given": "a search with no match",
+         "when": "the results are empty",
+         "then": "the three closest tools by category are suggested"
+        }
+       ],
+       "rest": "A member or a volunteer searches the catalog by name or by what the tool is for, and sees whether it is on the shelf."
+      },
+      {
+       "title": "Add and edit tools",
+       "priority": "P2",
+       "narrative": null,
+       "why": "The catalog is only useful while it matches the shelves.",
+       "test": "Add a tool with a photo taken on the tablet and find it by search a moment later.",
+       "scenarios": [
+        {
+         "given": "a volunteer at the counter",
+         "when": "they add a tool with a name, a category and a photo",
+         "then": "the tool gets a label code and appears in search"
+        },
+        {
+         "given": "a tool that broke beyond repair",
+         "when": "a volunteer retires it",
+         "then": "it disappears from search but its loan history stays"
+        }
+       ],
+       "rest": "A volunteer adds a donated tool with a photo, a category and a shelf location, and corrects entries later."
+      },
+      {
+       "title": "Browse by category",
+       "priority": "P3",
+       "narrative": null,
+       "why": "Helpful for new members, but search covers most visits.",
+       "test": "Open \"Garden\" and see only garden tools, the ones on the shelf first.",
+       "scenarios": [
+        {
+         "given": "the category list",
+         "when": "a member opens \"Garden\"",
+         "then": "garden tools are shown with the available ones first"
+        }
+       ],
+       "rest": "A member who does not know the name of a tool browses categories such as \"Garden\" or \"Painting\"."
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Edge Cases",
+     "depth": 3,
+     "markdown": "- Two identical drills: are they one catalog entry with two copies, or two entries?\n- A tool with several parts (a drill and its case of bits) that come back incomplete."
+    },
+    {
+     "kind": "raw",
+     "heading": "Requirements *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Search",
+     "depth": 4,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST find tools by name, category and purpose words"
+      },
+      {
+       "id": "FR-002",
+       "text": "System MUST show for every result whether the tool is in, and if not, when it is due"
+      },
+      {
+       "id": "FR-003",
+       "text": "System MUST answer a search in under one second on the counter tablet, offline included"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Catalog upkeep",
+     "depth": 4,
+     "items": [
+      {
+       "id": "FR-004",
+       "text": "System MUST let a volunteer add a tool with a name, a category, a shelf location and a photo"
+      },
+      {
+       "id": "FR-005",
+       "text": "System MUST give every copy of a tool its own label code"
+      },
+      {
+       "id": "FR-006",
+       "text": "System MUST keep the loan history of a retired tool"
+      },
+      {
+       "id": "FR-007",
+       "text": "System MUST let a volunteer mark a tool as \"needs repair\" so it cannot be lent"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Key Entities",
+     "depth": 3,
+     "markdown": "- **Tool**: a kind of thing the library lends; name, category, purpose words, photo\n- **Copy**: one physical item of a tool; label code, shelf location, condition\n- **Category**: a group of tools a member can browse"
+    },
+    {
+     "kind": "raw",
+     "heading": "Success Criteria *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Measurable Outcomes",
+     "depth": 3,
+     "items": [
+      {
+       "id": "SC-001",
+       "text": "A volunteer answers \"do you have X, and is it in?\" in under 10 seconds"
+      },
+      {
+       "id": "SC-002",
+       "text": "90% of searches by members end with a tool opened"
+      },
+      {
+       "id": "SC-003",
+       "text": "The catalog and the shelves disagree on fewer than 2% of copies at the monthly count"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/002-tool-catalog/plan.md": {
+   "ref": {
+    "path": "specs/002-tool-catalog/plan.md",
+    "kind": "plan",
+    "hash": "a83cb17e1806"
+   },
+   "title": "Implementation Plan: Tool Catalog",
+   "meta": [
+    {
+     "label": "Branch",
+     "value": "`002-tool-catalog`"
+    },
+    {
+     "label": "Date",
+     "value": "2026-03-05"
+    },
+    {
+     "label": "Spec",
+     "value": "[spec.md](spec.md)"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Summary",
+     "depth": 2,
+     "markdown": "Tools and their copies live in PostgreSQL; the counter tablet keeps a full copy of the catalog and searches it locally, so search works offline and stays under a second."
+    },
+    {
+     "kind": "fields",
+     "heading": "Technical Context",
+     "items": [
+      {
+       "label": "Language/Version",
+       "value": "TypeScript 5.9"
+      },
+      {
+       "label": "Primary Dependencies",
+       "value": "Fastify, React, MiniSearch"
+      },
+      {
+       "label": "Storage",
+       "value": "PostgreSQL 17, photos on the server disk, catalog mirror in IndexedDB"
+      },
+      {
+       "label": "Testing",
+       "value": "Vitest, Playwright"
+      },
+      {
+       "label": "Target Platform",
+       "value": "Android tablet (Chrome), members' phones"
+      },
+      {
+       "label": "Performance Goals",
+       "value": "Search results in under 1 s for 2,000 tools"
+      },
+      {
+       "label": "Constraints",
+       "value": "Catalog mirror under 20 MB, photos included"
+      },
+      {
+       "label": "Scale/Scope",
+       "value": "About 600 tools today, 2,000 within three years"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Constitution Check",
+     "depth": 2,
+     "markdown": "| Principle | Status | Note |\n|---|---|---|\n| I. The Counter Comes First | Pass | Search is the first screen of the counter app |\n| II. A Loan Is Never Lost | Pass | Retiring a tool hides it, history stays |\n| III. Works When the Wi-Fi Does Not | Pass | Search runs on the local mirror |\n| VI. Plain Words | Pass | \"Copy\" is shown as \"item 2 of 3\" |"
+    },
+    {
+     "kind": "raw",
+     "heading": "Project Structure",
+     "depth": 2,
+     "markdown": "```text\nserver/\n├── catalog/\n│   ├── routes.ts\n│   ├── store.ts\n│   └── photos.ts\napp/\n├── catalog/\n│   ├── SearchScreen.tsx\n│   ├── ToolForm.tsx\n│   └── CategoryList.tsx\n└── offline/\n    └── catalogMirror.ts\ntests/\n├── catalog.test.ts\n└── search.spec.ts\n```"
+    },
+    {
+     "kind": "raw",
+     "heading": "Complexity Tracking",
+     "depth": 2,
+     "markdown": "| Violation | Why needed | Simpler alternative rejected because |\n|---|---|---|\n| A second copy of the catalog on the tablet | Search must work offline | Server-only search fails in the basement |"
+    }
+   ]
+  },
+  "specs/002-tool-catalog/research.md": {
+   "ref": {
+    "path": "specs/002-tool-catalog/research.md",
+    "kind": "research",
+    "hash": "3a13955af843"
+   },
+   "title": "Research: Tool Catalog",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Search",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "decisions",
+     "items": [
+      {
+       "title": "Where search runs",
+       "fields": [
+        {
+         "label": "Decision",
+         "value": "Search runs in the counter app on a local mirror of the catalog."
+        },
+        {
+         "label": "Rationale",
+         "value": "The basement connection drops several times a day, and 2,000 tools fit in memory with room to spare."
+        },
+        {
+         "label": "Alternatives considered",
+         "value": "PostgreSQL full-text search on the server (fast, but useless offline); a hosted search service (a monthly bill and member queries leaving the building)."
+        }
+       ],
+       "rest": ""
+      },
+      {
+       "title": "Search library",
+       "fields": [
+        {
+         "label": "Decision",
+         "value": "MiniSearch, with prefix and fuzzy matching switched on."
+        },
+        {
+         "label": "Rationale",
+         "value": "It is small, has no dependencies and forgives the typos a volunteer makes with gloves on."
+        },
+        {
+         "label": "Alternatives considered",
+         "value": "Lunr (no fuzzy matching on prefixes); writing our own substring match (no ranking)."
+        }
+       ],
+       "rest": ""
+      }
+     ]
+    },
+    {
+     "kind": "decisions",
+     "items": [
+      {
+       "title": "One entry or one per item",
+       "fields": [
+        {
+         "label": "Decision",
+         "value": "A tool is one catalog entry with one or more copies."
+        },
+        {
+         "label": "Rationale",
+         "value": "Members look for \"a drill\", volunteers hand over \"drill number 2\". Both need to be true at once."
+        }
+       ],
+       "rest": ""
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Photos",
+     "depth": 2,
+     "markdown": "Photos are taken on the tablet, resized to 800 px on the long side before upload, and stored on the server disk. No decision is open here; the library already owns the disk."
+    }
+   ]
+  },
+  "specs/002-tool-catalog/data-model.md": {
+   "ref": {
+    "path": "specs/002-tool-catalog/data-model.md",
+    "kind": "data-model",
+    "hash": "c16a6378cbc4"
+   },
+   "title": "Data Model: Tool Catalog",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "cards",
+     "heading": "Entities",
+     "items": [
+      {
+       "title": "Tool",
+       "markdown": "A kind of thing the library lends.\n\n| Field | Type | Notes |\n|---|---|---|\n| id | uuid | |\n| name | text | \"Tile cutter\" |\n| category_id | uuid | references Category |\n| purpose | text[] | words members search by: \"tiles\", \"bathroom\" |\n| photo_path | text | nullable |\n| retired_at | timestamptz | nullable; hidden from search when set |"
+      },
+      {
+       "title": "Copy",
+       "markdown": "One physical item of a tool.\n\n| Field | Type | Notes |\n|---|---|---|\n| id | uuid | |\n| tool_id | uuid | references Tool |\n| label_code | text | unique, printed on the item: `BB-0412` |\n| shelf | text | \"C3\" |\n| condition | enum | `ok`, `needs_repair`, `retired` |"
+      },
+      {
+       "title": "Category",
+       "markdown": "| Field | Type | Notes |\n|---|---|---|\n| id | uuid | |\n| name | text | unique: \"Garden\", \"Painting\" |\n| sort_order | int | order in the category list |"
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Relationships",
+     "depth": 2,
+     "markdown": "- A Tool belongs to one Category.\n- A Tool has one or more Copies.\n- A Copy is lent, not a Tool (see `003-loan-checkout`)."
+    },
+    {
+     "kind": "raw",
+     "heading": "State Transitions",
+     "depth": 2,
+     "markdown": "```text\nok ──► needs_repair ──► ok\n │            │\n └────────────┴──► retired\n```"
+    }
+   ]
+  },
+  "specs/002-tool-catalog/tasks.md": {
+   "ref": {
+    "path": "specs/002-tool-catalog/tasks.md",
+    "kind": "tasks",
+    "hash": "c2877c6418d4"
+   },
+   "title": "Tasks: Tool Catalog",
+   "meta": [
+    {
+     "label": "Input",
+     "value": "Design documents from `/specs/002-tool-catalog/`"
+    },
+    {
+     "label": "Prerequisites",
+     "value": "plan.md, spec.md, research.md, data-model.md"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "phase",
+     "title": "Phase 1: Setup",
+     "fields": [
+      {
+       "label": "Purpose",
+       "value": "Tables and module skeletons."
+      }
+     ],
+     "items": [
+      {
+       "id": "T001",
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Create the `tools`, `copies` and `categories` migrations in server/db/migrations/"
+      },
+      {
+       "id": "T002",
+       "done": true,
+       "parallel": true,
+       "story": null,
+       "text": "Add the catalog module skeleton in server/catalog/"
+      },
+      {
+       "id": "T003",
+       "done": true,
+       "parallel": true,
+       "story": null,
+       "text": "Add the catalog screens skeleton in app/catalog/"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 2: Foundational",
+     "fields": [
+      {
+       "label": "Purpose",
+       "value": "The catalog mirror every story depends on."
+      },
+      {
+       "label": "Checkpoint",
+       "value": "The tablet holds the whole catalog and refreshes it when the stamp changes."
+      }
+     ],
+     "items": [
+      {
+       "id": "T004",
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Implement the catalog store in server/catalog/store.ts"
+      },
+      {
+       "id": "T005",
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Serve the full catalog with a version stamp in server/catalog/routes.ts"
+      },
+      {
+       "id": "T006",
+       "done": true,
+       "parallel": false,
+       "story": null,
+       "text": "Mirror the catalog into IndexedDB in app/offline/catalogMirror.ts"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 3: User Story 1 - Find a tool (P1)",
+     "fields": [
+      {
+       "label": "Goal",
+       "value": "Search by name, category or purpose, with availability on every result."
+      },
+      {
+       "label": "Independent Test",
+       "value": "Search for \"tile\" and see the tile cutter, its shelf and whether it is in."
+      }
+     ],
+     "items": [
+      {
+       "id": "T007",
+       "done": true,
+       "parallel": true,
+       "story": "US1",
+       "text": "Test: search matches name, category and purpose words in tests/catalog.test.ts"
+      },
+      {
+       "id": "T008",
+       "done": true,
+       "parallel": true,
+       "story": "US1",
+       "text": "Test: a tool on loan shows its due date in tests/search.spec.ts"
+      },
+      {
+       "id": "T009",
+       "done": true,
+       "parallel": false,
+       "story": "US1",
+       "text": "Build the search index from the mirror in app/catalog/searchIndex.ts"
+      },
+      {
+       "id": "T010",
+       "done": true,
+       "parallel": false,
+       "story": "US1",
+       "text": "Build the search screen in app/catalog/SearchScreen.tsx"
+      },
+      {
+       "id": "T011",
+       "done": false,
+       "parallel": false,
+       "story": "US1",
+       "text": "Suggest the closest tools when nothing matches in app/catalog/searchIndex.ts"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 4: User Story 2 - Add and edit tools (P2)",
+     "fields": [
+      {
+       "label": "Goal",
+       "value": "A volunteer keeps the catalog in step with the shelves."
+      }
+     ],
+     "items": [
+      {
+       "id": "T012",
+       "done": true,
+       "parallel": true,
+       "story": "US2",
+       "text": "Test: every copy gets its own label code in tests/catalog.test.ts"
+      },
+      {
+       "id": "T013",
+       "done": false,
+       "parallel": true,
+       "story": "US2",
+       "text": "Test: a retired tool keeps its loan history in tests/catalog.test.ts"
+      },
+      {
+       "id": "T014",
+       "done": false,
+       "parallel": false,
+       "story": "US2",
+       "text": "Build the tool form with photo capture in app/catalog/ToolForm.tsx"
+      },
+      {
+       "id": "T015",
+       "done": false,
+       "parallel": false,
+       "story": "US2",
+       "text": "Resize and store photos in server/catalog/photos.ts"
+      },
+      {
+       "id": "T016",
+       "done": false,
+       "parallel": false,
+       "story": "US2",
+       "text": "Add the \"needs repair\" switch to a copy in app/catalog/ToolForm.tsx"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 5: User Story 3 - Browse by category (P3)",
+     "fields": [
+      {
+       "label": "Goal",
+       "value": "A member who does not know the name finds the tool by category."
+      }
+     ],
+     "items": [
+      {
+       "id": "T017",
+       "done": false,
+       "parallel": true,
+       "story": "US3",
+       "text": "Test: available tools are listed first in tests/search.spec.ts"
+      },
+      {
+       "id": "T018",
+       "done": false,
+       "parallel": false,
+       "story": "US3",
+       "text": "Build the category list in app/catalog/CategoryList.tsx"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 6: Polish",
+     "fields": [],
+     "items": [
+      {
+       "id": "T019",
+       "done": false,
+       "parallel": true,
+       "story": null,
+       "text": "Dutch translations for the catalog screens"
+      },
+      {
+       "id": "T020",
+       "done": false,
+       "parallel": true,
+       "story": null,
+       "text": "Check the mirror stays under 20 MB with 2,000 tools"
+      },
+      {
+       "id": "T021",
+       "done": false,
+       "parallel": false,
+       "story": null,
+       "text": "Run the monthly shelf count against the catalog once"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Dependencies",
+     "depth": 2,
+     "markdown": "- Phase 2 blocks every user story.\n- User stories 2 and 3 can be built in parallel once story 1 is done."
+    }
+   ]
+  },
+  "specs/003-loan-checkout/spec.md": {
+   "ref": {
+    "path": "specs/003-loan-checkout/spec.md",
+    "kind": "spec",
+    "hash": "1c234ad90fe0"
+   },
+   "title": "Feature Specification: Loan Checkout",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`003-loan-checkout`"
+    },
+    {
+     "label": "Created",
+     "value": "2026-04-07"
+    },
+    {
+     "label": "Status",
+     "value": "Ready for implementation"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Overview",
+     "depth": 2,
+     "markdown": "Lending is the reason the library exists. Today a loan is a line in a paper book; this feature makes it a scan and a tap."
+    },
+    {
+     "kind": "raw",
+     "heading": "User Stories",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "stories",
+     "items": [
+      {
+       "title": "Lend a tool",
+       "priority": null,
+       "narrative": "**As a** volunteer at the counter\n**I want to** scan a member card and a tool label\n**So that** the loan is recorded before the member leaves the desk",
+       "why": null,
+       "test": null,
+       "scenarios": [
+        {
+         "given": "a member with no overdue loans and a tool that is on the shelf",
+         "when": "I scan the member card and then the tool label",
+         "then": "a loan is created with a due date two weeks from today\n\nAnd the tool shows as \"out\" in the catalog"
+        },
+        {
+         "given": "a member who already holds five tools",
+         "when": "I scan a sixth tool",
+         "then": "the loan is refused with the reason on screen"
+        }
+       ],
+       "rest": ""
+      },
+      {
+       "title": "Take a tool back",
+       "priority": null,
+       "narrative": "**As a** volunteer at the counter\n**I want to** scan a returned tool\n**So that** it is back in the catalog for the next member",
+       "why": null,
+       "test": null,
+       "scenarios": [
+        {
+         "given": "a tool that is on loan",
+         "when": "I scan its label",
+         "then": "the loan is closed with today's date\n\nAnd the tool shows as \"in\" in the catalog"
+        },
+        {
+         "given": "a tool that comes back broken",
+         "when": "I mark it \"needs repair\" while returning it",
+         "then": "the loan is closed and the tool cannot be lent\n\nBut the member is not blocked from borrowing"
+        }
+       ],
+       "rest": ""
+      },
+      {
+       "title": "Extend a loan",
+       "priority": null,
+       "narrative": "**As a** member\n**I want to** extend my loan once from my phone\n**So that** I do not have to come in when a job takes longer",
+       "why": null,
+       "test": null,
+       "scenarios": [
+        {
+         "given": "a loan that is not overdue and that nobody is waiting for",
+         "when": "I tap \"extend\"",
+         "then": "the due date moves one week"
+        },
+        {
+         "given": "a loan that was extended before",
+         "when": "I tap \"extend\"",
+         "then": "I am told to ask at the counter"
+        }
+       ],
+       "rest": ""
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Requirements",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST create a loan from one member card scan and one tool label scan"
+      },
+      {
+       "id": "FR-002",
+       "text": "System MUST set the due date to 14 days after checkout"
+      },
+      {
+       "id": "FR-003",
+       "text": "System MUST refuse a loan when the member holds five tools or has an overdue loan"
+      },
+      {
+       "id": "FR-004",
+       "text": "System MUST close a loan when the tool label is scanned at return"
+      },
+      {
+       "id": "FR-005",
+       "text": "System MUST let a member extend a loan once by 7 days"
+      },
+      {
+       "id": "FR-006",
+       "text": "System MUST record checkouts and returns while offline and sync them in order"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Non-Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "NFR-001",
+       "text": "A checkout takes at most three taps after the two scans"
+      },
+      {
+       "id": "NFR-002",
+       "text": "No loan is lost when the tablet loses power between scan and sync"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Out of Scope",
+     "depth": 2,
+     "markdown": "- Deposits and fines\n- Reserving a tool that is on the shelf"
+    }
+   ]
+  },
+  "specs/003-loan-checkout/plan.md": {
+   "ref": {
+    "path": "specs/003-loan-checkout/plan.md",
+    "kind": "plan",
+    "hash": "39596e066835"
+   },
+   "title": "Implementation Plan: Loan Checkout",
+   "meta": [
+    {
+     "label": "Branch",
+     "value": "`003-loan-checkout`"
+    },
+    {
+     "label": "Date",
+     "value": "2026-04-10"
+    },
+    {
+     "label": "Spec",
+     "value": "[spec.md](spec.md)"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Summary",
+     "depth": 2,
+     "markdown": "Loans are an append-only list of events (checked out, extended, returned) written on the tablet first and replayed on the server, so two tablets that were offline never disagree about who holds a tool."
+    },
+    {
+     "kind": "fields",
+     "heading": "Technical Context",
+     "items": [
+      {
+       "label": "Language/Version",
+       "value": "TypeScript 5.9"
+      },
+      {
+       "label": "Primary Dependencies",
+       "value": "Fastify, React, Dexie, the tablet camera for barcode scans"
+      },
+      {
+       "label": "Storage",
+       "value": "PostgreSQL 17 (`loan_events`), IndexedDB outbox on the tablet"
+      },
+      {
+       "label": "Testing",
+       "value": "Vitest, Playwright with a fake camera"
+      },
+      {
+       "label": "Target Platform",
+       "value": "Android tablet (Chrome)"
+      },
+      {
+       "label": "Performance Goals",
+       "value": "Scan to confirmation under 500 ms"
+      },
+      {
+       "label": "Constraints",
+       "value": "No loan event may be dropped or applied twice"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Constitution Check",
+     "depth": 2,
+     "markdown": "| Principle | Status | Note |\n|---|---|---|\n| I. The Counter Comes First | Pass | Two scans, one confirmation |\n| II. A Loan Is Never Lost | Pass | Events are written before the screen confirms |\n| III. Works When the Wi-Fi Does Not | Pass | Outbox on the tablet, replay on the server |"
+    },
+    {
+     "kind": "raw",
+     "heading": "Project Structure",
+     "depth": 2,
+     "markdown": "```text\nserver/\n└── loans/\n    ├── events.ts\n    ├── rules.ts\n    └── routes.ts\napp/\n├── checkout/\n│   ├── ScanScreen.tsx\n│   └── ReturnScreen.tsx\n└── offline/\n    └── outbox.ts\n```"
+    }
+   ]
+  },
+  "specs/003-loan-checkout/tasks.md": {
+   "ref": {
+    "path": "specs/003-loan-checkout/tasks.md",
+    "kind": "tasks",
+    "hash": "517c3d86ab0a"
+   },
+   "title": "Tasks: Loan Checkout",
+   "meta": [
+    {
+     "label": "Input",
+     "value": "Design documents from `/specs/003-loan-checkout/`"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "phase",
+     "title": "Phase 1: Setup",
+     "fields": [
+      {
+       "label": "Purpose",
+       "value": "The loan events table and module skeletons."
+      }
+     ],
+     "items": [
+      {
+       "id": "T001",
+       "done": false,
+       "parallel": false,
+       "story": null,
+       "text": "Create the `loan_events` migration in server/db/migrations/"
+      },
+      {
+       "id": "T002",
+       "done": false,
+       "parallel": true,
+       "story": null,
+       "text": "Add the loans module skeleton in server/loans/"
+      },
+      {
+       "id": "T003",
+       "done": false,
+       "parallel": true,
+       "story": null,
+       "text": "Add the checkout screens skeleton in app/checkout/"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 2: Foundational",
+     "fields": [
+      {
+       "label": "Purpose",
+       "value": "The event log and the outbox that every story writes to."
+      }
+     ],
+     "items": [
+      {
+       "id": "T004",
+       "done": false,
+       "parallel": false,
+       "story": null,
+       "text": "Implement the append-only event store in server/loans/events.ts"
+      },
+      {
+       "id": "T005",
+       "done": false,
+       "parallel": false,
+       "story": null,
+       "text": "Implement the tablet outbox with ordered replay in app/offline/outbox.ts"
+      },
+      {
+       "id": "T006",
+       "done": false,
+       "parallel": true,
+       "story": null,
+       "text": "Test: an event replayed twice is applied once in tests/loans.test.ts"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 3: User Story 1 - Lend a tool",
+     "fields": [
+      {
+       "label": "Goal",
+       "value": "Two scans make a loan."
+      }
+     ],
+     "items": [
+      {
+       "id": "T007",
+       "done": false,
+       "parallel": true,
+       "story": "US1",
+       "text": "Test: a sixth tool is refused in tests/loans.test.ts"
+      },
+      {
+       "id": "T008",
+       "done": false,
+       "parallel": true,
+       "story": "US1",
+       "text": "Test: an overdue member is refused in tests/loans.test.ts"
+      },
+      {
+       "id": "T009",
+       "done": false,
+       "parallel": false,
+       "story": "US1",
+       "text": "Implement the lending rules in server/loans/rules.ts"
+      },
+      {
+       "id": "T010",
+       "done": false,
+       "parallel": false,
+       "story": "US1",
+       "text": "Build the scan screen in app/checkout/ScanScreen.tsx"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 4: User Story 2 - Take a tool back",
+     "fields": [
+      {
+       "label": "Goal",
+       "value": "One scan closes a loan."
+      }
+     ],
+     "items": [
+      {
+       "id": "T011",
+       "done": false,
+       "parallel": true,
+       "story": "US2",
+       "text": "Test: a broken return closes the loan and blocks the tool in tests/loans.test.ts"
+      },
+      {
+       "id": "T012",
+       "done": false,
+       "parallel": false,
+       "story": "US2",
+       "text": "Build the return screen in app/checkout/ReturnScreen.tsx"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "phase",
+     "title": "Phase 5: User Story 3 - Extend a loan",
+     "fields": [
+      {
+       "label": "Goal",
+       "value": "One extension from the member's phone."
+      }
+     ],
+     "items": [
+      {
+       "id": "T013",
+       "done": false,
+       "parallel": true,
+       "story": "US3",
+       "text": "Test: a second extension is refused in tests/loans.test.ts"
+      },
+      {
+       "id": "T014",
+       "done": false,
+       "parallel": false,
+       "story": "US3",
+       "text": "Add the extend route in server/loans/routes.ts"
+      },
+      {
+       "id": "T015",
+       "done": false,
+       "parallel": false,
+       "story": "US3",
+       "text": "Add the extend button to the member page in app/member/Loans.tsx"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/003-loan-checkout/handover.md": {
+   "ref": {
+    "path": "specs/003-loan-checkout/handover.md",
+    "kind": "other",
+    "hash": "a31f5c0765cc"
+   },
+   "title": "Handover: Loan Checkout",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": null,
+     "depth": 0,
+     "markdown": "Notes from the paper loan book, for whoever picks this feature up. spec-kit does not define this file, so the dashboard lists it as an \"other\" document."
+    },
+    {
+     "kind": "raw",
+     "heading": "What the paper book taught us",
+     "depth": 2,
+     "markdown": "- Most mistakes are a tool written down under the wrong member, not a missing line.\n- Returns pile up on Saturday at closing time; that is when the tablet must be fastest."
+    },
+    {
+     "kind": "raw",
+     "heading": "Still to import",
+     "depth": 2,
+     "markdown": "About 40 open loans are only in the paper book. They need to be typed in on the day the counter switches over."
+    }
+   ]
+  },
+  "specs/004-due-reminders/spec.md": {
+   "ref": {
+    "path": "specs/004-due-reminders/spec.md",
+    "kind": "spec",
+    "hash": "4830e8a5aff0"
+   },
+   "title": "Feature Specification: Due Date Reminders",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`004-due-reminders`"
+    },
+    {
+     "label": "Created",
+     "value": "2026-05-11"
+    },
+    {
+     "label": "Status",
+     "value": "Planned"
+    },
+    {
+     "label": "Input",
+     "value": "User description: \"A third of the tools come back late, mostly because people forget. Remind them.\""
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "User Scenarios & Testing *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "stories",
+     "items": [
+      {
+       "title": "Reminder before the due date",
+       "priority": "P1",
+       "narrative": null,
+       "why": "Forgetting is the main cause of late returns; one message fixes most of it.",
+       "test": "Create a loan due in two days, run the daily job, and see one message addressed to the member.",
+       "scenarios": [
+        {
+         "given": "a loan due in two days",
+         "when": "the daily reminder job runs",
+         "then": "the member gets one message naming the tool and the due date"
+        },
+        {
+         "given": "a member with three loans due on the same day",
+         "when": "the job runs",
+         "then": "they get one message listing all three tools"
+        },
+        {
+         "given": "a loan that was already reminded",
+         "when": "the job runs again the same day",
+         "then": "no second message is sent"
+        }
+       ],
+       "rest": "A member gets a message two days before a tool is due, by the contact detail they gave at signup."
+      },
+      {
+       "title": "Overdue notice",
+       "priority": "P2",
+       "narrative": null,
+       "why": "Needed for the tools that still come back late, but it helps fewer members than the first reminder.",
+       "test": "Let a loan pass its due date, run the job, and see the notice and the loan on the overdue list.",
+       "scenarios": [
+        {
+         "given": "a loan one day past its due date",
+         "when": "the daily job runs",
+         "then": "the member gets an overdue notice"
+        },
+        {
+         "given": "a loan that has been overdue for a week",
+         "when": "a volunteer opens the overdue list",
+         "then": "the loan is at the top with the member's contact detail"
+        }
+       ],
+       "rest": "A member whose tool is late gets a notice the day after, and the volunteers see the list of overdue loans."
+      },
+      {
+       "title": "Stop the reminders",
+       "priority": "P3",
+       "narrative": null,
+       "why": "Required by the \"Ask for Less\" principle, used by few.",
+       "test": "Turn reminders off for a member, run the job, and see that nothing is sent to them.",
+       "scenarios": [
+        {
+         "given": "a member who turned reminders off",
+         "when": "one of their loans is due in two days",
+         "then": "no message is sent and the loan still appears on the volunteers' list"
+        }
+       ],
+       "rest": "A member who does not want messages turns them off."
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Requirements *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST send one reminder per member two days before a due date, listing every tool due that day"
+      },
+      {
+       "id": "FR-002",
+       "text": "System MUST send one overdue notice the day after a missed due date"
+      },
+      {
+       "id": "FR-003",
+       "text": "System MUST never send the same reminder twice"
+      },
+      {
+       "id": "FR-004",
+       "text": "System MUST send by SMS when the member gave a phone number and by email otherwise"
+      },
+      {
+       "id": "FR-005",
+       "text": "System MUST let a member turn reminders off with one tap from any message"
+      },
+      {
+       "id": "FR-006",
+       "text": "System MUST show volunteers a list of overdue loans, oldest first"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Success Criteria *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Measurable Outcomes",
+     "depth": 3,
+     "items": [
+      {
+       "id": "SC-001",
+       "text": "Late returns fall from 33% to under 15% within two months"
+      },
+      {
+       "id": "SC-002",
+       "text": "Fewer than 1 in 100 members turns reminders off"
+      },
+      {
+       "id": "SC-003",
+       "text": "The association pays less than 10 euros a month for messages"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/004-due-reminders/plan.md": {
+   "ref": {
+    "path": "specs/004-due-reminders/plan.md",
+    "kind": "plan",
+    "hash": "cea0b75cd927"
+   },
+   "title": "Implementation Plan: Due Date Reminders",
+   "meta": [
+    {
+     "label": "Branch",
+     "value": "`004-due-reminders`"
+    },
+    {
+     "label": "Date",
+     "value": "2026-05-14"
+    },
+    {
+     "label": "Spec",
+     "value": "[spec.md](spec.md)"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Summary",
+     "depth": 2,
+     "markdown": "A daily job on the server reads the loans due in two days and the loans that became overdue, groups them by member, and sends one message each through a small sender interface with an SMS and an email implementation. Every send is recorded, which is also what prevents a second one."
+    },
+    {
+     "kind": "fields",
+     "heading": "Technical Context",
+     "items": [
+      {
+       "label": "Language/Version",
+       "value": "TypeScript 5.9"
+      },
+      {
+       "label": "Primary Dependencies",
+       "value": "Fastify, node-cron, Nodemailer, the SMS provider's HTTP API"
+      },
+      {
+       "label": "Storage",
+       "value": "PostgreSQL 17 (`reminders` table)"
+      },
+      {
+       "label": "Testing",
+       "value": "Vitest with a recording fake sender"
+      },
+      {
+       "label": "Target Platform",
+       "value": "Linux server"
+      },
+      {
+       "label": "Performance Goals",
+       "value": "The daily job finishes in under a minute for 500 open loans"
+      },
+      {
+       "label": "Constraints",
+       "value": "Message cost under 10 euros a month; no message between 20:00 and 09:00"
+      },
+      {
+       "label": "Scale/Scope",
+       "value": "About 120 open loans on a normal week"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Constitution Check",
+     "depth": 2,
+     "markdown": "| Principle | Status | Note |\n|---|---|---|\n| II. A Loan Is Never Lost | Pass | The job only reads loans |\n| IV. Ask for Less | Pass | Uses the contact detail from signup, nothing new |\n| V. Tests Before Shelves | Pass | The job is tested with a fake clock and a fake sender |\n| VI. Plain Words | Pass | Message texts are in [quickstart.md](quickstart.md) for review |"
+    },
+    {
+     "kind": "raw",
+     "heading": "Project Structure",
+     "depth": 2,
+     "markdown": "### Documentation (this feature)\n\n```text\nspecs/004-due-reminders/\n├── plan.md\n├── research.md\n├── data-model.md\n├── quickstart.md\n└── contracts/\n    └── reminders.openapi.yaml\n```\n\n### Source Code\n\n```text\nserver/\n└── reminders/\n    ├── job.ts\n    ├── select.ts\n    ├── senders/\n    │   ├── sms.ts\n    │   └── email.ts\n    └── routes.ts\ntests/\n└── reminders.test.ts\n```"
+    }
+   ]
+  },
+  "specs/004-due-reminders/research.md": {
+   "ref": {
+    "path": "specs/004-due-reminders/research.md",
+    "kind": "research",
+    "hash": "0dc228fb9e74"
+   },
+   "title": "Research: Due Date Reminders",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "decisions",
+     "items": [
+      {
+       "title": "Channel",
+       "fields": [
+        {
+         "label": "Decision",
+         "value": "SMS when the member gave a phone number, email otherwise."
+        },
+        {
+         "label": "Rationale",
+         "value": "Nine in ten members signed up with a phone number, and a text is read within minutes. Email costs nothing and covers the rest."
+        },
+        {
+         "label": "Alternatives considered",
+         "value": "A messaging app bot (members would have to add a contact first); push notifications (there is no member app to push to); email only (half the members gave no address)."
+        }
+       ],
+       "rest": ""
+      },
+      {
+       "title": "When to remind",
+       "fields": [
+        {
+         "label": "Decision",
+         "value": "Two days before the due date, at 10:00 local time."
+        },
+        {
+         "label": "Rationale",
+         "value": "Two days leaves a weekend day to bring the tool back, and 10:00 is inside the opening hours of both weekdays the library is open."
+        },
+        {
+         "label": "Alternatives considered",
+         "value": "The evening before (too late to plan a trip); one week before (forgotten again by the due date)."
+        }
+       ],
+       "rest": ""
+      },
+      {
+       "title": "Scheduling",
+       "fields": [
+        {
+         "label": "Decision",
+         "value": "An in-process cron schedule in the existing server."
+        },
+        {
+         "label": "Rationale",
+         "value": "One job a day does not justify a queue or a second process."
+        },
+        {
+         "label": "Alternatives considered",
+         "value": "A system cron entry calling an HTTP route (one more thing to configure on the server); a job queue (nothing else needs one yet)."
+        }
+       ],
+       "rest": ""
+      },
+      {
+       "title": "Not sending twice",
+       "fields": [
+        {
+         "label": "Decision",
+         "value": "A unique key on member, kind and due date in the `reminders` table; the row is written before the message is sent."
+        },
+        {
+         "label": "Rationale",
+         "value": "If the job crashes and restarts, the key refuses the duplicate. A message that was recorded but not sent is retried by a separate sweep."
+        }
+       ],
+       "rest": ""
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Message cost",
+     "depth": 2,
+     "markdown": "At the provider's price of 7 cents a text and about 110 reminders a month, the bill is close to 8 euros. Grouping loans per member, as FR-001 asks, is what keeps it under the 10 euro limit."
+    }
+   ]
+  },
+  "specs/004-due-reminders/data-model.md": {
+   "ref": {
+    "path": "specs/004-due-reminders/data-model.md",
+    "kind": "data-model",
+    "hash": "cbc5abfe8c3d"
+   },
+   "title": "Data Model: Due Date Reminders",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "cards",
+     "heading": "Entities",
+     "items": [
+      {
+       "title": "Reminder",
+       "markdown": "One message sent, or about to be sent, to one member.\n\n| Field | Type | Notes |\n|---|---|---|\n| id | uuid | |\n| member_id | uuid | references Member |\n| kind | enum | `due_soon`, `overdue` |\n| due_date | date | the due date the message is about |\n| channel | enum | `sms`, `email` |\n| status | enum | `pending`, `sent`, `failed` |\n| sent_at | timestamptz | nullable |\n\nUnique on (`member_id`, `kind`, `due_date`)."
+      },
+      {
+       "title": "Reminder Preference",
+       "markdown": "| Field | Type | Notes |\n|---|---|---|\n| member_id | uuid | primary key, references Member |\n| enabled | boolean | default `true` |\n| changed_at | timestamptz | |"
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Relationships",
+     "depth": 2,
+     "markdown": "- A Reminder covers every loan of one member that shares its due date.\n- A Reminder Preference belongs to exactly one Member; no row means reminders are on."
+    },
+    {
+     "kind": "raw",
+     "heading": "State Transitions",
+     "depth": 2,
+     "markdown": "```text\npending ──► sent\n   │\n   └──► failed ──► pending   (retried up to 3 times by the sweep)\n```"
+    }
+   ]
+  },
+  "specs/004-due-reminders/quickstart.md": {
+   "ref": {
+    "path": "specs/004-due-reminders/quickstart.md",
+    "kind": "quickstart",
+    "hash": "d1a0f65394ab"
+   },
+   "title": "Quickstart: Due Date Reminders",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": null,
+     "depth": 0,
+     "markdown": "How to check this feature by hand once it is built."
+    },
+    {
+     "kind": "raw",
+     "heading": "Prepare a loan that is due in two days",
+     "depth": 2,
+     "markdown": "```sh\nnpm run seed -- --member \"Test Member\" --phone \"+31600000000\"\nnpm run seed:loan -- --member \"Test Member\" --tool \"Tile cutter\" --due-in 2\n```"
+    },
+    {
+     "kind": "raw",
+     "heading": "Run the daily job with the fake sender",
+     "depth": 2,
+     "markdown": "```sh\nREMINDER_SENDER=fake npm run reminders:run\n```\n\nExpected output:\n\n```text\ndue_soon  Test Member  sms  \"Your Tile cutter is due back on Saturday 16 May.\"\n1 reminder sent, 0 skipped, 0 failed\n```"
+    },
+    {
+     "kind": "raw",
+     "heading": "Run it again",
+     "depth": 2,
+     "markdown": "```sh\nREMINDER_SENDER=fake npm run reminders:run\n```\n\nNothing is sent the second time: `0 reminders sent, 1 skipped, 0 failed`."
+    },
+    {
+     "kind": "raw",
+     "heading": "Turn reminders off and check",
+     "depth": 2,
+     "markdown": "Open the link from the message, tap \"Stop reminders\", create another loan for the same member and run the job once more. The loan appears in the volunteers' list at `/counter/overdue` when it is late, but no message is recorded."
+    },
+    {
+     "kind": "raw",
+     "heading": "Message texts to review",
+     "depth": 2,
+     "markdown": "| Kind | English | Dutch |\n|---|---|---|\n| Due soon | Your {tools} is due back on {date}. | Je {tools} moet terug op {date}. |\n| Overdue | Your {tools} was due on {date}. Please bring it back this week. | Je {tools} had terug moeten zijn op {date}. Breng je het deze week terug? |"
+    }
+   ]
+  },
+  "specs/004-due-reminders/contracts/reminders.openapi.yaml": {
+   "ref": {
+    "path": "specs/004-due-reminders/contracts/reminders.openapi.yaml",
+    "kind": "contract",
+    "hash": "433461653eea"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.1.0\ninfo:\n  title: Borrowbox reminders\n  version: 0.1.0\npaths:\n  /counter/overdue:\n    get:\n      summary: Overdue loans, oldest first\n      responses:\n        '200':\n          description: The list shown to volunteers\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/OverdueLoan'\n  /members/{memberId}/reminders:\n    put:\n      summary: Turn reminders on or off for one member\n      parameters:\n        - name: memberId\n          in: path\n          required: true\n          schema:\n            type: string\n            format: uuid\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              type: object\n              required: [enabled]\n              properties:\n                enabled:\n                  type: boolean\n      responses:\n        '204':\n          description: Saved\n        '404':\n          description: No such member\ncomponents:\n  schemas:\n    OverdueLoan:\n      type: object\n      required: [loanId, memberName, toolName, dueDate, daysLate]\n      properties:\n        loanId:\n          type: string\n          format: uuid\n        memberName:\n          type: string\n        toolName:\n          type: string\n        dueDate:\n          type: string\n          format: date\n        daysLate:\n          type: integer\n          minimum: 1\n"
+    }
+   ]
+  },
+  "specs/005-waitlist/spec.md": {
+   "ref": {
+    "path": "specs/005-waitlist/spec.md",
+    "kind": "spec",
+    "hash": "11acfeeb8919"
+   },
+   "title": "Feature Specification: Waitlist",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`005-waitlist`"
+    },
+    {
+     "label": "Created",
+     "value": "2026-06-01"
+    },
+    {
+     "label": "Status",
+     "value": "Draft"
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Overview",
+     "depth": 2,
+     "markdown": "The pressure washer and the two ladders are almost never on the shelf. Members ask the volunteers to \"call me when it's back\", and the volunteers keep sticky notes. This feature replaces the sticky notes."
+    },
+    {
+     "kind": "raw",
+     "heading": "User Stories",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "stories",
+     "items": [
+      {
+       "title": "Join the waitlist",
+       "priority": null,
+       "narrative": "**As a** member\n**I want to** put my name down for a tool that is out\n**So that** I do not have to keep checking whether it came back",
+       "why": null,
+       "test": null,
+       "scenarios": [
+        {
+         "given": "a tool with every copy on loan",
+         "when": "I tap \"tell me when it's back\"",
+         "then": "I am added to the end of the waitlist for that tool\n\nAnd I see my place in the queue"
+        },
+        {
+         "given": "a tool that is on the shelf",
+         "when": "I open its page",
+         "then": "there is no waitlist button"
+        }
+       ],
+       "rest": ""
+      },
+      {
+       "title": "Be told when it is back",
+       "priority": null,
+       "narrative": "**As a** member on a waitlist\n**I want to** get a message when the tool is returned\n**So that** I can come and borrow it",
+       "why": null,
+       "test": null,
+       "scenarios": [
+        {
+         "given": "I am first on the waitlist for a tool",
+         "when": "a copy of it is returned",
+         "then": "I get a message saying it is held for me for three days\n\nAnd the copy cannot be lent to anyone else during those days"
+        },
+        {
+         "given": "I do not collect the tool within three days",
+         "when": "the hold ends",
+         "then": "the next member on the waitlist is told\n\nBut I keep my membership without any penalty"
+        }
+       ],
+       "rest": ""
+      },
+      {
+       "title": "See who is waiting",
+       "priority": null,
+       "narrative": "**As a** volunteer\n**I want to** see the waitlist of a tool when it is returned\n**So that** I put it on the hold shelf instead of the normal one",
+       "why": null,
+       "test": null,
+       "scenarios": [
+        {
+         "given": "a returned tool with a waitlist",
+         "when": "I scan it at return",
+         "then": "the screen says \"hold for\" and the first member's name"
+        }
+       ],
+       "rest": ""
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Requirements",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST let a member join the waitlist of a tool only when no copy is available"
+      },
+      {
+       "id": "FR-002",
+       "text": "System MUST keep the waitlist in the order members joined"
+      },
+      {
+       "id": "FR-003",
+       "text": "System MUST hold a returned copy for the first waiting member for three days"
+      },
+      {
+       "id": "FR-004",
+       "text": "System MUST tell the next member when a hold ends without a loan"
+      },
+      {
+       "id": "FR-005",
+       "text": "System MUST show the hold on the return screen"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Success Criteria",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Measurable Outcomes",
+     "depth": 3,
+     "items": [
+      {
+       "id": "SC-001",
+       "text": "No sticky notes on the counter after one month"
+      },
+      {
+       "id": "SC-002",
+       "text": "80% of holds end in a loan"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/006-damage-reports/spec.md": {
+   "ref": {
+    "path": "specs/006-damage-reports/spec.md",
+    "kind": "spec",
+    "hash": "b9b6859a1eef"
+   },
+   "title": "Feature Specification: Damage Reports",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`006-damage-reports`"
+    },
+    {
+     "label": "Created",
+     "value": "2026-06-22"
+    },
+    {
+     "label": "Status",
+     "value": "Draft"
+    },
+    {
+     "label": "Input",
+     "value": "User description: \"Tools come back broken and nobody knows since when. Let people report damage, with a photo.\""
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "User Scenarios & Testing *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "stories",
+     "items": [
+      {
+       "title": "Report damage at return",
+       "priority": "P1",
+       "narrative": null,
+       "why": "Most damage is noticed at the counter, and the repair volunteers need to know what to fix.",
+       "test": "Return a tool, add a damage report with a photo, and see it on the repair list.",
+       "scenarios": [
+        {
+         "given": "a tool being returned",
+         "when": "the volunteer taps \"damaged\" and takes a photo",
+         "then": "a damage report is saved and the tool is marked \"needs repair\""
+        },
+        {
+         "given": "a tool with an open damage report",
+         "when": "anyone searches for it",
+         "then": "it is shown as not available"
+        }
+       ],
+       "rest": "A volunteer who takes back a damaged tool records what is wrong, with a photo, before it goes to the repair shelf."
+      },
+      {
+       "title": "Report damage from home",
+       "priority": "P2",
+       "narrative": null,
+       "why": "It gives the repair volunteers a head start, and members would rather say so than be found out.",
+       "test": "Open a current loan on a phone, report damage, and see the report at the counter.",
+       "scenarios": [
+        {
+         "given": "a member with a tool on loan",
+         "when": "they send a damage report from their phone",
+         "then": "the volunteers see it on the repair list before the tool is back"
+        },
+        {
+         "given": "a member who reports damage",
+         "when": "the report is saved",
+         "then": "they see a message that says what happens next [NEEDS CLARIFICATION: does the member pay for repairs, and does the message say so?]"
+        }
+       ],
+       "rest": "A member who breaks a tool, or finds it broken, reports it from their phone before bringing it back."
+      },
+      {
+       "title": "Close a repair",
+       "priority": "P3",
+       "narrative": null,
+       "why": "Without it, tools stay on the repair shelf in the catalog forever.",
+       "test": "Close a report as \"fixed\" and find the tool available again in search.",
+       "scenarios": [
+        {
+         "given": "an open damage report",
+         "when": "a repair volunteer marks it fixed",
+         "then": "the tool is available again"
+        },
+        {
+         "given": "an open damage report",
+         "when": "a repair volunteer marks it beyond repair",
+         "then": "the tool is retired and keeps its history"
+        }
+       ],
+       "rest": "A repair volunteer marks a tool as fixed, or as beyond repair."
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Edge Cases",
+     "depth": 3,
+     "markdown": "- Damage that was already there: the previous borrower returned it without anyone noticing.\n- A report with no photo because the tablet camera is broken."
+    },
+    {
+     "kind": "raw",
+     "heading": "Requirements *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST let a volunteer attach a damage report with a description and a photo to a tool at return"
+      },
+      {
+       "id": "FR-002",
+       "text": "System MUST let a member report damage on a tool they currently hold"
+      },
+      {
+       "id": "FR-003",
+       "text": "System MUST mark a tool with an open damage report as not available"
+      },
+      {
+       "id": "FR-004",
+       "text": "System MUST keep damage photos for [NEEDS CLARIFICATION: how long may photos be kept under the \"Ask for Less\" principle?]"
+      },
+      {
+       "id": "FR-005",
+       "text": "System MUST let a repair volunteer close a report as fixed or beyond repair"
+      },
+      {
+       "id": "FR-006",
+       "text": "System MUST notify [NEEDS CLARIFICATION: who is told about a new report, every repair volunteer or one coordinator?]"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Key Entities",
+     "depth": 3,
+     "markdown": "- **Damage Report**: what is wrong with one copy of a tool; description, photo, who reported it, when, and how it was closed"
+    },
+    {
+     "kind": "raw",
+     "heading": "Success Criteria *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Measurable Outcomes",
+     "depth": 3,
+     "items": [
+      {
+       "id": "SC-001",
+       "text": "Every tool on the repair shelf has a report that says what is wrong"
+      },
+      {
+       "id": "SC-002",
+       "text": "Half of the damaged tools are available again within two weeks"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/007-opening-hours/spec.md": {
+   "ref": {
+    "path": "specs/007-opening-hours/spec.md",
+    "kind": "spec",
+    "hash": "f53f0fbd94d9"
+   },
+   "title": "Feature Specification: Opening Hours",
+   "meta": [
+    {
+     "label": "Feature Branch",
+     "value": "`007-opening-hours`"
+    },
+    {
+     "label": "Created",
+     "value": "2026-07-06"
+    },
+    {
+     "label": "Status",
+     "value": "Draft"
+    },
+    {
+     "label": "Input",
+     "value": "User description: \"Due dates land on days we are closed. Show the opening hours and never set a due date on a closed day.\""
+    }
+   ],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "User Scenarios & Testing *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "stories",
+     "items": [
+      {
+       "title": "Due dates on open days only",
+       "priority": "P1",
+       "narrative": null,
+       "why": "A due date on a closed day makes a member late through no fault of their own.",
+       "test": "Lend a tool so that 14 days later is a closed day, and see the due date moved to the next open day.",
+       "scenarios": [
+        {
+         "given": "the library is closed on Sundays",
+         "when": "a loan would be due on a Sunday",
+         "then": "its due date is the following open day"
+        },
+        {
+         "given": "a holiday closure entered by a volunteer",
+         "when": "a loan would be due inside it",
+         "then": "its due date is the first open day after the closure"
+        }
+       ],
+       "rest": "A loan is never due on a day the library is closed."
+      },
+      {
+       "title": "See when the library is open",
+       "priority": "P2",
+       "narrative": null,
+       "why": "It saves a trip, but the hours are also on the door.",
+       "test": "Enter a closure for next week and see it on the catalog page.",
+       "scenarios": [
+        {
+         "given": "a closure next Saturday",
+         "when": "a member opens the catalog",
+         "then": "a notice names the day the library is closed"
+        }
+       ],
+       "rest": "A member sees the opening hours and upcoming closures on the catalog page."
+      }
+     ]
+    },
+    {
+     "kind": "raw",
+     "heading": "Requirements *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "System MUST store the weekly opening hours and single-day closures"
+      },
+      {
+       "id": "FR-002",
+       "text": "System MUST move a due date that falls on a closed day to the next open day"
+      },
+      {
+       "id": "FR-003",
+       "text": "System MUST show the opening hours and the next closure on the catalog page"
+      }
+     ],
+     "rest": ""
+    },
+    {
+     "kind": "raw",
+     "heading": "Success Criteria *(mandatory)*",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Measurable Outcomes",
+     "depth": 3,
+     "items": [
+      {
+       "id": "SC-001",
+       "text": "No loan is due on a closed day"
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  }
+ }
+}
