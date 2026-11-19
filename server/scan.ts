@@ -53,10 +53,30 @@ export const hashOf = (buf: Buffer) => crypto.createHash('sha1').update(buf).dig
 const kept = memo<unknown>(5000)
 export const keep = <T>(root: string, rel: string, hash: string, make: () => T) => kept([root, rel, hash].join('\0'), make) as T
 
+// Every folder of `rel` below the root is a real directory, checked with lstat now: never through a symbolic link.
+export function realDir(root: string, rel: string): boolean {
+  let at = root
+  for (const part of rel.split('/').filter(Boolean)) {
+    if (part === '.' || part === '..') return false
+    at = path.join(at, part)
+    if (!lst(at)?.isDirectory()) return false
+  }
+  return true
+}
+export const realFile = (root: string, rel: string) => realDir(root, path.posix.dirname(rel)) && !!lst(path.join(root, rel))?.isFile()
+
+// A file's bytes, refused when any folder above it or the file itself is a symbolic link at the moment it is read.
+export function readSafe(root: string, rel: string): Buffer {
+  if (!realDir(root, path.posix.dirname(rel))) throw new Error(`not read: a folder of ${rel} is a symbolic link or missing`)
+  // O_NOFOLLOW: the file itself swapped for a link after the check is still not followed.
+  const fd = fs.openSync(path.join(root, rel), fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW)
+  try { return fs.readFileSync(fd) } finally { fs.closeSync(fd) }
+}
+
 // Reads one document; a read failure becomes DocRef.error so the scan goes on.
 export function readDoc(root: string, rel: string, kind: DocKind): { ref: DocRef; text: string } {
   try {
-    const buf = fs.readFileSync(path.join(root, rel))
+    const buf = readSafe(root, rel)
     const hash = hashOf(buf)
     return { ref: { path: rel, kind, hash }, text: buf.toString('utf8') }
   } catch (e) {
@@ -67,6 +87,7 @@ export function readDoc(root: string, rel: string, kind: DocKind): { ref: DocRef
 // Recursive, skips symlinks and dot-entries. Returns paths relative to `dir`, forward slashes.
 export function walk(dir: string, prefix = ''): string[] {
   const out: string[] = []
+  if (!isDir(dir)) return out // a folder swapped for a link since its parent was listed is not entered
   for (const e of entries(dir)) {
     if (e.isSymbolicLink() || e.name.startsWith('.')) continue
     if (e.isDirectory()) out.push(...walk(path.join(dir, e.name), prefix + e.name + '/'))

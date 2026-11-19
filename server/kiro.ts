@@ -4,7 +4,7 @@ import path from 'node:path'
 import { clean, kids, parse, slice, splitAt } from './md.ts'
 import type { Node } from './md.ts'
 import { countTasks, parseDesign, parseNumberedTasks, wholeTasks, type Parser } from './items.ts'
-import { byNumber, currentBranch, entries, isDir, keep, readAbout, readDoc, walk } from './scan.ts'
+import { byNumber, currentBranch, entries, isDir, keep, readAbout, readDoc, realDir, walk } from './scan.ts'
 import type { Block, Criterion, DocKind, DocRef, Feature, Project, Requirement, Stage, Step } from './types.ts'
 
 const ORDER: DocKind[] = ['requirements', 'design', 'tasks', 'other']
@@ -28,7 +28,7 @@ export function specStageOf(f: { tasks: { done: number; total: number } | null; 
 function scanSpec(root: string, id: string): Feature {
   const rel = `.kiro/specs/${id}`
   const docs: { ref: DocRef; text: string }[] = []
-  for (const file of walk(path.join(root, rel))) {
+  for (const file of realDir(root, rel) ? walk(path.join(root, rel)) : []) {
     if (file.endsWith('.md')) docs.push(readDoc(root, `${rel}/${file}`, specKindOf(file)))
   }
   docs.sort((a, b) => ORDER.indexOf(a.ref.kind) - ORDER.indexOf(b.ref.kind) || (a.ref.path < b.ref.path ? -1 : 1))
@@ -38,14 +38,15 @@ function scanSpec(root: string, id: string): Feature {
 }
 
 export function scanKiro(root: string, branch: string | null = currentBranch(root)): Project {
+  // Checked again on every scan, component by component: .kiro/ or a folder in it may have become a symbolic link.
   const steering = path.join(root, '.kiro', 'steering')
   const rank = (rel: string) => { const i = FOUNDATION.indexOf(rel); return i < 0 ? FOUNDATION.length : i }
-  const shared = isDir(path.join(root, '.kiro')) && isDir(steering)
+  const shared = realDir(root, '.kiro/steering')
     ? walk(steering).filter((r) => r.endsWith('.md')).sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : 1))
       .map((r) => readDoc(root, `.kiro/steering/${r}`, 'context').ref)
     : []
   const specs = path.join(root, '.kiro', 'specs')
-  const ids = isDir(path.join(root, '.kiro')) && isDir(specs)
+  const ids = realDir(root, '.kiro/specs')
     ? entries(specs).filter((e) => e.isDirectory() && !e.name.startsWith('.')).map((e) => e.name).sort(byNumber)
     : []
   const features = ids.map((id) => scanSpec(root, id))

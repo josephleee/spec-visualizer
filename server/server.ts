@@ -3,7 +3,7 @@ import http from 'node:http'
 import path from 'node:path'
 import type { AddressInfo } from 'node:net'
 import { parseDoc } from './parsers.ts'
-import { hashOf } from './scan.ts'
+import { hashOf, lst, readSafe } from './scan.ts'
 import { ADAPTERS, detect, type Adapter } from './formats.ts'
 import { memo } from './cache.ts'
 
@@ -35,7 +35,7 @@ export function startServer(opts: { root: string; port: number; webDir: string; 
     for (const d of format.watch) {
       if (watched.has(d)) continue
       try {
-        if (!fs.statSync(path.join(root, d)).isDirectory()) continue
+        if (!lst(path.join(root, d))?.isDirectory()) continue // a symbolic link is not watched, as it is not read
         const w = fs.watch(path.join(root, d), { recursive: true }, notify)
         w.on('error', () => { w.close(); watched.delete(d) }) // folder deleted etc.: a later root event may re-attach
         watched.add(d)
@@ -90,7 +90,7 @@ export function startServer(opts: { root: string; port: number; webDir: string; 
         const ref = refs.find((r) => r.path === url.searchParams.get('path'))
         if (!ref) return notFound(res)
         let buf: Buffer
-        try { buf = fs.readFileSync(path.join(root, ref.path)) } catch { return notFound(res) }
+        try { buf = readSafe(root, ref.path) } catch { return notFound(res) } // never through a symbolic link, even one made since the scan
         const hash = hashOf(buf) // of the bytes parsed now, which may be newer than the scan's
         return send(res, 200, JSON_TYPE, docs([root, ref.path, hash, format.id].join('\0'), () => JSON.stringify(parseDoc({ ...ref, hash }, buf.toString('utf8'), format))))
       }

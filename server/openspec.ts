@@ -4,7 +4,7 @@ import path from 'node:path'
 import { clean, kids, parse, slice, splitAt } from './md.ts'
 import type { Node } from './md.ts'
 import { countTasks, parseDesign, parseGroupedTasks, wholeTasks, type Parser } from './items.ts'
-import { currentBranch, entries, isDir, keep, lst, readAbout, readDoc, walk } from './scan.ts'
+import { currentBranch, entries, isDir, keep, readAbout, readDoc, realDir, realFile, walk } from './scan.ts'
 import type { Block, Criterion, DocKind, DocRef, Feature, Project, Requirement, Stage, Step } from './types.ts'
 
 const ORDER: DocKind[] = ['proposal', 'delta', 'design', 'tasks', 'other']
@@ -29,7 +29,7 @@ export function changeStageOf(f: { archived: boolean; tasks: { done: number; tot
 
 function scanChange(root: string, rel: string, archived: boolean): Feature {
   const docs: { ref: DocRef; text: string }[] = []
-  for (const file of walk(path.join(root, rel))) {
+  for (const file of realDir(root, rel) ? walk(path.join(root, rel)) : []) {
     if (file.endsWith('.md')) docs.push(readDoc(root, `${rel}/${file}`, changeKindOf(file)))
   }
   docs.sort((a, b) => ORDER.indexOf(a.ref.kind) - ORDER.indexOf(b.ref.kind) || (a.ref.path < b.ref.path ? -1 : 1))
@@ -45,19 +45,18 @@ function scanChange(root: string, rel: string, archived: boolean): Feature {
 const dirs = (dir: string) => entries(dir).filter((e) => e.isDirectory() && !e.name.startsWith('.')).map((e) => e.name)
 
 export function scanOpenSpec(root: string, branch: string | null = currentBranch(root)): Project {
+  // Every folder is checked again on every scan, component by component: openspec/ or a folder in it may have been
+  // swapped for a symbolic link since the server started, and nothing is read through one.
   const shared: DocRef[] = []
-  const specs = path.join(root, 'openspec', 'specs')
-  if (isDir(specs)) {
-    for (const rel of walk(specs).filter((r) => r.endsWith('/spec.md')).sort()) shared.push(readDoc(root, `openspec/specs/${rel}`, 'capability').ref)
+  if (realDir(root, 'openspec/specs')) {
+    for (const rel of walk(path.join(root, 'openspec', 'specs')).filter((r) => r.endsWith('/spec.md')).sort()) shared.push(readDoc(root, `openspec/specs/${rel}`, 'capability').ref)
   }
   // Project context: config.yaml (1.x and later), project.md (0.x). Only real files, never a symlink.
   for (const name of ['config.yaml', 'project.md']) {
-    if (lst(path.join(root, 'openspec', name))?.isFile()) shared.push(readDoc(root, `openspec/${name}`, 'context').ref)
+    if (realFile(root, `openspec/${name}`)) shared.push(readDoc(root, `openspec/${name}`, 'context').ref)
   }
-  const changes = path.join(root, 'openspec', 'changes')
-  const active = isDir(changes) ? dirs(changes).filter((n) => n !== 'archive').sort() : []
-  const archive = path.join(changes, 'archive')
-  const done = isDir(archive) ? dirs(archive).sort().reverse() : [] // date-prefixed: newest first
+  const active = realDir(root, 'openspec/changes') ? dirs(path.join(root, 'openspec', 'changes')).filter((n) => n !== 'archive').sort() : []
+  const done = realDir(root, 'openspec/changes/archive') ? dirs(path.join(root, 'openspec', 'changes', 'archive')).sort().reverse() : [] // date-prefixed: newest first
   const features = [
     ...active.map((n) => scanChange(root, `openspec/changes/${n}`, false)),
     ...done.map((n) => scanChange(root, `openspec/changes/archive/${n}`, true)),
