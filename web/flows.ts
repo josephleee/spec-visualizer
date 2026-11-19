@@ -94,7 +94,7 @@ const named = (cmd: string, f: Feature) => `${cmd} ${f.id}`
 const OPENSPEC: Flow = {
   id: 'openspec',
   stages: [
-    { key: 'specs', kinds: ['capability', 'context'], cmd: null },
+    { key: 'specs', kinds: ['capability', 'context', 'other'], cmd: null },
     { key: 'propose', kinds: ['proposal', 'delta'], cmd: OS.propose, note: 'p.note.propose' },
     { key: 'design', kinds: ['design'], cmd: OS.continue },
     { key: 'tasks', kinds: ['tasks'], cmd: OS.continue },
@@ -133,7 +133,7 @@ const forSpec = (cmd: string, f: Feature | null) => (f ? cmd.replace('<name>', f
 const KIRO: Flow = {
   id: 'kiro',
   stages: [
-    { key: 'steering', kinds: ['context'], cmd: null },
+    { key: 'steering', kinds: ['context', 'other'], cmd: null },
     { key: 'requirements', kinds: ['requirements'], cmd: KIRO_CMD.new },
     { key: 'design', kinds: ['design'], cmd: KIRO_CMD.step },
     { key: 'tasks', kinds: ['tasks'], cmd: KIRO_CMD.step },

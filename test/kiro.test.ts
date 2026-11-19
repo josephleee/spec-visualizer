@@ -327,3 +327,16 @@ test('## Requirement N with ### Acceptance Criteria, a User Story with a full st
   expect(items[0].story).toBe('As a reviewer, I want both suites run before I read a pull request, so that a green check means something.')
   expect(items[0].criteria.map((c) => c.steps.map((s) => s.key))).toEqual([['WHEN', 'THEN'], [''], ['IF', 'THEN']])
 })
+
+test('a loose markdown file in .kiro/specs and the root AGENTS.md are project documents, reachable from the first stage', async () => {
+  const root = tmp()
+  write(root, '.kiro/steering/product.md', '# P\n')
+  write(root, '.kiro/specs/OW-676-onboarding.md', '# a spec written as one file\n')
+  write(root, '.kiro/specs/s/requirements.md', '# R\n')
+  write(root, '.kiro/settings/templates/requirements.md', '# a template, not a document\n')
+  write(root, 'AGENTS.md', '# agents\n')
+  const p = scanKiro(root, null)
+  expect(p.shared!.map((d) => [d.path, d.kind])).toEqual([['.kiro/steering/product.md', 'context'], ['AGENTS.md', 'context'], ['.kiro/specs/OW-676-onboarding.md', 'other']])
+  const { resolveTarget } = await import('../web/route.ts')
+  expect(resolveTarget(p, { kind: 'stage', stage: 'steering', feature: null, sub: null }).refs).toHaveLength(3)
+})

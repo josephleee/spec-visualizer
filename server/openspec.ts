@@ -55,6 +55,13 @@ export function scanOpenSpec(root: string, branch: string | null = currentBranch
   for (const name of ['config.yaml', 'project.md']) {
     if (realFile(root, `openspec/${name}`)) shared.push(readDoc(root, `openspec/${name}`, 'context').ref)
   }
+  // Every other markdown file under openspec/ stays reachable as a project document: a capability's design.md (0.x),
+  // notes beside the changes, folders of the project's own. Change folders list their own files; schemas/ holds templates.
+  if (realDir(root, 'openspec')) {
+    const inChange = (rel: string) => /^changes\/(?!archive\/)[^/]+\/./.test(rel) || /^changes\/archive\/[^/]+\/./.test(rel)
+    const known = (rel: string) => /^specs\/(?:[^/]+\/)+spec\.md$/.test(rel) || rel === 'project.md' || rel.startsWith('schemas/') || inChange(rel)
+    for (const rel of walk(path.join(root, 'openspec')).filter((r) => r.endsWith('.md') && !known(r)).sort()) shared.push(readDoc(root, `openspec/${rel}`, 'other').ref)
+  }
   const active = realDir(root, 'openspec/changes') ? dirs(path.join(root, 'openspec', 'changes')).filter((n) => n !== 'archive').sort() : []
   const done = realDir(root, 'openspec/changes/archive') ? dirs(path.join(root, 'openspec', 'changes', 'archive')).sort().reverse() : [] // date-prefixed: newest first
   const features = [

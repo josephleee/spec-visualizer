@@ -81,8 +81,8 @@ function Region({ project, stage, i, count, nextLive, seen }: { project: Project
   // Per kind: the documents that could be read, and how many could not.
   const stack = def.kinds.map(kind => {
     const docs = first ? projectDocs(project, [kind]) : project.features.flatMap(f => f.docs.filter(d => d.kind === kind))
-    return { file: kindFile(kind, flow), n: docs.filter(d => !d.error).length, bad: docs.filter(d => d.error).length }
-  })
+    return { kind, file: kindFile(kind, flow), n: docs.filter(d => !d.error).length, bad: docs.filter(d => d.error).length }
+  }).filter(s => s.kind !== 'other' || s.n + s.bad > 0) // the project stage's loose documents: a row only when there are some
   // What the project stage lists: the principles (spec-kit), the capabilities (OpenSpec) or the steering files (Kiro).
   const shared = projectDocs(project, def.kinds.slice(0, 1)).filter(d => d.kind !== 'constitution')
   const items = flow.id === 'spec-kit' ? project.principles : shared.map(d => d.path.split('/').slice(d.kind === 'capability' ? -2 : -1)[0].replace(/\.md$/, ''))

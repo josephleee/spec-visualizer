@@ -4,7 +4,7 @@ import path from 'node:path'
 import { clean, kids, parse, slice, splitAt } from './md.ts'
 import type { Node } from './md.ts'
 import { countTasks, parseDesign, parseNumberedTasks, wholeTasks, type Parser } from './items.ts'
-import { byNumber, currentBranch, entries, isDir, keep, readAbout, readDoc, realDir, walk } from './scan.ts'
+import { byNumber, currentBranch, entries, isDir, keep, readAbout, readDoc, realDir, realFile, walk } from './scan.ts'
 import type { Block, Criterion, DocKind, DocRef, Feature, Project, Requirement, Stage, Step } from './types.ts'
 
 const ORDER: DocKind[] = ['requirements', 'design', 'tasks', 'other']
@@ -45,10 +45,17 @@ export function scanKiro(root: string, branch: string | null = currentBranch(roo
     ? walk(steering).filter((r) => r.endsWith('.md')).sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : 1))
       .map((r) => readDoc(root, `.kiro/steering/${r}`, 'context').ref)
     : []
+  // Kiro also reads the root AGENTS.md as steering.
+  if (realFile(root, 'AGENTS.md')) shared.push(readDoc(root, 'AGENTS.md', 'context').ref)
   const specs = path.join(root, '.kiro', 'specs')
   const ids = realDir(root, '.kiro/specs')
     ? entries(specs).filter((e) => e.isDirectory() && !e.name.startsWith('.')).map((e) => e.name).sort(byNumber)
     : []
+  // A markdown file written straight into .kiro/specs/, outside any spec folder, stays reachable as a project document.
+  if (realDir(root, '.kiro/specs')) {
+    for (const e of entries(specs).filter((e) => e.isFile() && e.name.endsWith('.md') && !e.name.startsWith('.')).map((e) => e.name).sort())
+      shared.push(readDoc(root, `.kiro/specs/${e}`, 'other').ref)
+  }
   const features = ids.map((id) => scanSpec(root, id))
   const currentFeature = features.find((f) => f.id === branch)?.id ?? null
   if (currentFeature) features.sort((a, b) => +(b.id === currentFeature) - +(a.id === currentFeature)) // stable

@@ -56,8 +56,8 @@ export const keep = <T>(root: string, rel: string, hash: string, make: () => T) 
 // Every folder of `rel` below the root is a real directory, checked with lstat now: never through a symbolic link.
 export function realDir(root: string, rel: string): boolean {
   let at = root
-  for (const part of rel.split('/').filter(Boolean)) {
-    if (part === '.' || part === '..') return false
+  for (const part of rel.split('/').filter((x) => x && x !== '.')) {
+    if (part === '..') return false
     at = path.join(at, part)
     if (!lst(at)?.isDirectory()) return false
   }

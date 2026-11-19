@@ -179,7 +179,8 @@ test('scanOpenSpec: specs and context are shared, changes then archived ones new
   const p = scanOpenSpec(root, null)
   expect(p.format).toBe('openspec')
   expect(p.shared!.map((d) => [d.path, d.kind])).toEqual([
-    ['openspec/specs/identity/members/spec.md', 'capability'], ['openspec/specs/loans/spec.md', 'capability'], ['openspec/config.yaml', 'context']])
+    ['openspec/specs/identity/members/spec.md', 'capability'], ['openspec/specs/loans/spec.md', 'capability'], ['openspec/config.yaml', 'context'],
+    ['openspec/specs/spec.md', 'other']]) // OpenSpec skips a spec.md outside a capability folder; it is still shown
   expect(p.features.map((f) => [f.id, f.stage])).toEqual([
     ['a-first', 'propose'], ['add-reminders', 'apply'], ['archive/2026-03-04-newer', 'archive'], ['archive/2026-01-02-old', 'archive']])
   const f = p.features[1]
@@ -215,4 +216,24 @@ test('scanOpenSpec never follows a symlinked change or spec folder', () => {
   const p = scanOpenSpec(root, null)
   expect(p.features.map((f) => f.id)).toEqual(['real'])
   expect(p.shared).toEqual([])
+})
+
+test('every other markdown file under openspec/ is listed as a project document, reachable from the first stage', async () => {
+  const root = tmp()
+  write(root, 'openspec/specs/llms-txt/spec.md', '# spec\n')
+  write(root, 'openspec/specs/llms-txt/design.md', '# design of a capability (0.x)\n')
+  write(root, 'openspec/AGENTS.md', '# agents\n')
+  write(root, 'openspec/ROADMAP.md', '# roadmap\n')
+  write(root, 'openspec/explorations/idea.md', '# idea\n')
+  write(root, 'openspec/changes/README.md', '# about changes\n')
+  write(root, 'openspec/changes/archive/INDEX.md', '# index\n')
+  write(root, 'openspec/changes/c/proposal.md', '## Why\n')
+  write(root, 'openspec/changes/c/notes.md', '# in a change: listed with it\n')
+  write(root, 'openspec/schemas/mine/templates/proposal.md', '# a schema template, not a document\n')
+  const p = scanOpenSpec(root, null)
+  expect(p.shared!.filter((d) => d.kind === 'other').map((d) => d.path)).toEqual([
+    'openspec/AGENTS.md', 'openspec/ROADMAP.md', 'openspec/changes/README.md', 'openspec/changes/archive/INDEX.md', 'openspec/explorations/idea.md', 'openspec/specs/llms-txt/design.md'])
+  expect(p.features[0].docs.map((d) => d.path)).toContain('openspec/changes/c/notes.md')
+  const { resolveTarget } = await import('../web/route.ts')
+  expect(resolveTarget(p, { kind: 'stage', stage: 'specs', feature: null, sub: null }).refs.map((d) => d.path)).toContain('openspec/ROADMAP.md')
 })

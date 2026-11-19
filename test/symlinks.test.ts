@@ -146,3 +146,14 @@ test('spec-kit: specs/ and .specify/ swapped for symlinks while the server runs'
     await srv.close()
   }
 })
+
+test('the extra project documents (openspec/*.md, loose .kiro/specs/*.md, AGENTS.md) are never read through a symlink', () => {
+  const os1 = write(tmp(), { 'openspec/changes/c/proposal.md': '# ok\n' })
+  link(out('product.md'), path.join(os1, 'openspec/NOTES.md'))
+  link(outside, path.join(os1, 'openspec/explorations'))
+  expect(paths(scanOpenSpec(os1, null))).toEqual(['openspec/changes/c/proposal.md'])
+  const k = write(tmp(), { '.kiro/specs/s/requirements.md': '# ok\n' })
+  link(out('product.md'), path.join(k, '.kiro/specs/loose.md'))
+  link(out('product.md'), path.join(k, 'AGENTS.md'))
+  expect(paths(scanKiro(k, null))).toEqual(['.kiro/specs/s/requirements.md'])
+})
