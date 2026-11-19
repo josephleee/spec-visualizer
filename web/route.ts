@@ -97,8 +97,9 @@ export function docHref(feature: Feature, d: DocRef, flow: Flow = SPEC_KIT): str
       default: return formatRoute({ kind: 'doc', path: d.path })
     }
   }
-  // The first stage that shows this kind: as its lead document, or as a tab. A second document of a kind has no stage page.
-  const def = flow.stages.slice(1).find(s => s.kinds.includes(d.kind))
+  // The stage the feature stands at when it shows this kind (an archived change's deltas open on Archive), else the first
+  // stage that shows it: as its lead document, or as a tab. A second document of a kind has no stage page.
+  const def = flow.stages.slice(1).find(s => s.key === feature.stage && s.kinds.includes(d.kind)) ?? flow.stages.slice(1).find(s => s.kinds.includes(d.kind))
   if (!def || !first) return formatRoute({ kind: 'doc', path: d.path })
   return stageHref(def.key, feature.id, def.kinds[0] === d.kind ? null : d.kind)
 }

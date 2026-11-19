@@ -43,7 +43,9 @@ function Missing({ stage, feature, kind, flow }: { stage: StageKey; feature: Fea
       {flow.setup && <dl className="empty-cmds"><div className="now"><dt>{t('e.make')}</dt><dd><CmdRow cmd={flow.setup} big /></dd></div></dl>}</State>
   )
   // A finished feature without a checklist is not behind: it is complete, and there is nothing to type for it.
-  if (missingWhy(feature, stage, flow) === 'complete') return <State title={t('e.complete.title')}><p>{t('e.complete', feature.id)}</p></State>
+  const why = missingWhy(feature, stage, flow)
+  if (why === 'complete') return <State title={t(flow.labels.complete[0])}><p>{t(flow.labels.complete[1], feature.id)}</p></State>
+  if (why === 'skipped') return <State title={t('e.skipped.title')}><p>{t('e.skipped', feature.id, t(`n.${stage}`), kindFile(kind, flow))}</p></State>
   const next = nextCommand(feature, flow).cmd, make = creatingCommand(kind, flow, feature)
   return (
     <State title={t('e.title')}>

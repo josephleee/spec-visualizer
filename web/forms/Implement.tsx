@@ -43,7 +43,8 @@ export const implement: Form = (doc, { t, feature, flow }) => {
             )
           })}
         </Sec>
-        <Sec title={t('i.bystory')} note={t('i.groups', stories.length)}>
+        {/* Stories are spec-kit's ([US1]); another format shows this only when its tasks name some. */}
+        {(!flow || flow.id === 'spec-kit' || all.some(x => x.story)) && <Sec title={t('i.bystory')} note={t('i.groups', stories.length)}>
           <div className="bystory">
             {stories.map((g, i) => (
               <div key={i} className={g.items.some(x => next.has(x)) ? 'bs next' : 'bs'}>
@@ -53,7 +54,7 @@ export const implement: Form = (doc, { t, feature, flow }) => {
               </div>
             ))}
           </div>
-        </Sec>
+        </Sec>}
       </>
     ),
   }

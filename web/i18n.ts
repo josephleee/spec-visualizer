@@ -58,6 +58,10 @@ const LABELS = {
     // ---------- other formats ----------
     'n.specs': 'Specs', 'n.propose': 'Propose', 'n.design': 'Design', 'n.apply': 'Apply', 'n.archive': 'Archive', 'n.steering': 'Steering', 'n.requirements': 'Requirements',
     'zone.n': '{0} SDD stages', 'g.start': 'A new feature starts with this',
+    'zone.empty.os': 'No changes in this project yet. Type {0} to propose the first change', 'zone.empty.kiro': 'No specs in this project yet. Type {0} to write the first requirements',
+    'e.complete.os.title': 'Archived without spec changes', 'e.complete.os': '{0} is archived. It changed no specs, and nothing is left to type for it.',
+    'e.complete.kiro.title': 'Finished', 'e.complete.kiro': '{0} is finished, and nothing is left to type for it.',
+    'e.skipped.title': 'Not written, and not needed to go on', 'e.skipped': '{0} went past the {1} stage without {2}. In this format that document is optional.',
     'pr.caps': 'Capabilities', 'pr.caps.none': 'No specs yet. Archiving a change writes them', 'pr.steer': 'Steering files', 'pr.steer.none': 'No steering files yet',
     'e.project.os': 'A change starts with a proposal. Type this in your agent, then come back: the board updates by itself.',
     'e.project.kiro': 'A spec starts with its requirements. Type this in the Kiro CLI or start a spec in the Kiro IDE, then come back: the board updates by itself.',
@@ -123,6 +127,10 @@ const LABELS = {
     // ---------- other formats ----------
     'n.specs': '스펙', 'n.propose': '제안', 'n.design': '설계', 'n.apply': '적용', 'n.archive': '보관', 'n.steering': '스티어링', 'n.requirements': '요구사항',
     'zone.n': 'SDD {0}단계', 'g.start': '새 기능은 이 명령으로 시작',
+    'zone.empty.os': '이 프로젝트에는 아직 변경이 없다. {0} 를 입력해 첫 변경을 제안한다', 'zone.empty.kiro': '이 프로젝트에는 아직 스펙이 없다. {0} 를 입력해 첫 요구사항을 쓴다',
+    'e.complete.os.title': '스펙을 바꾸지 않고 보관됨', 'e.complete.os': '{0} 은 보관되었다. 바꾼 스펙이 없고, 더 입력할 명령도 없다.',
+    'e.complete.kiro.title': '완료됨', 'e.complete.kiro': '{0} 은 완료되었고, 더 입력할 명령이 없다.',
+    'e.skipped.title': '쓰지 않았고, 없어도 진행된다', 'e.skipped': '{0} 은 {2} 없이 {1} 단계를 지나갔다. 이 형식에서 그 문서는 선택 사항이다.',
     'pr.caps': '스펙 영역', 'pr.caps.none': '스펙이 아직 없다. 변경을 보관하면 쓰인다', 'pr.steer': '스티어링 파일', 'pr.steer.none': '스티어링 파일이 아직 없다',
     'e.project.os': '변경은 제안에서 시작한다. 에이전트에 이 명령을 입력하고 돌아오면 보드가 스스로 바뀐다.',
     'e.project.kiro': '스펙은 요구사항에서 시작한다. Kiro CLI에 이 명령을 입력하거나 Kiro IDE에서 스펙을 시작하고 돌아오면 보드가 스스로 바뀐다.',

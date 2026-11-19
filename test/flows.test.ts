@@ -67,12 +67,12 @@ test('each stage page reads its kind of document; the project stage offers every
   expect(linkFeature(os, { kind: 'stage', stage: 'specs', feature: 'gone', sub: null }, null)).toBeNull()
 })
 
-test('a document opens on the first stage that shows its kind, as the lead or as a tab', () => {
+test('a document opens on the stage where its unit stands when that stage shows it, else the first that does', () => {
   const r = os.features[1]
   expect(r.docs.map(d => docHref(r, d, FLOWS.openspec))).toEqual([
-    '#/stage/propose/reminders', '#/stage/propose/reminders/delta', `#/doc/${encodeURIComponent('u/reminders/delta2.md')}`, '#/stage/design/reminders', '#/stage/tasks/reminders'])
+    '#/stage/propose/reminders', '#/stage/propose/reminders/delta', `#/doc/${encodeURIComponent('u/reminders/delta2.md')}`, '#/stage/design/reminders', '#/stage/apply/reminders'])
   const k = kiro.features[1]
-  expect(k.docs.map(d => docHref(k, d, FLOWS.kiro))).toEqual(['#/stage/requirements/search', '#/stage/design/search', '#/stage/tasks/search'])
+  expect(k.docs.map(d => docHref(k, d, FLOWS.kiro))).toEqual(['#/stage/requirements/search', '#/stage/design/search', '#/stage/implement/search']) // tasks open where the spec stands
   expect(docHref(k, ref('x/notes.md', 'other'), FLOWS.kiro)).toBe(`#/doc/${encodeURIComponent('x/notes.md')}`)
 })
 

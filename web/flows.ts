@@ -22,7 +22,9 @@ export type Flow = {
   setup: string | null                      // writes the project stage's document when the project has none
   clarify: string | null                    // spec-kit's clarify: asked first when a unit has open questions
   files: Partial<Record<DocKind, string>>   // where this format keeps a kind, where KIND_FILE does not say it
-  labels: { items: LabelKey; none: LabelKey; empty: LabelKey; noShared: LabelKey }
+  // items, none: the project-stage list; empty: a project with no units; noShared: no project documents;
+  // zoneEmpty: the empty board's line; complete: a finished unit with no document for the last stage (title, text).
+  labels: { items: LabelKey; none: LabelKey; empty: LabelKey; noShared: LabelKey; zoneEmpty: LabelKey; complete: [LabelKey, LabelKey] }
   next(f: Feature): { cmd: string | null; left: number }
   making(kind: DocKind, f: Feature | null): string | null
   guide(p: Project, stage: StageKey, here: Feature[]): StageGuide
@@ -48,7 +50,7 @@ const SPEC_KIT: Flow = {
     { key: 'done', kinds: ['checklist'], cmd: null },
   ],
   unit: 'feature', start: CMD.specify, setup: CMD.constitution, clarify: CMD.clarify, files: {},
-  labels: { items: 'principles', none: 'pr.none', empty: 'e.project.say', noShared: 'e.constitution' },
+  labels: { items: 'principles', none: 'pr.none', empty: 'e.project.say', noShared: 'e.constitution', zoneEmpty: 'zone.empty', complete: ['e.complete.title', 'e.complete'] },
   next(f) {
     switch (f.stage) {
       case 'specify': return { cmd: f.openQuestions > 0 ? CMD.clarify : CMD.plan, left: 0 }
@@ -101,7 +103,7 @@ const OPENSPEC: Flow = {
   ],
   unit: 'change', start: OS.propose, setup: null, clarify: null,
   files: { capability: 'specs/*/spec.md', delta: 'specs/*/spec.md', context: 'config.yaml' },
-  labels: { items: 'pr.caps', none: 'pr.caps.none', empty: 'e.project.os', noShared: 'e.shared.os' },
+  labels: { items: 'pr.caps', none: 'pr.caps.none', empty: 'e.project.os', noShared: 'e.shared.os', zoneEmpty: 'zone.empty.os', complete: ['e.complete.os.title', 'e.complete.os'] },
   next(f) {
     switch (f.stage) {
       case 'propose': case 'design': return { cmd: named(OS.continue, f), left: 0 }
@@ -140,7 +142,7 @@ const KIRO: Flow = {
   ],
   unit: 'spec', start: KIRO_CMD.new, setup: null, clarify: null,
   files: { context: 'steering/*.md' },
-  labels: { items: 'pr.steer', none: 'pr.steer.none', empty: 'e.project.kiro', noShared: 'e.shared.kiro' },
+  labels: { items: 'pr.steer', none: 'pr.steer.none', empty: 'e.project.kiro', noShared: 'e.shared.kiro', zoneEmpty: 'zone.empty.kiro', complete: ['e.complete.kiro.title', 'e.complete.kiro'] },
   next(f) {
     switch (f.stage) {
       case 'requirements': case 'design': return { cmd: forSpec(KIRO_CMD.step, f), left: 0 }

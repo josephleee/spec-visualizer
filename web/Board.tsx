@@ -154,7 +154,7 @@ export function Board({ project, seen }: { project: Project | null; seen: Seen }
       <section className="zone stages" aria-busy={!project}>
         <header className="zone-h">
           <h2>{n === 6 ? t('zone') : t('zone.n', n)}</h2>
-          {project && !project.features.length && <p>{t('zone.empty', flow.start)}</p>}
+          {project && !project.features.length && <p>{t(flow.labels.zoneEmpty, flow.start)}</p>}
         </header>
         <div className="regions" style={n === 6 ? undefined : cssVars({ '--stages': n })}>
           {flow.stages.map(({ key: stage }, i) => project && counts

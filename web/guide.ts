@@ -18,7 +18,8 @@ export function stageCounts(p: Project): StageCount[] {
   const flow = flowOf(p)
   return flow.stages.map((_, i) => {
     const here = i === 0 ? [] : p.features.filter(f => stageIndex(f, flow) === i)
-    return { here, passed: p.features.filter(f => stageIndex(f, flow) > i).length, live: here.some(busy) }
+    // An archived OpenSpec change may keep unticked tasks; work there is not under way. spec-kit's done features are never busy.
+    return { here, passed: p.features.filter(f => stageIndex(f, flow) > i).length, live: here.some(f => busy(f) && !finished(flow, f)) }
   })
 }
 
@@ -51,9 +52,12 @@ export function stripGuide(p: Project): StripGuide {
 // The command that writes a kind of document, for this feature where the command names it.
 export const creatingCommand = (kind: DocKind, flow: Flow = SPEC_KIT, f: Feature | null = null): string | null => flow.making(kind, f)
 
-// Why a feature has no document for a stage: it is not that far yet, or it is finished and just has no document there.
-export const missingWhy = (f: Feature, stage: StageKey, flow: Flow = SPEC_KIT): 'complete' | 'ahead' =>
-  (stage === lastStage(flow) && finished(flow, f) ? 'complete' : 'ahead')
+// Why a feature has no document for a stage: it is not that far yet, it is finished and just has no document there, or
+// (outside spec-kit, where design and the like are optional) it went past the stage without that document.
+export function missingWhy(f: Feature, stage: StageKey, flow: Flow = SPEC_KIT): 'complete' | 'ahead' | 'skipped' {
+  if (stage === lastStage(flow) && finished(flow, f)) return 'complete'
+  return flow !== SPEC_KIT && stageIndex(f, flow) > flow.stages.findIndex(s => s.key === stage) ? 'skipped' : 'ahead'
+}
 
 // How many features the principles bind: said on the constitution page only, and only when there are features.
 export const boundFeatures = (p: Project, stage: StageKey | null): number | null =>
