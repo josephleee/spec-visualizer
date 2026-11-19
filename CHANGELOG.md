@@ -12,7 +12,7 @@
 - Design documents of both formats show their decisions as cards.
 - Every other markdown file in the OpenSpec and Kiro folders is shown as a project document on the first stage.
 - No format follows a symbolic link at any folder of a path, even one swapped in while the server runs.
-- spec-kit projects show exactly what they showed before: the server's JSON and every page are compared with the previous version in the tests.
+- spec-kit projects show what they showed before (the server's JSON and every page are compared with the previous version in the tests), with two intended exceptions: a stage page that offers more than 12 documents of one kind (contracts, checklists) lists them in a select, and a constitution with 10 or more principles keeps the board's two-digit numbers apart from the names.
 
 ## [0.1.1-rc.0] - 2026-11-18
 

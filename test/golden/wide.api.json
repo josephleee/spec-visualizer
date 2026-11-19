@@ -1,0 +1,454 @@
+{
+ "project": {
+  "root": "<root>",
+  "name": "wide",
+  "about": "A spec-kit project with a long constitution and many contracts, kept to pin how spec-visualizer draws those shapes.",
+  "constitution": {
+   "path": ".specify/memory/constitution.md",
+   "kind": "constitution",
+   "hash": "223e55f79280"
+  },
+  "constitutionVersion": "2.0.0",
+  "constitutionRatified": "2026-03-01",
+  "constitutionAmended": "2026-10-12",
+  "principles": [
+   "Readable First",
+   "One Source of Truth",
+   "Small Steps",
+   "Tests Before Code",
+   "No Hidden State",
+   "Fail Loudly",
+   "Local by Default",
+   "Plain Text Wins",
+   "Measure Before Tuning",
+   "Docs Ship With Code",
+   "Reversible Changes"
+  ],
+  "currentFeature": null,
+  "features": [
+   {
+    "id": "001-gateway",
+    "stage": "plan",
+    "docs": [
+     {
+      "path": "specs/001-gateway/spec.md",
+      "kind": "spec",
+      "hash": "2747d64d4349"
+     },
+     {
+      "path": "specs/001-gateway/plan.md",
+      "kind": "plan",
+      "hash": "1344b761414c"
+     },
+     {
+      "path": "specs/001-gateway/contracts/01-accounts.md",
+      "kind": "contract",
+      "hash": "7de1e470b7a8"
+     },
+     {
+      "path": "specs/001-gateway/contracts/02-billing.yaml",
+      "kind": "contract",
+      "hash": "e8e0494d0a75"
+     },
+     {
+      "path": "specs/001-gateway/contracts/03-catalog.yaml",
+      "kind": "contract",
+      "hash": "1b4d2ca11cc2"
+     },
+     {
+      "path": "specs/001-gateway/contracts/04-checkout.yaml",
+      "kind": "contract",
+      "hash": "55691f02e8ff"
+     },
+     {
+      "path": "specs/001-gateway/contracts/05-delivery.md",
+      "kind": "contract",
+      "hash": "6d7520f3d077"
+     },
+     {
+      "path": "specs/001-gateway/contracts/06-events.yaml",
+      "kind": "contract",
+      "hash": "5a6b4970b7ee"
+     },
+     {
+      "path": "specs/001-gateway/contracts/07-files.yaml",
+      "kind": "contract",
+      "hash": "6c1a77fb2e4a"
+     },
+     {
+      "path": "specs/001-gateway/contracts/08-gifts.yaml",
+      "kind": "contract",
+      "hash": "a610854bac9c"
+     },
+     {
+      "path": "specs/001-gateway/contracts/09-history.md",
+      "kind": "contract",
+      "hash": "f229f837ca5a"
+     },
+     {
+      "path": "specs/001-gateway/contracts/10-inventory.yaml",
+      "kind": "contract",
+      "hash": "fbcd7047abac"
+     },
+     {
+      "path": "specs/001-gateway/contracts/11-jobs.yaml",
+      "kind": "contract",
+      "hash": "567cd070b564"
+     },
+     {
+      "path": "specs/001-gateway/contracts/12-keys.yaml",
+      "kind": "contract",
+      "hash": "802fefdd3fec"
+     },
+     {
+      "path": "specs/001-gateway/contracts/13-ledger.md",
+      "kind": "contract",
+      "hash": "efb56eae208f"
+     }
+    ],
+    "tasks": null,
+    "openQuestions": 0
+   }
+  ]
+ },
+ "docs": {
+  ".specify/memory/constitution.md": {
+   "ref": {
+    "path": ".specify/memory/constitution.md",
+    "kind": "constitution",
+    "hash": "223e55f79280"
+   },
+   "title": "Wide Constitution",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "cards",
+     "heading": "Core Principles",
+     "items": [
+      {
+       "title": "I. Readable First",
+       "markdown": "Every change follows the principle of readable first."
+      },
+      {
+       "title": "II. One Source of Truth",
+       "markdown": "Every change follows the principle of one source of truth."
+      },
+      {
+       "title": "III. Small Steps",
+       "markdown": "Every change follows the principle of small steps."
+      },
+      {
+       "title": "IV. Tests Before Code",
+       "markdown": "Every change follows the principle of tests before code."
+      },
+      {
+       "title": "V. No Hidden State",
+       "markdown": "Every change follows the principle of no hidden state."
+      },
+      {
+       "title": "VI. Fail Loudly",
+       "markdown": "Every change follows the principle of fail loudly."
+      },
+      {
+       "title": "VII. Local by Default",
+       "markdown": "Every change follows the principle of local by default."
+      },
+      {
+       "title": "VIII. Plain Text Wins",
+       "markdown": "Every change follows the principle of plain text wins."
+      },
+      {
+       "title": "IX. Measure Before Tuning",
+       "markdown": "Every change follows the principle of measure before tuning."
+      },
+      {
+       "title": "X. Docs Ship With Code",
+       "markdown": "Every change follows the principle of docs ship with code."
+      },
+      {
+       "title": "XI. Reversible Changes",
+       "markdown": "Every change follows the principle of reversible changes."
+      }
+     ]
+    },
+    {
+     "kind": "fields",
+     "heading": "Governance",
+     "items": [
+      {
+       "label": "Version",
+       "value": "2.0.0"
+      },
+      {
+       "label": "Ratified",
+       "value": "2026-03-01"
+      },
+      {
+       "label": "Last Amended",
+       "value": "2026-10-12"
+      }
+     ],
+     "rest": "Amendments need a pull request and one review."
+    }
+   ]
+  },
+  "specs/001-gateway/spec.md": {
+   "ref": {
+    "path": "specs/001-gateway/spec.md",
+    "kind": "spec",
+    "hash": "2747d64d4349"
+   },
+   "title": "Feature Specification: Gateway",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Requirements",
+     "depth": 2,
+     "markdown": ""
+    },
+    {
+     "kind": "idList",
+     "heading": "Functional Requirements",
+     "depth": 3,
+     "items": [
+      {
+       "id": "FR-001",
+       "text": "The gateway SHALL route every request to one of thirteen services."
+      }
+     ],
+     "rest": ""
+    }
+   ]
+  },
+  "specs/001-gateway/plan.md": {
+   "ref": {
+    "path": "specs/001-gateway/plan.md",
+    "kind": "plan",
+    "hash": "1344b761414c"
+   },
+   "title": "Implementation Plan: Gateway",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Summary",
+     "depth": 2,
+     "markdown": "One contract per service behind the gateway."
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/01-accounts.md": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/01-accounts.md",
+    "kind": "contract",
+    "hash": "7de1e470b7a8"
+   },
+   "title": "accounts contract",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Endpoints",
+     "depth": 2,
+     "markdown": "GET /accounts"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/02-billing.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/02-billing.yaml",
+    "kind": "contract",
+    "hash": "e8e0494d0a75"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: billing\npaths:\n  /billing:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/03-catalog.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/03-catalog.yaml",
+    "kind": "contract",
+    "hash": "1b4d2ca11cc2"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: catalog\npaths:\n  /catalog:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/04-checkout.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/04-checkout.yaml",
+    "kind": "contract",
+    "hash": "55691f02e8ff"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: checkout\npaths:\n  /checkout:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/05-delivery.md": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/05-delivery.md",
+    "kind": "contract",
+    "hash": "6d7520f3d077"
+   },
+   "title": "delivery contract",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Endpoints",
+     "depth": 2,
+     "markdown": "GET /delivery"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/06-events.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/06-events.yaml",
+    "kind": "contract",
+    "hash": "5a6b4970b7ee"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: events\npaths:\n  /events:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/07-files.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/07-files.yaml",
+    "kind": "contract",
+    "hash": "6c1a77fb2e4a"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: files\npaths:\n  /files:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/08-gifts.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/08-gifts.yaml",
+    "kind": "contract",
+    "hash": "a610854bac9c"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: gifts\npaths:\n  /gifts:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/09-history.md": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/09-history.md",
+    "kind": "contract",
+    "hash": "f229f837ca5a"
+   },
+   "title": "history contract",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Endpoints",
+     "depth": 2,
+     "markdown": "GET /history"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/10-inventory.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/10-inventory.yaml",
+    "kind": "contract",
+    "hash": "fbcd7047abac"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: inventory\npaths:\n  /inventory:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/11-jobs.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/11-jobs.yaml",
+    "kind": "contract",
+    "hash": "567cd070b564"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: jobs\npaths:\n  /jobs:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/12-keys.yaml": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/12-keys.yaml",
+    "kind": "contract",
+    "hash": "802fefdd3fec"
+   },
+   "title": null,
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "code",
+     "lang": "yaml",
+     "text": "openapi: 3.0.0\ninfo:\n  title: keys\npaths:\n  /keys:\n    get: {}\n"
+    }
+   ]
+  },
+  "specs/001-gateway/contracts/13-ledger.md": {
+   "ref": {
+    "path": "specs/001-gateway/contracts/13-ledger.md",
+    "kind": "contract",
+    "hash": "efb56eae208f"
+   },
+   "title": "ledger contract",
+   "meta": [],
+   "blocks": [
+    {
+     "kind": "raw",
+     "heading": "Endpoints",
+     "depth": 2,
+     "markdown": "GET /ledger"
+    }
+   ]
+  }
+ }
+}

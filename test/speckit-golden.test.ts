@@ -1,6 +1,7 @@
 // spec-kit output must not change: the JSON the server sends and the HTML the page draws for the two spec-kit
 // projects in this repository are compared with what the version before the format layer produced.
 // UPDATE_GOLDEN=1 writes the files instead; do that only on a commit whose spec-kit output is the reference.
+// UPDATE_GOLDEN=<name> writes one project's files only, for a project added later; the others are left as recorded.
 import { afterAll, beforeAll, expect, test, vi } from 'vitest'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
@@ -11,13 +12,15 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { ParsedDoc, Project } from '../server/types.ts'
 import { startServer } from '../server/server.ts'
 
-const update = process.env.UPDATE_GOLDEN === '1'
+const update = process.env.UPDATE_GOLDEN
 const goldenDir = path.join(import.meta.dirname, 'golden')
 const webDir = fs.mkdtempSync(path.join(os.tmpdir(), 'specviz-golden-'))
 fs.writeFileSync(path.join(webDir, 'index.html'), '<h1>hi</h1>')
 afterAll(() => fs.rmSync(webDir, { recursive: true, force: true }))
 
-const projects = { fixture: 'test/fixtures/demo', example: 'examples/demo' } as const
+// wide: a constitution with 11 principles and a feature with 13 contracts, added after the format layer to pin the two
+// shapes whose drawing changed on purpose (see docs/design-formats.md, "How spec-kit is kept the same").
+const projects = { fixture: 'test/fixtures/demo', example: 'examples/demo', wide: 'test/fixtures/wide' } as const
 type Name = keyof typeof projects
 type Captured = { project: string; docs: Record<string, string> }
 const captured = {} as Record<Name, Captured>
@@ -42,7 +45,7 @@ beforeAll(async () => {
 
 function golden(file: string, value: string) {
   const at = path.join(goldenDir, file)
-  if (update) { fs.mkdirSync(goldenDir, { recursive: true }); fs.writeFileSync(at, value); return }
+  if (update === '1' || (update && file.startsWith(`${update}.`))) { fs.mkdirSync(goldenDir, { recursive: true }); fs.writeFileSync(at, value); return }
   expect(value, file).toBe(fs.readFileSync(at, 'utf8'))
 }
 
@@ -57,7 +60,7 @@ for (const name of Object.keys(projects) as Name[]) {
   test(`${name}: the strip, the board and every page draw the same HTML in both languages`, async () => {
     const c = captured[name]
     const project = { ...JSON.parse(c.project), root: '/golden' } as Project
-    const hashes: Record<string, string> = {}
+    const pages: Record<string, string> = {}
     for (const lang of ['en', 'ko'] as const) {
       vi.resetModules()
       vi.stubGlobal('localStorage', { getItem: (k: string) => (k === 'specviz:lang' ? lang : null), setItem: () => {} })
@@ -67,8 +70,8 @@ for (const name of Object.keys(projects) as Name[]) {
       const route = await import('../web/route.ts')
       const seen = Object.fromEntries([project.constitution, ...project.features.flatMap((f) => f.docs)].filter((d) => !!d).map((d) => [d!.path, d!.hash]))
       const html = (el: ReturnType<typeof createElement>) => renderToStaticMarkup(el)
-      hashes[`${lang} strip`] = html(createElement(Strip, { project }))
-      hashes[`${lang} board`] = html(createElement(Board, { project, seen }))
+      pages[`${lang} strip`] = html(createElement(Strip, { project }))
+      pages[`${lang} board`] = html(createElement(Board, { project, seen }))
       const routes: string[] = []
       for (const stage of route.STAGES) for (const f of [null, ...project.features.map((x) => x.id)]) {
         routes.push(route.stageHref(stage, f))
@@ -81,11 +84,15 @@ for (const name of Object.keys(projects) as Name[]) {
         const ref = route.resolveTarget(project, r).refs[0] ?? null
         const doc = ref && !ref.error ? JSON.parse(c.docs[ref.path]) as ParsedDoc : null
         const view = { route: r, entry: 'e', path: ref && !ref.error ? ref.path : null, doc: ref ? doc : null, failed: false }
-        hashes[`${lang} ${hash}`] = html(createElement(Fragment, null, createElement(StagePage, { view, asked: r, project, seen, onSeen: () => {}, onPick: () => {} })))
+        pages[`${lang} ${hash}`] = html(createElement(Fragment, null, createElement(StagePage, { view, asked: r, project, seen, onSeen: () => {}, onPick: () => {} })))
       }
     }
     vi.unstubAllGlobals()
-    const sums = Object.fromEntries(Object.entries(hashes).map(([k, v]) => [k, crypto.createHash('sha1').update(v).digest('hex')]))
+    if (name === 'wide') { // the two intended changes, stated here as well as in the hashes
+      expect(pages['en board']).toContain('class="pr wide"')
+      expect(pages['en #/stage/plan/001-gateway/contract']).toContain('<select')
+    }
+    const sums = Object.fromEntries(Object.entries(pages).map(([k, v]) => [k, crypto.createHash('sha1').update(v).digest('hex')]))
     golden(`${name}.html.json`, JSON.stringify(sums, null, 1) + '\n')
   })
 }

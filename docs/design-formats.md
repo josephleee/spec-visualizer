@@ -160,6 +160,15 @@ The next command for one unit carries its name where the tool takes one: `/opens
 - `test/speckit-golden.test.ts` compares the JSON of `/api/project` and every `/api/doc`, and the HTML of the strip, the board and every page in English and Korean, for `examples/demo` and `test/fixtures/demo`, with files recorded before this change (`test/golden/`).
 - Screenshots of the spec-kit pages, taken in headless Chrome at 1280 and 390 wide in both languages, were compared byte for byte with the same pages served by `main`; they are identical. This is a manual check, not part of the test suite: it caught a sub-pixel difference the HTML comparison cannot see (the stage count rendered as three text nodes instead of two), which is fixed.
 
+**Two changes to spec-kit pages are intended.** They are improvements made for the new formats that apply to spec-kit too, and they appear only in these shapes:
+
+| Change | Applies when | What is drawn instead |
+|---|---|---|
+| The document chooser becomes a select | a stage page offers more than 12 documents of one kind (in spec-kit: a feature with more than 12 contracts, or more than 12 checklists) | one select listing the documents, instead of a row of buttons that pushes the page down |
+| The principle list on the board keeps two-digit numbers apart | the constitution has 10 or more principles | the list gets the class `pr wide`, which gives each number room so that "10" no longer runs into the principle's name |
+
+Nothing else changes: the server's JSON is byte-identical in these shapes too. In a sample of 100 public spec-kit repositories, 3 of 1,156 feature folders had more than 12 contracts and 4 constitutions had 10 or more principles. Both shapes are pinned by a third golden project, `test/fixtures/wide` (a constitution with 11 principles, a feature with 13 contracts), recorded after the change: against `main`'s code, 4 of its 68 pages differ (the board and the plan stage's contract page, in each language), and its JSON is identical. The golden files of `examples/demo` and `test/fixtures/demo` were not regenerated.
+
 ## Out of scope
 
 - BMad Method, Agent OS, Tessl and other formats (see formats.md for why).
