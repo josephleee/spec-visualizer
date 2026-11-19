@@ -34,7 +34,7 @@ Arguments: `$ARGUMENTS`
    Dashboard: http://127.0.0.1:4321
    ```
 
-   The first line names the format it found (`spec-kit`, `OpenSpec` or `Kiro`). When the folder has several formats it shows spec-kit first and prints one more line naming the others; tell the user, and pass `--format <name>` only if they ask for another one.
+   The first line names the format it found (`spec-kit`, `OpenSpec` or `Kiro`). When the folder holds several formats, a second line says which one it chose and why, and names the others; tell the user, and pass `--format <name>` only if they ask for another one.
 
    The port may differ from 4321: when that port is taken the tool picks the next free one. Always report the address it printed, never one you assumed.
 5. Tell the user the address, and that the dashboard keeps running until they ask you to stop it.

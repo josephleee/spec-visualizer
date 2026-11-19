@@ -19,7 +19,7 @@ const docs = memo<string>(64 * 1024 * 1024, (json) => json.length)
 export function startServer(opts: { root: string; port: number; webDir: string; adapter?: Adapter }): Promise<{ port: number; close(): Promise<void> }> {
   const { root } = opts
   // The format is fixed for the life of the server: the one asked for, else the first the folder matches.
-  const format = opts.adapter ?? detect(root)[0] ?? ADAPTERS[0]
+  const format = opts.adapter ?? detect(root)[0]?.adapter ?? ADAPTERS[0]
   const sse = new Set<http.ServerResponse>()
   const watchers: fs.FSWatcher[] = []
   let timer: NodeJS.Timeout | undefined

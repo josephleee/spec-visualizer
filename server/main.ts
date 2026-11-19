@@ -6,6 +6,7 @@ import { parseArgs } from 'node:util'
 import { startServer } from './server.ts'
 import { ADAPTERS, adapter, detect, type Adapter } from './formats.ts'
 import type { FormatId } from './types.ts'
+import { lst } from './scan.ts'
 
 // This file is server/main.ts in a checkout and dist/server/main.js in the package.
 const here = fileURLToPath(import.meta.url)
@@ -86,15 +87,18 @@ export async function run(
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new CliError(`Invalid port: ${values.port}`)
 
   const found = detect(root)
+  // A format folder that exists as a symbolic link is not missing: say why it is not read.
+  const links = ['specs', '.specify', 'openspec', '.kiro', '.kiro/specs', '.kiro/steering'].filter((d) => lst(path.join(root, d))?.isSymbolicLink())
+  const linked = links.length ? `\n${links.join(', ')} ${links.length > 1 ? 'are symbolic links' : 'is a symbolic link'}, which spec-visualizer does not follow.` : ''
   let format: Adapter
   if (asked !== undefined) {
     format = adapter(asked as FormatId)
-    if (!format.matches(root)) throw new CliError(`Not ${an(format.name)} ${format.name} project: no ${format.folders} folder in ${root}`)
-  } else if (found.length) format = found[0]
+    if (!format.matches(root)) throw new CliError(`Not ${an(format.name)} ${format.name} project: no ${format.folders} folder in ${root}${linked}`)
+  } else if (found.length) format = found[0].adapter
   else {
     const [first, ...others] = ADAPTERS
     throw new CliError(`Not a ${first.name} project: no ${first.folders} folder in ${root}\n`
-      + `Nor ${others.map((a) => `${an(a.name)} ${a.name} project (no ${a.folders} folder)`).join(' or ')}.`)
+      + `Nor ${others.map((a) => `${an(a.name)} ${a.name} project (no ${a.folders} folder)`).join(' or ')}.${linked}`)
   }
   const webDir = io.webDir ?? path.join(pkgRoot, 'dist', 'web')
   if (!fs.existsSync(path.join(webDir, 'index.html'))) throw new CliError('Web files are missing. Run: npm run build')
@@ -113,8 +117,15 @@ export async function run(
   const docs = p.features.reduce((n, f) => n + f.docs.length, 0) + (p.constitution ? 1 : 0) + (p.shared?.length ?? 0)
   const url = `http://127.0.0.1:${srv.port}`
   io.out(`${format.name} project: ${p.features.length} ${format.unit}, ${docs} documents`)
+  // When the folder holds more than one format: which one was opened and why, and how to open each of the others.
   const also = asked === undefined ? found.slice(1) : []
-  if (also.length) io.out(`Also found: ${also.map((a) => `${a.name} (${a.folders})`).join(', ')}. Showing ${format.name}; choose with --format ${also[0].id}`)
+  if (also.length) {
+    const lost = found[0].adapter.id !== 'spec-kit' && also.some((f) => f.adapter.id === 'spec-kit')
+    const names = also.map((f) => `${f.adapter.name} (${f.adapter.id === 'spec-kit' ? 'specs/' : f.why})`)
+    const flags = also.map((f) => `--format ${f.adapter.id}`)
+    io.out(`Chose ${format.name} (${found[0].why})${lost ? ': specs/ holds no spec-kit documents' : ''}. `
+      + `Also found ${names.join(' and ')}; choose ${also.length > 1 ? 'one' : 'it'} with ${flags.join(' or ')}`)
+  }
   io.out(`Dashboard: ${url}`)
   if (!values['no-open']) io.open?.(url)
   return srv

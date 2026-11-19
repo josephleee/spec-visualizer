@@ -150,7 +150,7 @@ test('an OpenSpec or a Kiro folder is found by its folders and named in the firs
 test('a folder of several formats shows spec-kit first and says how to choose another', async () => {
   const { lines } = await cli([mixed, '--port', '0'])
   expect(lines[0]).toBe('spec-kit project: 1 features, 1 documents')
-  expect(lines[1]).toBe('Also found: OpenSpec (openspec/), Kiro (.kiro/specs/ or .kiro/steering/). Showing spec-kit; choose with --format openspec')
+  expect(lines[1]).toBe('Chose spec-kit (specs/001-x/spec.md). Also found OpenSpec (openspec/) and Kiro (.kiro/specs/); choose one with --format openspec or --format kiro')
   const k = await cli([mixed, '--port', '0', '--format', 'kiro'])
   expect(k.lines[0]).toBe('Kiro project: 1 specs, 1 documents')
   expect(k.lines).toHaveLength(2) // the format was asked for: nothing else to say
@@ -161,6 +161,14 @@ test('--format must name a known format the folder has', async () => {
   await expect(cli([os1, '--format', 'kiro'])).rejects.toThrow(`Not a Kiro project: no .kiro/specs/ or .kiro/steering/ folder in ${os1}`)
   await expect(cli([kiro1, '--format', 'openspec'])).rejects.toThrow(`Not an OpenSpec project: no openspec/ folder in ${kiro1}`)
   await expect(cli([plain])).rejects.toThrow('Nor an OpenSpec project (no openspec/ folder) or a Kiro project (no .kiro/specs/ or .kiro/steering/ folder).')
+})
+
+test('OpenSpec content beside a specs/ folder without spec-kit documents opens as OpenSpec, and says why', async () => {
+  const root = folder({ 'openspec/changes/add-x/proposal.md': '## Why\n', 'specs/notes.md': '# notes\n' })
+  const { lines } = await cli([root, '--port', '0'])
+  expect(lines[0]).toBe('OpenSpec project: 1 changes, 1 documents')
+  expect(lines[1]).toBe('Chose OpenSpec (openspec/): specs/ holds no spec-kit documents. Also found spec-kit (specs/); choose it with --format spec-kit')
+  fs.rmSync(root, { recursive: true, force: true })
 })
 
 test('--help names --format and the formats it reads', async () => {
@@ -203,3 +211,13 @@ for (const [format, unit, stages] of [
     expect(blocks.some((b) => b.kind === 'cards')).toBe(true)
   })
 }
+
+test('a format folder that is a symbolic link is named as one, not as missing', async () => {
+  const target = folder({ 'changes/a/proposal.md': '## Why\n' })
+  const root = folder({ 'README.md': '# x\n' })
+  fs.symlinkSync(target, path.join(root, 'openspec'))
+  await expect(cli([root, '--format', 'openspec'])).rejects.toThrow('openspec is a symbolic link, which spec-visualizer does not follow')
+  await expect(cli([root])).rejects.toThrow(`Not a spec-kit project: no specs/ or .specify/ folder in ${root}`) // the message as before, then why
+  await expect(cli([root])).rejects.toThrow('openspec is a symbolic link, which spec-visualizer does not follow')
+  for (const d of [target, root]) fs.rmSync(d, { recursive: true, force: true })
+})

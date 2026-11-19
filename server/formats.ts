@@ -1,6 +1,6 @@
 // One adapter per spec-driven format: how to recognise a project, what to watch, how to scan it and read its documents.
 import type { Reading } from './parsers.ts'
-import { isSpecKit, scanProject } from './scan.ts'
+import { entries, isSpecKit, realDir, realFile, scanProject } from './scan.ts'
 import { isOpenSpec, OPENSPEC_PARSERS, scanOpenSpec } from './openspec.ts'
 import { isKiro, KIRO_PARSERS, scanKiro } from './kiro.ts'
 import type { FormatId, Project } from './types.ts'
@@ -23,6 +23,29 @@ export const ADAPTERS: Adapter[] = [
 
 export const adapter = (id: FormatId): Adapter => ADAPTERS.find((a) => a.id === id)!
 
-// Every format the folder matches, in order of precedence: spec-kit first, so a folder that opened as spec-kit
-// before other formats were read still does.
-export const detect = (root: string): Adapter[] => ADAPTERS.filter((a) => a.matches(root))
+// What makes a folder spec-kit's own rather than any folder named specs/: a .specify/ folder, or a feature folder holding
+// spec.md or plan.md (spec-kit writes one of them first; tasks.md alone is also OpenSpec's and Kiro's).
+export function specKitEvidence(root: string): string | null {
+  if (realDir(root, '.specify')) return '.specify/'
+  if (!realDir(root, 'specs')) return null
+  for (const e of entries(`${root}/specs`).filter((x) => x.isDirectory()).map((x) => x.name).sort())
+    for (const doc of ['spec.md', 'plan.md']) if (realFile(root, `specs/${e}/${doc}`)) return `specs/${e}/${doc}`
+  return null
+}
+
+const kiroWhy = (root: string) => ['.kiro/specs', '.kiro/steering'].filter((d) => realDir(root, d)).map((d) => `${d}/`).join(' and ')
+
+export type Found = { adapter: Adapter; why: string }
+
+// Every format the folder matches, the one to open first, each with why it matched. spec-kit comes first when it has
+// documents of its own, so every real spec-kit folder opens as before; a specs/ folder without them (Gherkin files,
+// loose notes, another tool's layout) gives way to OpenSpec or Kiro content, and stays a choice for --format.
+export function detect(root: string): Found[] {
+  const evidence = specKitEvidence(root)
+  const found = ADAPTERS.filter((a) => a.matches(root)).map((adapter): Found => ({
+    adapter,
+    why: adapter.id === 'spec-kit' ? evidence ?? 'specs/ (no spec-kit documents in it)' : adapter.id === 'openspec' ? 'openspec/' : kiroWhy(root),
+  }))
+  if (evidence || found.length < 2 || found[0].adapter.id !== 'spec-kit') return found
+  return [...found.slice(1), found[0]]
+}

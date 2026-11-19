@@ -5,14 +5,18 @@ import path from 'node:path'
 import { ADAPTERS, adapter, detect } from '../server/formats.ts'
 
 const dirs: string[] = []
+// Folders end in '/', anything else is a file.
 const folder = (paths: string[]) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'specviz-detect-'))
   dirs.push(root)
-  for (const p of paths) fs.mkdirSync(path.join(root, p), { recursive: true })
+  for (const p of paths) {
+    if (p.endsWith('/') || !/.\./.test(p.split('/').pop()!)) fs.mkdirSync(path.join(root, p), { recursive: true }) // a dot after the first character: a file
+    else { fs.mkdirSync(path.dirname(path.join(root, p)), { recursive: true }); fs.writeFileSync(path.join(root, p), 'x') }
+  }
   return root
 }
 afterAll(() => { for (const d of dirs) fs.rmSync(d, { recursive: true, force: true }) })
-const ids = (root: string) => detect(root).map((a) => a.id)
+const ids = (root: string) => detect(root).map((f) => f.adapter.id)
 
 test('each format by its own folders', () => {
   expect(ids(folder(['specs']))).toEqual(['spec-kit'])
@@ -31,8 +35,8 @@ test('none: an empty folder, a .kiro folder holding only settings, a file named 
   expect(ids(root)).toEqual([])
 })
 
-test('several: spec-kit first, then OpenSpec, then Kiro, so a folder that opened as spec-kit still does', () => {
-  expect(ids(folder(['specs', 'openspec', '.kiro/specs']))).toEqual(['spec-kit', 'openspec', 'kiro'])
+test('several, with spec-kit documents: spec-kit first, then OpenSpec, then Kiro', () => {
+  expect(ids(folder(['specs/001-x/spec.md', 'openspec', '.kiro/specs']))).toEqual(['spec-kit', 'openspec', 'kiro'])
   expect(ids(folder(['openspec', '.kiro/steering']))).toEqual(['openspec', 'kiro'])
   expect(ADAPTERS.map((a) => a.id)).toEqual(['spec-kit', 'openspec', 'kiro'])
 })
@@ -78,4 +82,30 @@ test('an OpenSpec project: live updates from openspec/, documents served only wh
   } finally {
     await srv.close()
   }
+})
+
+// The review's counter-examples (I6): repositories with real OpenSpec or Kiro content and an unrelated specs/ folder.
+test('a specs/ folder without spec-kit documents does not win against OpenSpec or Kiro content', () => {
+  const cases: [string, string[], string][] = [
+    ['loose files in specs/ beside OpenSpec', ['openspec/changes/', 'openspec/config.yaml', 'specs/REGISTRY_SPEC.md', 'specs/articles.zip'], 'openspec'],
+    ['a model-checking folder in specs/ beside openspec/ notes', ['openspec/ROADMAP.md', 'specs/quint/fee_pool.qnt', 'specs/quint/README.md'], 'openspec'],
+    ['Gherkin files in specs/ beside Kiro specs', ['.kiro/specs/dark-theme/requirements.md', 'specs/new_project.feature'], 'kiro'],
+    ['a custom layout of dated folders in specs/', ['.kiro/specs/a/tasks.md', '.kiro/steering/product.md', 'specs/lookup_20260511100000/technical-design/x.md'], 'kiro'],
+    ['Kiro-style folders mirrored in specs/', ['.kiro/specs/a/requirements.md', 'specs/action/requirements.md', 'specs/action/design.md', 'specs/action/tasks.md', 'specs/IDEAS.md'], 'kiro'],
+  ]
+  for (const [what, files, want] of cases) expect(ids(folder(files))[0], what).toBe(want)
+})
+
+test('genuinely mixed folders, with spec-kit documents, still open as spec-kit; a specs/ folder alone still does', () => {
+  expect(ids(folder(['.specify/memory/constitution.md', 'specs/001-org/plan.md', 'openspec/specs/x/spec.md']))[0]).toBe('spec-kit')
+  expect(ids(folder(['specs/006-android/spec.md', 'specs/006-android/tasks.md', 'openspec/changes/']))[0]).toBe('spec-kit')
+  expect(ids(folder(['specs/notes.md']))).toEqual(['spec-kit']) // nothing else matched: as before
+  expect(ids(folder(['specs/quint/x.qnt', 'openspec/']))).toEqual(['openspec', 'spec-kit']) // spec-kit stays a choice
+})
+
+test('each match says why it matched', () => {
+  const why = (files: string[]) => detect(folder(files)).map((f) => `${f.adapter.id}: ${f.why}`)
+  expect(why(['.specify/memory/', 'openspec/'])).toEqual(['spec-kit: .specify/', 'openspec: openspec/'])
+  expect(why(['specs/001-x/plan.md'])).toEqual(['spec-kit: specs/001-x/plan.md'])
+  expect(why(['specs/x.md', '.kiro/steering/'])).toEqual(['kiro: .kiro/steering/', 'spec-kit: specs/ (no spec-kit documents in it)'])
 })
