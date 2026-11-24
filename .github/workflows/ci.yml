@@ -62,3 +62,10 @@ jobs:
           spec-visualizer --demo --no-open --port 4455 &
           for i in 1 2 3 4 5 6 7 8 9 10; do curl -fsS http://127.0.0.1:4455/ > /dev/null && break || sleep 1; done
           curl -fsS http://127.0.0.1:4455/api/project | grep -q '"001-member-signup"'
+      - name: Serve the OpenSpec and Kiro demos and fetch them
+        run: |
+          spec-visualizer --demo --format openspec --no-open --port 4456 &
+          spec-visualizer --demo --format kiro --no-open --port 4457 &
+          for p in 4456 4457; do for i in 1 2 3 4 5 6 7 8 9 10; do curl -fsS http://127.0.0.1:$p/ > /dev/null && break || sleep 1; done; done
+          curl -fsS http://127.0.0.1:4456/api/project | grep -q '"add-due-reminders"'
+          curl -fsS http://127.0.0.1:4457/api/project | grep -q '"tool-search"'

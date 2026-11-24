@@ -121,3 +121,103 @@ test('--demo serves the bundled example: every stage, both story dialects, every
   expect(tasks.some((t) => t.parallel)).toBe(true)
   expect(tasks.some((t) => t.story)).toBe(true)
 })
+
+// ---------- other formats ----------
+
+const folder = (files: Record<string, string>) => {
+  const root = tmp()
+  for (const [rel, text] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true })
+    fs.writeFileSync(path.join(root, rel), text)
+  }
+  return root
+}
+const os1 = folder({ 'openspec/specs/loans/spec.md': '# loans\n', 'openspec/changes/add-x/proposal.md': '## Why\n' })
+const kiro1 = folder({ '.kiro/steering/product.md': '# P\n', '.kiro/specs/search/requirements.md': '# R\n', '.kiro/specs/search/tasks.md': '- [ ] 1. a\n' })
+const mixed = folder({ 'specs/001-x/spec.md': '# S\n', 'openspec/changes/add-x/proposal.md': '## Why\n', '.kiro/specs/s/requirements.md': '# R\n' })
+afterAll(() => { for (const d of [os1, kiro1, mixed]) fs.rmSync(d, { recursive: true, force: true }) })
+
+test('an OpenSpec or a Kiro folder is found by its folders and named in the first line', async () => {
+  const a = await cli([os1, '--port', '0'])
+  expect(a.lines[0]).toBe('OpenSpec project: 1 changes, 2 documents')
+  const p = await (await fetch(`http://127.0.0.1:${a.srv!.port}/api/project`)).json() as Project
+  expect(p.format).toBe('openspec')
+  const b = await cli([kiro1, '--port', '0'])
+  expect(b.lines[0]).toBe('Kiro project: 1 specs, 3 documents')
+  expect(b.lines).toHaveLength(2)
+})
+
+test('a folder of several formats shows spec-kit first and says how to choose another', async () => {
+  const { lines } = await cli([mixed, '--port', '0'])
+  expect(lines[0]).toBe('spec-kit project: 1 features, 1 documents')
+  expect(lines[1]).toBe('Chose spec-kit (specs/001-x/spec.md). Also found OpenSpec (openspec/) and Kiro (.kiro/specs/); choose one with --format openspec or --format kiro')
+  const k = await cli([mixed, '--port', '0', '--format', 'kiro'])
+  expect(k.lines[0]).toBe('Kiro project: 1 specs, 1 documents')
+  expect(k.lines).toHaveLength(2) // the format was asked for: nothing else to say
+})
+
+test('--format must name a known format the folder has', async () => {
+  await expect(cli([os1, '--format', 'bmad'])).rejects.toThrow('Unknown format: bmad. Use one of: spec-kit, openspec, kiro')
+  await expect(cli([os1, '--format', 'kiro'])).rejects.toThrow(`Not a Kiro project: no .kiro/specs/ or .kiro/steering/ folder in ${os1}`)
+  await expect(cli([kiro1, '--format', 'openspec'])).rejects.toThrow(`Not an OpenSpec project: no openspec/ folder in ${kiro1}`)
+  await expect(cli([plain])).rejects.toThrow('Nor an OpenSpec project (no openspec/ folder) or a Kiro project (no .kiro/specs/ or .kiro/steering/ folder).')
+})
+
+test('OpenSpec content beside a specs/ folder without spec-kit documents opens as OpenSpec, and says why', async () => {
+  const root = folder({ 'openspec/changes/add-x/proposal.md': '## Why\n', 'specs/notes.md': '# notes\n' })
+  const { lines } = await cli([root, '--port', '0'])
+  expect(lines[0]).toBe('OpenSpec project: 1 changes, 1 documents')
+  expect(lines[1]).toBe('Chose OpenSpec (openspec/): specs/ holds no spec-kit documents. Also found spec-kit (specs/); choose it with --format spec-kit')
+  fs.rmSync(root, { recursive: true, force: true })
+})
+
+test('--help names --format and the formats it reads', async () => {
+  const { lines } = await cli(['--help'])
+  expect(lines.join('\n')).toMatch(/--format <name>[\s\S]*spec-kit, openspec or kiro/)
+})
+
+test('the server tells the page its format before the first request returns', async () => {
+  const { srv } = await cli([os1, '--port', '0'])
+  expect(await (await fetch(`http://127.0.0.1:${srv!.port}/`)).text()).toBe('<h1>hi</h1>') // a page without <html> is served as it is
+  const web = folder({ 'index.html': '<!doctype html>\n<html lang="en"><body></body></html>' })
+  const a = await cli([os1, '--port', '0'], { webDir: web })
+  expect(await (await fetch(`http://127.0.0.1:${a.srv!.port}/`)).text()).toBe('<!doctype html>\n<html data-format="openspec" lang="en"><body></body></html>')
+  const b = await cli([project, '--port', '0'], { webDir: web })
+  expect(await (await fetch(`http://127.0.0.1:${b.srv!.port}/`)).text()).toContain('<html data-format="spec-kit" lang="en">')
+  fs.rmSync(web, { recursive: true, force: true })
+})
+
+for (const [format, unit, stages] of [
+  ['openspec', 'changes', ['propose', 'design', 'tasks', 'apply', 'archive']],
+  ['kiro', 'specs', ['requirements', 'design', 'tasks', 'implement', 'done']],
+] as const) {
+  test(`--demo --format ${format} serves its bundled example: units at every stage, every document parsed`, async () => {
+    const { lines, srv } = await cli(['--demo', '--format', format, '--port', '0'])
+    expect(lines[0]).toMatch(new RegExp(`^\\w+ project: \\d+ ${unit}, \\d+ documents$`))
+    const base = `http://127.0.0.1:${srv!.port}`
+    const p = (await (await fetch(`${base}/api/project`)).json()) as Project
+    expect(p.format).toBe(format)
+    expect(new Set(p.features.map((f) => f.stage))).toEqual(new Set(stages))
+    expect(p.about).toBeTruthy()
+    const blocks: Block[] = []
+    for (const r of [...(p.shared ?? []), ...p.features.flatMap((f) => f.docs)]) {
+      expect(r.error).toBeUndefined()
+      const res = await fetch(`${base}/api/doc?path=${encodeURIComponent(r.path)}`)
+      expect(res.status, r.path).toBe(200)
+      blocks.push(...((await res.json()) as ParsedDoc).blocks)
+    }
+    expect(blocks.some((b) => b.kind === 'requirements')).toBe(true)
+    expect(blocks.some((b) => b.kind === 'phase')).toBe(true)
+    expect(blocks.some((b) => b.kind === 'cards')).toBe(true)
+  })
+}
+
+test('a format folder that is a symbolic link is named as one, not as missing', async () => {
+  const target = folder({ 'changes/a/proposal.md': '## Why\n' })
+  const root = folder({ 'README.md': '# x\n' })
+  fs.symlinkSync(target, path.join(root, 'openspec'))
+  await expect(cli([root, '--format', 'openspec'])).rejects.toThrow('openspec is a symbolic link, which spec-visualizer does not follow')
+  await expect(cli([root])).rejects.toThrow(`Not a spec-kit project: no specs/ or .specify/ folder in ${root}`) // the message as before, then why
+  await expect(cli([root])).rejects.toThrow('openspec is a symbolic link, which spec-visualizer does not follow')
+  for (const d of [target, root]) fs.rmSync(d, { recursive: true, force: true })
+})

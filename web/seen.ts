@@ -21,7 +21,7 @@ export function loadSeen(project: Project, store?: Storage): Seen {
   const saved = read(project.root, store)
   if (saved) return saved
   const seen: Seen = {}
-  for (const d of [project.constitution, ...project.features.flatMap(f => f.docs)]) if (d && !d.error) seen[d.path] = d.hash
+  for (const d of [project.constitution, ...(project.shared ?? []), ...project.features.flatMap(f => f.docs)]) if (d && !d.error) seen[d.path] = d.hash
   write(project.root, seen, store)
   return seen
 }

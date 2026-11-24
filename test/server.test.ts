@@ -157,3 +157,25 @@ test('a root README change sends a changed event, other root files do not', asyn
   }
   events.close()
 })
+
+test('a Kiro project: a change to the root AGENTS.md sends a changed event', async () => {
+  const kiro = tmp()
+  fs.mkdirSync(path.join(kiro, '.kiro/steering'), { recursive: true })
+  fs.writeFileSync(path.join(kiro, '.kiro/steering/product.md'), '# Product\n')
+  const s = await startServer({ root: kiro, port: 0, webDir })
+  try {
+    await wait(300)
+    const events = collectSse(`http://127.0.0.1:${s.port}/api/events`)
+    await events.ready
+    fs.writeFileSync(path.join(kiro, 'notes.txt'), 'x')
+    await wait(400)
+    expect(events.count).toBe(0)
+    fs.writeFileSync(path.join(kiro, 'AGENTS.md'), '# Agents\n')
+    await wait(400)
+    expect(events.count).toBeGreaterThan(0)
+    events.close()
+  } finally {
+    await s.close()
+    fs.rmSync(kiro, { recursive: true, force: true })
+  }
+})

@@ -4,7 +4,7 @@
 
 ## 목적
 
-spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 글로 읽지 않고 화면으로 파악하게 한다. 문서 종류마다 그 문서에 맞는 화면을 준다.
+spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 글로 읽지 않고 화면으로 파악하게 한다. 문서 종류마다 그 문서에 맞는 화면을 준다. OpenSpec과 Kiro로 쓴 프로젝트도 같은 화면에서 그 형식의 단계와 명령으로 보여 준다([다른 형식](#다른-형식)).
 
 쓰는 순간은 세 가지다.
 
@@ -12,7 +12,7 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 2. 새로 생긴 스펙 문서를 화면으로 보고 싶을 때
 3. 갱신된 문서를 다시 볼 때
 
-사용자는 spec-kit 프로젝트에서 작업하는 본인이나 팀원이고, 자기 컴퓨터에서 연다.
+사용자는 spec-kit, OpenSpec, Kiro 프로젝트에서 작업하는 본인이나 팀원이고, 자기 컴퓨터에서 연다.
 
 ### 성공 기준
 
@@ -29,7 +29,7 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 
 - 문서 편집, 체크박스 토글 등 파일 쓰기 일체
 - 갱신된 문서에서 바뀐 부분만 강조하기
-- OpenSpec, Kiro 등 다른 형식 읽기
+- spec-kit, OpenSpec, Kiro 밖의 형식 읽기, 여러 형식을 한 화면에 보기
 - 여러 프로젝트를 한 화면에 모으기
 - AI로 페이지 생성하기
 - 정적 HTML 내보내기, 호스팅, 로그인
@@ -37,7 +37,7 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 
 ## 여섯 단계
 
-보드와 문서 페이지는 모두 여섯 단계를 기준으로 한다.
+보드와 문서 페이지는 모두 단계를 기준으로 한다. 이 절은 spec-kit의 여섯 단계를 설명한다. OpenSpec과 Kiro의 단계는 [다른 형식](#다른-형식)에 있다.
 
 | # | 단계 | 명령 | 읽는 문서 |
 |---|---|---|---|
@@ -69,6 +69,25 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 - 폴더 이름 앞의 숫자순으로 늘어놓는다. 숫자가 없는 폴더는 뒤로 간다.
 - 현재 git 브랜치 이름과 같은 폴더가 현재 기능이고 맨 앞에 온다. 브랜치는 `git rev-parse --abbrev-ref HEAD`로 읽는다. 맞는 폴더가 없거나 git 저장소가 아니면 현재 기능은 없다.
 
+## 다른 형식
+
+서버는 시작할 때 프로젝트의 형식을 한 번 정하고, 그동안 바꾸지 않는다. 설계 전체는 [design-formats.md](design-formats.md)(영어), 형식 조사는 [formats.md](formats.md)(영어)에 있다.
+
+| 형식 | 알아보는 폴더 | 첫 단계 (프로젝트 문서) | 작업 단위 | 단계 |
+|---|---|---|---|---|
+| spec-kit | `specs/` 또는 `.specify/` | 헌법 | 기능 (`specs/<기능>/`) | 헌법, 명세, 계획, 작업 분해, 구현, 완료 |
+| OpenSpec | `openspec/` | 스펙: `openspec/specs/**/spec.md`, `config.yaml`, `project.md` | 변경 (`openspec/changes/<이름>/`, 보관된 것은 `archive/<날짜>-<이름>`) | 스펙, 제안, 설계, 작업 분해, 적용, 보관 |
+| Kiro | `.kiro/specs/` 또는 `.kiro/steering/` | 스티어링: `.kiro/steering/**/*.md` | 스펙 (`.kiro/specs/<이름>/`) | 스티어링, 요구사항, 설계, 작업 분해, 구현, 완료 |
+
+- 폴더가 여러 형식에 맞으면, spec-kit 문서(`.specify/` 폴더, 또는 `specs/` 아래 기능 폴더의 `spec.md`나 `plan.md`)가 있을 때 spec-kit을 먼저 고르고, 그다음 OpenSpec, Kiro 순이다. spec-kit 문서가 없는 `specs/` 폴더(Gherkin 파일, 메모, 다른 도구의 구조)는 다른 형식에 자리를 내준다. `specs/`만 있는 폴더는 전처럼 spec-kit으로 열린다. CLI는 무엇을 왜 골랐는지와 다른 형식을 고르는 `--format` 옵션을 알려 준다.
+- 어느 형식도 심볼릭 링크를 따라가지 않는다. 스캔할 때마다 경로의 폴더를 하나씩 다시 확인하고(서버가 도는 동안 폴더가 링크로 바뀌어도), 문서는 위 폴더를 확인한 뒤 `O_NOFOLLOW`로 연다. `/api/doc`도 같다.
+- OpenSpec과 Kiro 폴더 안의 모르는 `.md`도 `other` 프로젝트 문서로 첫 단계에서 연다.
+- 서버 쪽은 형식마다 어댑터 하나다(`server/formats.ts`). 어댑터는 알아보는 규칙, 감시할 폴더, 스캔, 문서 종류별 파서를 준다. spec-kit 어댑터는 원래의 `scanProject`와 파서 표를 그대로 쓴다.
+- `Project`에는 `format`(OpenSpec, Kiro일 때만)과 `shared`(헌법 밖의 프로젝트 문서)가 붙는다. spec-kit에서는 둘 다 없으므로 JSON이 그대로다.
+- 화면 쪽은 형식마다 흐름 하나다(`web/flows.ts`). 단계 목록과 문서 종류, 명령, 작업 단위를 부르는 말을 담는다. spec-kit 흐름은 원래 화면이 가정하던 값 그대로다.
+- 화면 라벨의 "기능"은 OpenSpec에서 "변경", Kiro에서 "스펙"으로 바꿔 보여 준다. 셋 다 받침으로 끝나 조사가 그대로 맞는다.
+- `index.html`을 줄 때 `<html data-format="…">`을 붙여, 화면이 프로젝트를 받기 전에도 맞는 단계 이름으로 뼈대를 그린다.
+
 ## 구조
 
 ```text
@@ -82,11 +101,12 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 
 | 부분 | 위치 | 하는 일 |
 |---|---|---|
-| CLI | `server/cli.ts`, `server/main.ts` | 인자를 읽고, 서버를 띄우고, 주소를 출력하고, 브라우저를 연다 |
-| 스캔 | `server/scan.ts` | 프로젝트를 훑어 기능, 문서 목록, 단계, 작업 수, 열린 질문 수, 헌법 값, README 소개를 만든다 |
-| 파서 | `server/md.ts`, `server/parsers.ts` | 문서 하나를 종류별 블록으로 만든다 |
+| CLI | `server/cli.ts`, `server/main.ts` | 인자를 읽고, 형식을 정하고, 서버를 띄우고, 주소를 출력하고, 브라우저를 연다 |
+| 형식 | `server/formats.ts` | 형식별 어댑터와 형식 찾기 |
+| 스캔 | `server/scan.ts`, `server/openspec.ts`, `server/kiro.ts` | 프로젝트를 훑어 기능, 문서 목록, 단계, 작업 수, 열린 질문 수, 헌법 값, README 소개를 만든다 |
+| 파서 | `server/md.ts`, `server/parsers.ts`, `server/items.ts`, `server/openspec.ts`, `server/kiro.ts` | 문서 하나를 종류별 블록으로 만든다 |
 | 서버 | `server/server.ts` | JSON과 화면 파일을 주고, 파일 변경을 알린다 |
-| 화면 | `web/` | JSON을 받아 그린다. 마크다운 문서의 구조는 서버만 읽는다 |
+| 화면 | `web/` | JSON을 받아 그린다. 형식별 단계와 명령은 `web/flows.ts`에 있다. 마크다운 문서의 구조는 서버만 읽는다 |
 
 서버와 화면이 주고받는 형태는 `server/types.ts` 하나에 있고, 화면이 그대로 가져다 쓴다.
 
@@ -101,7 +121,7 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 
 ### 실시간 갱신
 
-- 서버는 `specs/`와 `.specify/`를 하위 폴더까지 감시한다. 프로젝트 루트는 한 단계만 감시해, 두 폴더가 나중에 생기는 것과 `README.md`가 바뀌는 것을 알아챈다.
+- 서버는 형식의 폴더(spec-kit은 `specs/`와 `.specify/`, OpenSpec은 `openspec/`, Kiro는 `.kiro/`)를 하위 폴더까지 감시한다. 프로젝트 루트는 한 단계만 감시해, 그 폴더가 나중에 생기는 것과 `README.md`가 바뀌는 것을 알아챈다.
 - 변경이 몰려도 100ms 동안 모아 `changed` 이벤트 하나를 보낸다.
 - 화면은 이벤트를 받으면 프로젝트와 열려 있는 문서를 다시 가져온다. 연결이 다시 열렸을 때도 그렇게 한다.
 - 늦게 도착한 옛 응답은 버린다. 마지막에 보낸 요청의 응답만 화면에 반영한다(`web/live.ts`의 `latestOnly`).
@@ -126,7 +146,7 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 | `#/` | 보드 |
 | `#/stage/<단계>` | 그 단계의 문서. 기능은 현재 기능에 그 문서가 있으면 현재 기능, 아니면 그 문서가 있는 기능 가운데 가장 앞선 기능 |
 | `#/stage/<단계>/<기능>` | 그 기능의 그 단계 문서 |
-| `#/stage/plan/<기능>/<딸린 문서>` | 계획 단계의 딸린 문서. `research`, `data-model`, `quickstart`, `contract` |
+| `#/stage/plan/<기능>/<딸린 문서>` | 계획 단계의 딸린 문서. `research`, `data-model`, `quickstart`, `contract`. OpenSpec의 제안 단계는 `#/stage/propose/<변경>/delta`로 델타 스펙을 연다 |
 | `#/doc/<경로>` | 경로로 연 문서 하나. 단계 페이지가 없는 문서(`other`, 두 번째 이후의 체크리스트와 계약 파일)에 쓴다 |
 
 읽을 수 없는 주소는 보드로 간다. 주소에 적힌 기능이 없으면 다른 기능으로 바꾸지 않고 "더 이상 없다"고 알린다.
@@ -173,7 +193,7 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 | 본문 | 문서 종류별 화면 |
 | 아래 | 이전 단계, 전체 보드, 다음 단계 |
 
-계획 단계에는 `plan.md`와 딸린 문서를 오가는 탭이 있다. 같은 종류의 문서가 여럿이면(체크리스트, 계약 파일) 본문 위에서 고른다. `Esc`를 누르면 보드로 돌아간다.
+계획 단계(OpenSpec은 제안 단계)에는 대표 문서와 딸린 문서를 오가는 탭이 있다. 같은 종류의 문서가 여럿이면(체크리스트, 계약 파일) 본문 위에서 고른다. `Esc`를 누르면 보드로 돌아간다.
 
 ### 단계별로 그리는 것
 
@@ -313,7 +333,7 @@ spec-kit(Spec-Driven Development)으로 작업하는 사람이 스펙 문서를 
 | 로컬 전용 | `127.0.0.1`에만 연결을 받는다 |
 | Host 확인 | `Host`가 `127.0.0.1:<포트>`나 `localhost:<포트>`가 아니면 403으로 답한다 |
 | 문서 접근 | `/api/doc`는 스캔이 찾은 문서의 경로만 받는다. 임의의 경로는 404다 |
-| 심볼릭 링크 | 스캔은 심볼릭 링크를 따라가지 않는다. `specs`, `.specify`, `memory`가 링크여도, README가 링크여도 읽지 않는다 |
+| 심볼릭 링크 | 스캔과 형식 찾기는 심볼릭 링크를 따라가지 않는다. `specs`, `.specify`, `memory`, `openspec`, `.kiro`가 링크여도, README가 링크여도 읽지 않는다 |
 | 화면 파일 | 실제 경로가 화면 폴더 안에 있는 파일만 준다 |
 | 응답 머리 | 모든 응답에 `Cache-Control: no-store`와 `X-Content-Type-Options: nosniff`를 붙인다 |
 | 원시 HTML | 마크다운 안의 HTML은 실행하지 않고 글자로 보여 준다 |
@@ -334,7 +354,7 @@ npx spec-visualizer --demo     # 함께 들어 있는 예제 프로젝트
 |---|---|
 | `dist/server` | JavaScript로 빌드한 서버. 실행 파일은 `dist/server/cli.js` |
 | `dist/web` | 빌드한 화면 파일. React는 여기에 묶여 들어간다 |
-| `examples/demo` | `--demo`가 보여 주는 예제 프로젝트 |
+| `examples/demo`, `examples/demo-openspec`, `examples/demo-kiro` | `--demo`가 보여 주는 예제 프로젝트. 뒤의 둘은 `--format openspec`, `--format kiro`와 함께 쓴다 |
 | `package.json`, `README.md`, `LICENSE` | npm이 항상 넣는 파일 |
 
 실행할 때 필요한 의존성은 마크다운 파서(`unified`, `remark-parse`, `remark-gfm`)뿐이다. 패키지는 Node.js 20 이상에서 실행한다. `docs/`와 테스트는 패키지에 들어가지 않는다.
@@ -347,9 +367,10 @@ spec-visualizer [path] [options]
 
 | 인자 | 동작 |
 |---|---|
-| `path` | 보여 줄 프로젝트. 생략하면 현재 폴더. `specs/`도 `.specify/`도 없으면 알리고 끝낸다 |
+| `path` | 보여 줄 프로젝트. 생략하면 현재 폴더. 어느 형식의 폴더도 없으면 알리고 끝낸다 |
+| `--format <이름>` | `spec-kit`, `openspec`, `kiro` 가운데 하나로 읽는다. 폴더가 그 형식에 맞지 않으면 알리고 끝낸다 |
 | `--port <n>` | 들을 포트. 기본값은 4321 |
-| `--demo` | 경로 대신 예제 프로젝트를 보여 준다. 경로와 함께 쓸 수 없다 |
+| `--demo` | 경로 대신 예제 프로젝트를 보여 준다. 경로와 함께 쓸 수 없다. `--format`과 함께 쓰면 그 형식의 예제 |
 | `--no-open` | 브라우저를 열지 않는다 |
 | `--help`, `--version` | 사용법이나 버전을 출력한다 |
 
@@ -363,7 +384,7 @@ spec-visualizer [path] [options]
 
 ### 예제 프로젝트
 
-`examples/demo`는 가상의 제품 Borrowbox를 spec-kit으로 쓴 프로젝트다. 헌법 하나와 기능 일곱 개가 있고, 기능들이 다섯 단계에 고루 서 있어 모든 화면에 그릴 것이 있다.
+`examples/demo`는 가상의 제품 Borrowbox를 spec-kit으로 쓴 프로젝트다. 헌법 하나와 기능 일곱 개가 있고, 기능들이 다섯 단계에 고루 서 있어 모든 화면에 그릴 것이 있다. `examples/demo-openspec`과 `examples/demo-kiro`는 같은 제품을 OpenSpec과 Kiro로 쓴 것이고, 역시 모든 단계에 작업 단위가 있다.
 
 ## 알려진 한계
 
@@ -372,7 +393,7 @@ spec-visualizer [path] [options]
 | 여러 조각에 걸쳐 열린 코드 블록 | 긴 문서를 조각으로 자를 때 코드 블록이 여러 자리에 걸쳐 열려 있으면 자리마다 한 번씩 다시 파싱한다. 결과는 같고 시간이 더 든다 (`server/md.ts`) |
 | 이름표가 없는 Technical Context | 빈 항목표 대신 원문(`raw`)으로 남는다 (`server/parsers.ts`) |
 | 포트가 바뀌면 표시가 초기화된다 | 새 문서·갱신 기록과 언어 선택은 브라우저가 주소(포트 포함)별로 저장한다. 다른 포트로 열면 처음 여는 것으로 본다 |
-| 브라우저에서의 자동 테스트가 없다 | 테스트는 서버, 파서, 주소·안내·기록 규칙, 그리고 문서 화면을 글자로 그린 결과를 확인한다. 보드, 프로젝트 띠, 단계 페이지의 틀, 카메라 이동, 포커스 이동, 스크롤 복원은 실제 브라우저에서 자동으로 확인하지 않는다 |
+| 브라우저에서의 자동 테스트가 없다 | 테스트는 서버, 파서, 주소·안내·기록 규칙, 그리고 문서 화면을 글자로 그린 결과를 확인한다. spec-kit은 두 예제 프로젝트의 API JSON과 모든 화면의 HTML을 기준 파일과 비교한다(`test/speckit-golden.test.ts`). 보드, 프로젝트 띠, 단계 페이지의 틀, 카메라 이동, 포커스 이동, 스크롤 복원은 실제 브라우저에서 자동으로 확인하지 않는다 |
 
 ## 결정 기록
 
@@ -381,7 +402,6 @@ spec-visualizer [path] [options]
 | 결정 | 내용 |
 |---|---|
 | 규칙 기반 로컬 웹앱 | 문서의 일정한 표식을 규칙으로 읽는다. 바로 뜨고 항상 최신이며 비용이 없다. AI가 문서마다 페이지를 만드는 방식과 에디터 확장은 택하지 않았다 |
-| spec-kit 문서가 기준 | 다른 형식은 읽지 않는다 |
 | 파싱은 서버에서만 | 마크다운의 구조는 remark(mdast)로 읽는다. 화면은 문서 구조를 파싱하지 않는다 |
 | 최신 상태만 보여 준다 | 갱신된 문서는 지금 내용을 보여 주고 표시만 단다 |
 | 영어와 한국어 라벨 | 전환 버튼을 두고, 번역 라이브러리 없이 라벨 표 하나로 처리한다 |
@@ -407,3 +427,4 @@ spec-visualizer [path] [options]
 | 포트가 사용 중이면 알리고 멈춘다 | 기본 포트는 다음 빈 포트로 넘어간다. `--port`로 준 포트만 오류로 끝낸다 |
 | 실행 인자는 경로와 `--port` | `--demo`, `--no-open`, `--help`, `--version`을 더했다 |
 | npm 배포 여부는 정하지 않음 | npm 패키지와 Claude Code 플러그인으로 전달한다 |
+| spec-kit 문서만 읽는다 | OpenSpec과 Kiro도 읽는다. 형식마다 어댑터와 화면 흐름이 있고, spec-kit의 출력은 그대로다([다른 형식](#다른-형식)) |
