@@ -34,7 +34,12 @@ export function tasksIn(src: string, nodes: Node[]): { tasks: Task[]; rest: Node
     if (n.type !== 'listItem') return null
     const first = n.children[0]
     const line = first?.type === 'paragraph' ? slice(src, [first]) : ''
-    if (n.checked != null) return { done: n.checked, optional: false, text: line }
+    if (n.checked != null) {
+      // remark moves the paragraph past the box only when the item opens with plain text; before bold, code or a link the box is still in the line.
+      const at = first?.position?.start.offset ?? 0
+      const moved = /\[[ \txX]\][ \t]*$/.test(src.slice(src.lastIndexOf('\n', at - 1) + 1, at))
+      return { done: n.checked, optional: false, text: moved ? line : line.replace(/^\[[ \txX]\][ \t]*/, '') }
+    }
     const m = MARK.exec(line)
     return m ? { done: /x/i.test(m[1]), optional: m[2].endsWith('*'), text: line.slice(m[0].length) } : null
   }

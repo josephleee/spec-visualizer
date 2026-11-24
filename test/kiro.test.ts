@@ -367,3 +367,21 @@ A closing note that is not a criterion.
   expect(b.items[0].criteria.map((c) => [c.id, c.steps.map((s) => s.key)])).toEqual([['3.1', ['']], ['3.2', ['WHEN', 'THEN']], ['3.3', ['']]])
   expect(b.items[0].rest).toBe('A closing note that is not a criterion.')
 })
+
+test('a task that opens with bold, code or a link keeps its number and loses the box', () => {
+  const doc = read('tasks', '# Plan\n\n## Tasks\n\n- [x] `npm test` passes\n- [ ] **1.1** Create interfaces\n- [ ] [the guide](a.md) is read\n- [x] [ ] is the empty box\n- [ ] 1.2 Plain\n', '.kiro/specs/x/tasks.md')
+  const items = phases(doc.blocks).flatMap((p) => p.items)
+  expect(items.map((i) => i.text)).toEqual(['`npm test` passes', '**1.1** Create interfaces', '[the guide](a.md) is read', '[ ] is the empty box', 'Plain'])
+  expect(items.map((i) => i.done)).toEqual([true, false, false, true, false])
+  expect(items[4].id).toBe('1.2')
+})
+
+test('a task list under a label line, with no ##, is on the page as the tasks the scan counts', () => {
+  const src = '# Plan\n\n**Feature**: search\n\n- [ ] 1. a\n- [x] 2. b\n'
+  const root = tmp()
+  write(root, '.kiro/specs/search/tasks.md', src)
+  expect(scanKiro(root, null).features[0].tasks).toEqual({ done: 1, total: 2 })
+  const doc = read('tasks', src, '.kiro/specs/search/tasks.md')
+  expect(doc.meta).toEqual([{ label: 'Feature', value: 'search' }])
+  expect(phases(doc.blocks).flatMap((p) => p.items).map((i) => [i.id, i.done])).toEqual([['1', false], ['2', true]])
+})

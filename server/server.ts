@@ -48,7 +48,7 @@ export function startServer(opts: { root: string; port: number; webDir: string; 
     // Non-recursive: picks up the format's folders appearing later, and the README the project summary is read from.
     const rw = fs.watch(root, (_e, name) => {
       if (name && format.watch.includes(name)) { attach(); notify() }
-      else if (name && /^readme\.md$/i.test(name)) notify()
+      else if (name && (/^readme\.md$/i.test(name) || format.rootFiles?.includes(name))) notify()
     })
     rw.on('error', () => rw.close())
     watchers.push(rw)

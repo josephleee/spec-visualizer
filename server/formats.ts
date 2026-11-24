@@ -12,13 +12,14 @@ export type Adapter = Reading & {
   folders: string       // the folders that make a project of this format, for messages
   matches(root: string): boolean
   watch: string[]       // top-level folders watched for changes
+  rootFiles?: string[]  // files in the project root the scan also reads
   scan(root: string): Project
 }
 
 export const ADAPTERS: Adapter[] = [
   { id: 'spec-kit', name: 'spec-kit', unit: 'features', folders: 'specs/ or .specify/', matches: isSpecKit, watch: ['specs', '.specify'], scan: (r) => scanProject(r) },
   { id: 'openspec', name: 'OpenSpec', unit: 'changes', folders: 'openspec/', matches: isOpenSpec, watch: ['openspec'], scan: (r) => scanOpenSpec(r), parsers: OPENSPEC_PARSERS },
-  { id: 'kiro', name: 'Kiro', unit: 'specs', folders: '.kiro/specs/ or .kiro/steering/', matches: isKiro, watch: ['.kiro'], scan: (r) => scanKiro(r), parsers: KIRO_PARSERS, frontMatter: true },
+  { id: 'kiro', name: 'Kiro', unit: 'specs', folders: '.kiro/specs/ or .kiro/steering/', matches: isKiro, watch: ['.kiro'], rootFiles: ['AGENTS.md'], scan: (r) => scanKiro(r), parsers: KIRO_PARSERS, frontMatter: true },
 ]
 
 export const adapter = (id: FormatId): Adapter => ADAPTERS.find((a) => a.id === id)!

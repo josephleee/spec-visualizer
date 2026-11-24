@@ -1,7 +1,7 @@
 import { checkItems, clean, headingText, kids, parse, slice, splitAt, stamp, takeLabels } from './md.ts'
 import type { Node, Sec } from './md.ts'
 import type { Block, DocRef, Field, ParsedDoc, Scenario } from './types.ts'
-import { frontMatter, type Parser } from './items.ts'
+import { frontMatter, tasksIn, type Parser } from './items.ts'
 
 export function rawBlock(src: string, sec: Sec): Block {
   return { kind: 'raw', heading: sec.heading, depth: sec.depth, markdown: slice(src, sec.nodes) }
@@ -277,9 +277,13 @@ export function parseDoc(ref: DocRef, src: string, reading: Reading = {}): Parse
   const nodes = parse(text)
   const h1 = nodes.find((n) => n.type === 'heading' && n.depth === 1)
   const pre = splitAt(nodes, 2).find((s) => s.heading === null)?.nodes.filter((n) => n !== h1) ?? []
-  const { fields, rest } = takeLabels(text, pre)
-  const meta = front ? [...front.fields, ...fields] : fields
   const parser: Parser = (reading.parsers ?? PARSERS)[ref.kind] ?? ((t: string) => bySection(t, () => null))
+  // For a parser that reads the preamble's tasks, a task list ends the label lines: it is not the value of the label
+  // above it, so the page shows the tasks the scan counts.
+  const cut = parser.preamble ? pre.findIndex((n) => n.type === 'list' && tasksIn(text, [n]).tasks.length > 0) : -1
+  const labels = takeLabels(text, cut < 0 ? pre : pre.slice(0, cut))
+  const fields = labels.fields, rest = cut < 0 ? labels.rest : [...labels.rest, ...pre.slice(cut)]
+  const meta = front ? [...front.fields, ...fields] : fields
   const blocks: Block[] = front?.leftover ? [front.leftover] : []
   // A parser that reads the preamble itself (a task list written before any ##) gets it; otherwise it is kept here.
   if (!parser.preamble && slice(text, rest)) blocks.push(rawBlock(text, { heading: null, depth: 0, nodes: rest }))

@@ -25,7 +25,7 @@ export const implement: Form = (doc, { t, feature, flow }) => {
             ? <div className="nextbox"><span className="lbl">{t('i.next')}</span><CmdRow cmd={cmd} big /><p>{t('i.cont', left)}</p></div>
             : left <= 0 && cmd && flow?.id === 'openspec'
               ? <div className="nextbox"><span className="lbl">{t('i.next')}</span><CmdRow cmd={cmd} big /><p>{t('i.archive')}</p></div>
-              : <div className="nextbox fin"><p>{t('i.fin')}</p></div>}
+              : <div className="nextbox fin"><p>{left > 0 ? t('i.open', left) : t('i.fin')}</p></div>}
           {total > all.length && <p className="prog-note">{t('i.outside', total - all.length, total)}</p>}
         </section>
         <Sec title={t('i.left')} note={openPhases ? t('i.left.n', openPhases) : t('i.left.none')}>
