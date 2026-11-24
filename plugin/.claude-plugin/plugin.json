@@ -1,6 +1,6 @@
 {
   "name": "spec-visualizer",
-  "version": "0.1.1-rc.0",
+  "version": "0.2.0",
   "description": "Start, open and stop the spec-visualizer dashboard for the spec-kit project you are working in.",
   "author": { "name": "josephleee" },
   "homepage": "https://github.com/josephleee/spec-visualizer#readme",

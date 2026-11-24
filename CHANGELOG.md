@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-24
+
 ### Other formats
 
 - OpenSpec and Kiro projects open on the same board, with their own six stages, commands and word for a unit of work (a change, a spec). The format is found from the folders: `specs/` or `.specify/` (spec-kit), `openspec/` (OpenSpec), `.kiro/specs/` or `.kiro/steering/` (Kiro); spec-kit comes first when a folder has several.
